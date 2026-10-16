@@ -1,0 +1,73 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+
+async function main() {
+  const functionPath = path.join(__dirname, 'HostedAtlas', 'site', 'functions', 'atlas-data', '[[path]].js');
+  const source = fs.readFileSync(functionPath, 'utf8');
+  const pagesFunction = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
+  const originalFetch = globalThis.fetch;
+  const originalCaches = globalThis.caches;
+  const fetches = [];
+  const cacheWrites = [];
+  globalThis.caches = { default: {
+    async match() { return undefined; },
+    async put(request, response) { cacheWrites.push({ request, response }); }
+  } };
+  globalThis.fetch = async (url, options = {}) => {
+    fetches.push({ url: String(url), method: options.method || 'GET', headers: options.headers });
+    return new Response(Buffer.from('webp'), { status: 200, headers: { 'Content-Length': '4', ETag: '"sample"' } });
+  };
+
+  try {
+    const imageName = `${'a'.repeat(64)}.webp`;
+    const jsonName = `${'b'.repeat(64)}.gz`;
+    const map = {
+      repository: 'atlas-owner/atlas-repo',
+      assets: {
+        'images/sample.webp': { tag: 'silksong-atlas-data-001', name: imageName },
+        'rooms/sample.json.gz': { tag: 'silksong-atlas-data-002', name: jsonName }
+      }
+    };
+    const env = { ASSETS: { async fetch(request) {
+      assert.equal(new URL(request.url).pathname, '/release-assets.json');
+      return new Response(JSON.stringify(map), { headers: { 'Content-Type': 'application/json' } });
+    } } };
+    const waits = [];
+    const context = { env, waitUntil(promise) { waits.push(promise); } };
+
+    const imageResponse = await pagesFunction.onRequest({
+      ...context,
+      request: new Request('https://atlas.example/atlas-data/images/sample.webp')
+    });
+    assert.equal(imageResponse.status, 200);
+    assert.equal(imageResponse.headers.get('Content-Type'), 'image/webp');
+    assert.equal(imageResponse.headers.get('Cache-Control'), 'public, max-age=86400');
+    assert.equal(await imageResponse.text(), 'webp');
+    assert.equal(fetches[0].url, `https://github.com/atlas-owner/atlas-repo/releases/download/silksong-atlas-data-001/${imageName}`);
+    assert.equal(cacheWrites.length, 1);
+
+    const jsonResponse = await pagesFunction.onRequest({
+      ...context,
+      request: new Request('https://atlas.example/atlas-data/rooms/sample.json')
+    });
+    assert.equal(jsonResponse.status, 200);
+    assert.equal(jsonResponse.headers.get('Content-Type'), 'application/json; charset=utf-8');
+    assert.equal(jsonResponse.headers.get('Content-Encoding'), 'gzip');
+    assert.equal(fetches[1].url, `https://github.com/atlas-owner/atlas-repo/releases/download/silksong-atlas-data-002/${jsonName}`);
+
+    const invalidResponse = await pagesFunction.onRequest({
+      ...context,
+      request: new Request('https://atlas.example/atlas-data/%2E%2E%2Fsecret')
+    });
+    assert.equal(invalidResponse.status, 400);
+    await Promise.all(waits);
+    console.log('Hosted Pages function tests passed: GitHub release images, gzip JSON, caching, and path validation.');
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (originalCaches === undefined) delete globalThis.caches;
+    else globalThis.caches = originalCaches;
+  }
+}
+
+main().catch((error) => { console.error(error); process.exitCode = 1; });

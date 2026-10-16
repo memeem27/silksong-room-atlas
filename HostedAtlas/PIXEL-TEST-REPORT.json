@@ -1,0 +1,45 @@
+{
+  "status": "passed",
+  "results": [
+    {
+      "sample": "bone_01 room",
+      "pixels": 99807119,
+      "visibleRgbDifferences": 0,
+      "alphaDifferences": 0
+    },
+    {
+      "sample": "bone_01 camera section",
+      "pixels": 10627668,
+      "visibleRgbDifferences": 0,
+      "alphaDifferences": 0
+    },
+    {
+      "sample": "ant_14 camera section",
+      "pixels": 90953544,
+      "visibleRgbDifferences": 0,
+      "alphaDifferences": 0
+    },
+    {
+      "sample": "aqueduct_03 camera section",
+      "pixels": 6525255,
+      "visibleRgbDifferences": 0,
+      "alphaDifferences": 0
+    },
+    {
+      "sample": "wide map",
+      "pixels": 3274668,
+      "visibleRgbDifferences": 0,
+      "alphaDifferences": 0
+    },
+    {
+      "sample": "game texture atlas",
+      "pixels": 44660,
+      "visibleRgbDifferences": 0,
+      "alphaDifferences": 0
+    },
+    {
+      "sample": "oversized PNG fallback",
+      "exactFileCopy": true
+    }
+  ]
+}

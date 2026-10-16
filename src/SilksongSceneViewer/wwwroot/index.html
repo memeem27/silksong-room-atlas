@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#11120f" />
+  <title>Silksong Scene Viewer</title>
+  <link rel="stylesheet" href="/styles.css?v=2" />
+  <script>if (new URLSearchParams(location.search).has('batchWorker')) document.documentElement.classList.add('batch-worker');</script>
+  <script src="/app.js?v=4" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Silksong Scene Viewer home"><span class="brand-icon">S</span><span>Pharloom<span class="brand-sub">SCENE VIEWER</span></span></a>
+    <div class="top-context"><span class="context-dot"></span><span id="sourceSummary">Connecting to local files…</span></div>
+    <div class="top-actions"><button id="mapReaderButton" class="reader-trigger" type="button">◎ <span>Map Reader</span></button><button class="icon-button" id="refreshButton" title="Refresh room list" aria-label="Refresh room list">↻</button><span class="build-label">UNITY 6</span></div>
+  </header>
+  <main class="workspace">
+    <aside class="rooms-panel">
+      <div class="panel-heading"><div><span class="eyebrow">ROOM INDEX</span><h1>Scenes</h1></div><button id="showListButton" class="quiet-button">+ List</button></div>
+      <label class="search-box"><span aria-hidden="true">⌕</span><input id="sceneSearch" autocomplete="off" placeholder="Find a room…" /><kbd>/</kbd></label>
+      <div class="index-caption"><span id="sceneCount">0 rooms</span><span class="index-sort">NAME <span>↕</span></span></div>
+      <button id="exportAllButton" class="tool-button bulk-export-trigger" title="Render every indexed room and export PNGs with portable object metadata" disabled>↓ <span>Export all rooms</span></button>
+      <button id="prepareReaderButton" class="tool-button bulk-export-trigger" title="Pre-render the map and all indexed rooms into the local preprocessed reader dataset" disabled>▧ <span>Prepare offline reader</span></button>
+      <section id="mapReaderNav" class="map-reader-nav" hidden aria-label="World map navigation">
+        <div class="reader-nav-heading"><span class="eyebrow">SILKSONG MAP DATA</span><h2 id="readerNavTitle">World regions</h2><p id="readerNavDescription">Select a region to zoom into its real map layout.</p></div>
+        <button id="readerWorldButton" class="reader-back-button" type="button" hidden>← All regions</button>
+        <div id="readerAreaList" class="reader-area-list"></div>
+        <div id="readerRoomList" class="reader-room-list" hidden><input id="readerRoomSearch" class="reader-room-search" type="search" placeholder="Find a room…" autocomplete="off" /></div>
+        <button id="readerReturnToAreaButton" class="reader-back-button" type="button" hidden>← Return to area map</button>
+      </section>
+      <nav id="sceneList" class="scene-list" aria-label="Room list"><div class="empty-state compact">Loading room bundles…</div></nav>
+      <div class="source-card"><span class="eyebrow">LOCAL SOURCE</span><span id="sourcePath" class="source-path">Finding Silksong bundles…</span><button id="changeSourceButton" class="link-button">Change folder ↗</button></div>
+    </aside>
+    <section class="stage-column">
+      <div class="room-toolbar">
+        <div class="breadcrumbs"><span>PHARLOOM</span><span class="crumb-divider">/</span><strong id="currentSceneTitle">Choose a room</strong><span id="sceneKind" class="kind-pill">SCENE</span></div>
+        <div class="room-actions"><button id="fitButton" class="tool-button" title="Fit all room artwork">⌗ <span>Fit</span></button><button id="fitZonesButton" class="tool-button" disabled title="Cycle through authored CameraLockArea bounds">▱ <span id="cameraLockLabel">Camera</span></button><button id="mapDataButton" class="tool-button" disabled title="Download room coordinates as JSON">↧ <span>Data</span></button><button id="exportButton" class="primary-button" title="Export native-resolution Silksong room artwork as a transparent PNG without viewer overlays" disabled><span>↓</span> Export PNG</button></div>
+      </div>
+      <div id="canvasShell" class="canvas-shell">
+        <div class="canvas-stamp"><span class="stamp-dot"></span><span id="viewStatus">AWAITING SCENE</span></div>
+        <div class="canvas-tools"><button id="zoomOutButton" class="canvas-tool" title="Zoom out">−</button><span id="zoomLevel">100%</span><button id="zoomInButton" class="canvas-tool" title="Zoom in">+</button><span class="canvas-tool-separator"></span><button id="gridButton" class="canvas-tool active" title="Toggle grid">▦</button></div>
+        <canvas id="roomCanvas" aria-label="Room view. Scroll to zoom; drag to pan."></canvas>
+        <div id="emptyCanvas" class="empty-canvas"><div class="monogram">S</div><span class="eyebrow">THE SCENE ATLAS</span><h2>Your room, in view.</h2><p>Choose a scene from the room list to inspect its Unity objects and export a coordinate map.</p><span class="key-hint"><kbd>↑</kbd><kbd>↓</kbd> browse scenes <span class="key-gap"></span><kbd>+</kbd><kbd>−</kbd> zoom</span></div>
+        <div class="canvas-footer"><span id="objectCount">NO OBJECTS</span><span id="coordinates">X&nbsp; — &nbsp;Y&nbsp; —</span></div>
+      </div>
+      <div class="layerbar"><div class="layer-label"><span class="eyebrow">MAP LAYERS</span><span class="layer-hint">toggle what appears</span></div><label class="layer-option"><input type="checkbox" id="layerArtwork" checked /><span class="layer-swatch swatch-artwork"></span>Artwork</label><label class="layer-option"><input type="checkbox" id="layerLighting" checked /><span class="layer-swatch swatch-lighting"></span>Lighting &amp; fog</label><label class="layer-option"><input type="checkbox" id="layerBackground" checked /><span class="layer-swatch swatch-background"></span>Background</label><label class="layer-option"><input type="checkbox" id="layerEffects" /><span class="layer-swatch swatch-effect"></span>Screen effects</label><label class="layer-option"><input type="checkbox" id="layerObjects" /><span class="layer-swatch swatch-object"></span>Objects</label><label class="layer-option"><input type="checkbox" id="layerColliders" /><span class="layer-swatch swatch-enemy"></span>Colliders</label><label class="layer-option"><input type="checkbox" id="layerEnemies" /><span class="layer-swatch swatch-enemy"></span>Enemies</label><label class="layer-option"><input type="checkbox" id="layerSpawns" /><span class="layer-swatch swatch-spawn"></span>Spawns</label><label class="layer-option"><input type="checkbox" id="layerChecks" /><span class="layer-swatch swatch-check"></span>Checks</label><span class="layer-right">UNITY ROOM ASSETS · X/Y POSITION</span></div>
+      <details id="artworkFilterMenu" class="artwork-filter-menu">
+        <summary>Artwork filters <span id="artworkFilterCount">all layers</span></summary>
+        <div class="artwork-filter-popover">
+            <div class="filter-menu-heading"><span>UNITY SORTING LAYERS</span><button id="resetArtworkFilters" type="button" class="filter-reset">Reset</button></div>
+          <div id="sortingLayerFilters" class="sorting-layer-filters"><span class="filter-empty">Choose a room to see its layers.</span></div>
+            <p class="filter-help">Layer names and order come from the nearest ProjectSettings/TagManager.asset. Unmapped IDs start hidden because their layer name is unavailable; enable them to inspect those sprites.</p>
+          <label class="filter-check"><input type="checkbox" id="previewBackgroundBlur" checked> Split background at saved BlurPlane</label>
+          <p class="filter-help">Uses the real serialized depth plane and room textures. Its four-pass game camera blur is approximated in the viewer.</p>
+          <div class="filter-menu-heading state-filter-heading"><span>AUTHORED STATE SETS</span><span id="stateSetCount"></span></div>
+          <div id="activationVariantFilters" class="activation-variant-filters"><span class="filter-empty">Choose a room to see its scene states.</span></div>
+          <div class="filter-menu-heading lighting-state-heading"><span>SAVED LIGHTING GRADES</span><span id="lightingStateCount"></span></div>
+          <div id="lightingStateFilters" class="lighting-state-filters"><span class="filter-empty">Choose a room to see its grade markers.</span></div>
+          <label class="filter-name grade-strength">Simulated Hero radius <span><output id="lightingPreviewValue">—</output><input type="range" id="lightingPreviewStrength" min="0" max="100" value="0" /></span></label>
+          <p class="filter-help">Choose a saved marker, then set Hero distance from its center. The preview uses the game’s squared-distance fade and saved alpha, curves, and saturation. Ambient and Hero-light targets are listed; their live shader effects depend on game state.</p>
+          <label class="filter-name">Find any object by name, parent, or component<input id="stateOverrideSearch" type="text" placeholder="e.g. quest, gate, Act 3…" autocomplete="off"></label>
+          <div id="stateOverrideRows" class="state-override-rows"><span class="filter-empty">Choose a room to find objects.</span></div>
+          <label class="filter-check"><input type="checkbox" id="includeInactiveSprites"> Include all serialized inactive objects</label>
+          <p class="filter-help">Object overrides change only this viewer and exported images. They do not run Silksong checks or events.</p>
+          <label class="filter-check"><input type="checkbox" id="includeDisabledSprites"> Show disabled SpriteRenderers</label>
+          <label class="filter-check"><input type="checkbox" id="applyRendererColors" checked> Apply saved SpriteRenderer color <small>(can change in-game)</small></label>
+          <label class="filter-name">Hide sprite or object names containing<input id="spriteNameExclude" type="text" placeholder="e.g. vignette, shadow, strand" autocomplete="off"></label>
+          <p class="filter-help">These filters apply to the room view and exported PNG.</p>
+        </div>
+      </details>
+    </section>
+    <aside class="inspector-panel"><div class="inspector-header"><div><span class="eyebrow">ROOM INSPECTOR</span><h2>Details</h2></div><button id="clearSelectionButton" class="icon-button small" title="Clear selection">×</button></div>
+      <section class="detail-section scene-details"><div class="section-title"><span>SCENE</span><span class="section-icon">⌂</span></div><div class="detail-name" id="detailSceneName">No scene selected</div><div class="detail-row"><span>Objects</span><span id="detailObjects">—</span></div><div class="detail-row"><span>Source bundle</span><span id="detailBundle">—</span></div><div class="detail-row"><span>Room bounds</span><span id="detailBounds">—</span></div></section>
+      <section class="detail-section capture-section">
+        <div class="section-title"><span>IN-GAME CAPTURE</span><span id="captureSceneCount" class="count-badge">not loaded</span></div>
+        <input id="captureFolderInput" type="file" webkitdirectory directory multiple accept=".json,.png" hidden />
+        <button id="selectCaptureFolderButton" type="button" class="tool-button capture-folder-button">Choose capture folder</button>
+        <div id="captureFolderStatus" class="empty-state capture-status">Use the optional F9 capture mod to import real game frames and camera data.</div>
+        <label class="filter-check capture-toggle"><input type="checkbox" id="useGameCaptures" disabled> Use captured game view</label>
+        <label class="filter-name capture-view-select">Capture view<select id="captureViewSelect" disabled><option value="all">All camera views</option></select></label>
+        <p class="filter-help capture-help">Frames preserve the game’s rendered pixels inside the saved camera view, including anything visible at capture time (player, HUD, particles, and temporary effects). The latest frame is selected first; choose composite all views to extend coverage, though different moments can show seams. Bundle art remains visible outside captured views.</p>
+      </section>
+      <section class="detail-section architect-section">
+        <div class="section-title"><span>ARCHITECT MOD</span><span id="architectSceneCount" class="count-badge">not loaded</span></div>
+        <input id="architectFolderInput" type="file" webkitdirectory directory multiple accept=".json,.png,.jpg,.jpeg,.webp" hidden />
+        <button id="selectArchitectFolderButton" type="button" class="tool-button architect-folder-button">Choose Architect folder</button>
+        <div id="architectFolderStatus" class="empty-state architect-status">Choose a mod folder. Architect scene and prefab data are indexed; serialized scripts are retained but never executed.</div>
+        <div id="architectRoomMatch" class="architect-room-match" role="status" aria-live="polite"><span id="architectRoomSummary">Open a game room to check for matching Architect data.</span><button id="architectEnableMarkersButton" type="button" hidden>Show markers</button></div>
+        <label id="architectSourceSelectWrap" class="filter-name architect-root-select" hidden>Architect data folder<select id="architectSourceSelect"></select></label>
+        <label class="filter-check architect-toggle"><input type="checkbox" id="architectMarkersToggle" disabled><span id="architectMarkerToggleText">Show gauntlet markers</span></label>
+        <div id="architectMarkerList" class="architect-marker-list"><span class="filter-empty">Gauntlet markers are off by default.</span></div>
+        <label class="filter-name architect-arena-select">Arena scene<select id="architectArenaSelect" disabled><option value="">Choose a room marker first</option></select></label>
+        <button id="architectReturnButton" type="button" class="link-button architect-return" hidden>Return to game room</button>
+        <label id="architectChangesToggleRow" class="filter-check architect-toggle" hidden><input type="checkbox" id="architectChangesToggle" checked> Show selected arena changes</label>
+        <label id="architectEnemyArtToggleRow" class="filter-check architect-toggle" hidden><input type="checkbox" id="architectEnemyArtToggle" checked> Show matching Silksong enemy textures</label>
+        <label id="architectModImagesToggleRow" class="filter-check architect-toggle" hidden><input type="checkbox" id="architectModImagesToggle"> Show linked Architect images</label>
+        <div id="architectArtworkStatus" class="filter-help architect-artwork-status" hidden></div>
+        <div id="architectWaveControls" class="architect-wave-controls" hidden>
+          <div class="architect-event-title">GAUNTLET WAVES</div>
+          <label class="filter-name architect-wave-select-label">Wave / phase<select id="architectWaveSelect"></select></label>
+          <div id="architectWaveSummary" class="filter-help architect-wave-summary"></div>
+          <div class="architect-wave-enemy-section"><div class="architect-event-title">ENEMY PLACEMENTS</div><div id="architectWaveEnemyNote" class="filter-help architect-wave-summary"></div><div id="architectWaveEnemyList" class="architect-wave-enemy-list"></div></div>
+        </div>
+        <details id="architectEventControls" class="architect-event-controls" hidden><summary class="architect-event-title">ADVANCED ACTIVATION EVENTS</summary><div id="architectEventList" class="architect-event-list"></div><button id="architectResetEventsButton" class="link-button architect-reset-events" type="button" hidden>Reset to initial state</button><p class="filter-help architect-event-help">These switches simulate saved placement enable/disable listeners. The linked check and script graph is retained as data but is not run.</p></details>
+        <label id="architectTilemapToggleRow" class="filter-check architect-toggle" hidden><input type="checkbox" id="architectTilemapToggle" checked> Show serialized tile cells</label>
+        <div id="architectPlacementList" class="architect-placement-list"><span class="filter-empty">Choose a room and enable its gauntlet markers.</span></div>
+        <p class="filter-help architect-help">Choose a mod folder and game room, then click a G pin to show its changes. The wave menu groups paired Architect Start/End events; enemy switches show each serialized placement at its saved coordinates. Wave order and labels are inferred from event names because mod scripts are retained as data and never run. Matching enemy prefab textures come from Silksong bundles. Linked Architect images are loaded only from the selected mod folder and are excluded from PNG export. The controller stores a check, not a target-arena link; choose a listed <code>gh*</code> scene to inspect an added arena.</p>
+      </section>
+      <section class="detail-section"><div class="section-title"><span>OBJECT TREE</span><span id="treeCount" class="count-badge">0</span></div><input id="objectSearch" class="tree-search" placeholder="Filter objects…" /><div id="objectTree" class="object-tree"><div class="empty-state tree-empty">Select a room to inspect its objects.</div></div></section>
+      <section class="detail-section selected-card"><div class="section-title"><span>SELECTION</span><span class="selection-mark">◎</span></div><div id="selectionContent" class="empty-state selection-empty">Click an object in the tree or on the map.</div></section>
+      <div class="inspector-foot"><span class="inspector-foot-icon">i</span><p>Coordinates show authored Unity positions. Potential spawns and checks require additional classification.</p></div>
+    </aside>
+  </main>
+  <dialog id="listDialog" class="modal"><form method="dialog"><div class="modal-heading"><div><span class="eyebrow">BATCH SCENE INPUT</span><h2>Open scene list</h2></div><button class="icon-button" value="cancel" aria-label="Close">×</button></div><p>Enter room names, one per line. Blank lines and lines starting with # are ignored.</p><textarea id="sceneListText" rows="9" placeholder="bone_02&#10;mosstown_01&#10;bellway_01"></textarea><div id="importProgress" class="import-progress"></div><div class="modal-actions"><button class="tool-button" value="cancel">Cancel</button><button id="loadListButton" class="tool-button" value="default">Show scenes</button><button id="importListButton" class="primary-button" type="button">Import objects</button></div></form></dialog>
+  <dialog id="sourceDialog" class="modal"><form method="dialog"><div class="modal-heading"><div><span class="eyebrow">BUNDLE LOCATION</span><h2>Choose scene source</h2></div><button class="icon-button" value="cancel" aria-label="Close">×</button></div><p>Enter the exact folder containing Silksong room <code>.bundle</code> files.</p><input id="sourceInput" class="text-input" spellcheck="false" placeholder="D:\\Games\\Silksong\\...\\scenes_scenes_scenes" /><div class="modal-error" id="sourceError"></div><div class="modal-actions"><button class="tool-button" value="cancel">Cancel</button><button id="applySourceButton" class="primary-button" value="default">Connect folder</button></div></form></dialog>
+  <dialog id="bulkExportDialog" class="modal export-modal" aria-labelledby="bulkExportTitle"><div class="export-dialog-content"><div class="modal-heading"><div><span class="eyebrow">ROOM ATLAS EXPORT</span><h2 id="bulkExportTitle">Rendering rooms</h2></div></div><p id="bulkExportSummary">Preparing full-resolution Silksong room artwork and scene metadata…</p><progress id="bulkExportProgress" max="1" value="0"></progress><div id="bulkExportStatus" class="export-status" role="status" aria-live="polite">Waiting for export to begin.</div><div class="modal-actions"><a id="bulkExportDownload" class="primary-button" hidden>Download ZIP</a><button id="bulkExportCancel" class="tool-button" type="button">Stop after this room</button><button id="bulkExportClose" class="tool-button" type="button" hidden>Close</button></div></div></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

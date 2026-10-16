@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#ffffff" />
+  <title>Silksong Room Atlas</title>
+  <link rel="stylesheet" href="./reader.css" />
+  <script src="./host-config.js"></script>
+  <script src="./reader.js?v=atlas-2" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./">Silksong Room Atlas</a>
+    <div class="top-status"><span class="status-dot"></span><span id="datasetStatus">Loading prepared atlas…</span></div>
+    <span class="build-tag">PREPROCESSED GAME ART</span>
+  </header>
+
+  <main class="layout">
+    <aside class="navigator" aria-label="Map navigation">
+      <div class="nav-head">
+        <span class="eyebrow">MAP</span>
+        <h1 id="navTitle">World regions</h1>
+        <p id="navDescription">Choose a region on the game map.</p>
+      </div>
+      <div class="breadcrumbs">
+        <button id="worldButton" type="button" hidden>World map</button>
+        <button id="areaButton" type="button" hidden>Area map</button>
+        <button id="allRoomsButton" type="button">All rooms</button>
+      </div>
+      <label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Find an area or room…" autocomplete="off" /></label>
+      <div id="navList" class="nav-list"><div class="empty">Preparing the room index…</div></div>
+      <div class="nav-foot"><span id="datasetCounts">Loading map data…</span><span>Only the selected room image and sidecar load.</span></div>
+    </aside>
+
+    <section class="stage" aria-label="Map and room image">
+      <div class="stage-head">
+        <div class="stage-title"><span class="eyebrow" id="stageKind">WORLD MAP</span><h2 id="stageTitle">World regions</h2></div>
+        <div class="stage-tools">
+          <button id="fitButton" type="button">Fit view</button>
+          <button id="toggleMapBackdrop" type="button" aria-pressed="false" hidden>Show full map</button>
+          <button id="exportPngButton" type="button" hidden>Export clean PNG</button>
+          <button id="refreshButton" type="button" title="Reload the map index">Refresh</button>
+        </div>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="mapCanvas" aria-label="Silksong world map, area map, or selected room"></canvas>
+        <div id="canvasNotice" class="canvas-notice" hidden></div>
+        <div id="canvasLoading" class="canvas-loading" hidden>Loading selected room…</div>
+      </div>
+      <div class="stage-foot"><span id="viewFoot">REAL GAME MAP ART</span><span id="imageDimensions"></span></div>
+    </section>
+
+    <aside class="inspector" aria-label="Room controls and details">
+      <div class="inspector-head"><div><span class="eyebrow">DETAILS</span><h2 id="inspectorTitle">Room information</h2></div><button id="closeRoomButton" type="button" title="Return to area map" hidden>×</button></div>
+      <div id="roomSummary" class="summary"><div class="empty">Select a region, then choose a room.</div></div>
+
+      <section id="roomSectionPanel" class="control-section" hidden>
+        <div class="section-title">ROOM SECTION <span>GAME CAMERA AREA</span></div>
+        <label class="select-label">Render view<select id="roomViewSelect"></select></label>
+        <p id="roomViewHint" class="hint">Choose a serialized camera-lock area to frame this room section.</p>
+      </section>
+
+      <section id="objectLayers" class="control-section" hidden>
+        <div class="section-title">ROOM OVERLAYS <span>OFF BY DEFAULT</span></div>
+        <label class="toggle"><input id="toggleEnemies" type="checkbox" /><span class="swatch enemy"></span>Enemy candidates <small id="enemyCount">0</small></label>
+        <label class="toggle"><input id="toggleSpawns" type="checkbox" /><span class="swatch spawn"></span>Spawn locations <small id="spawnCount">0</small></label>
+        <label class="toggle"><input id="toggleChecks" type="checkbox" /><span class="swatch check"></span>Checks &amp; interactions <small id="checkCount">0</small></label>
+        <p class="hint">These markers are optional overlays. The room image and PNG export contain only the clean game artwork.</p>
+      </section>
+
+      <section id="architectPanel" class="control-section architect" hidden>
+        <div class="section-title">ARCHITECT / GAUNTLETSONG <span id="architectCount">0 markers</span></div>
+        <label class="toggle"><input id="toggleGauntlets" type="checkbox" /><span class="swatch gauntlet">G</span>Show gauntlet markers</label>
+        <div class="hint">Choose a marker to show its arena changes, waves, and linked placements.</div>
+        <div id="gauntletList" class="gauntlet-list"><div class="hint">No gauntlets recorded in this room.</div></div>
+        <div id="gauntletDetails" class="gauntlet-details" hidden>
+          <label class="select-label">Wave / event phase<select id="waveSelect"></select></label>
+          <div id="waveSummary" class="hint"></div>
+          <label class="toggle sub-toggle"><input id="toggleArenaChanges" type="checkbox" checked />Show arena changes</label>
+          <label class="toggle sub-toggle"><input id="toggleEnemyTextures" type="checkbox" checked />Show matching enemy textures</label>
+          <div class="section-title small-title">ENEMY / OBJECT PLACEMENTS <span id="placementCount">0</span></div>
+          <div id="placementList" class="placement-list"></div>
+        </div>
+        <p id="architectNote" class="hint"></p>
+      </section>
+
+      <section id="metadataPanel" class="control-section" hidden>
+        <div class="section-title">IMAGE &amp; SOURCE</div>
+        <div id="metadataRows" class="metadata-rows"></div>
+      </section>
+      <div class="inspector-foot">Enemy, spawn, check, and Architect overlays start hidden. Toggle a layer when you need it.</div>
+    </aside>
+  </main>
+</body>
+</html>
