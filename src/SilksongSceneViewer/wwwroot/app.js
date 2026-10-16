@@ -776,7 +776,10 @@ function spritePassesFilters(object, sprite, includeScreenEffects = false, gameA
   if (gameArtworkOnly) {
     if (object.sortingGroup?.enabled && object.sortingGroup.sortingLayerKnown === false) return false;
     if (sprite.sortingLayerKnown === false || !objectIsActive(object) || sprite.rendererEnabled === false) return false;
-    if (!includeScreenEffects && isScreenEffect(object, sprite)) return false;
+    // Shader-driven light/fog sprites are masks or intensity textures in the
+    // bundle. Drawing them as ordinary RGBA artwork creates the large gray and
+    // red discs seen in some rooms (for example lava haze in Bone Town).
+    if (!includeScreenEffects && (isScreenEffect(object, sprite) || isLightingArtwork(object, sprite))) return false;
     return Boolean(isGameBundleTexture(sprite.imageUrl) && sprite.rectWidth && sprite.rectHeight);
   }
   if (object.sortingGroup?.enabled && state.hiddenSortingLayers.has(Number(object.sortingGroup.sortingLayerId) || 0)) return false;
@@ -826,7 +829,8 @@ function meshPassesFilters(object, mesh, includeScreenEffects = false, gameArtwo
   if (gameArtworkOnly) {
     if (object.sortingGroup?.enabled && object.sortingGroup.sortingLayerKnown === false) return false;
     if (mesh.sortingLayerKnown === false || !objectIsActive(object) || mesh.rendererEnabled === false) return false;
-    return isGameBundleTexture(mesh.imageUrl) && (includeScreenEffects || !isScreenEffect(object, { name: mesh.materialName }));
+    return isGameBundleTexture(mesh.imageUrl) && (includeScreenEffects ||
+      (!isScreenEffect(object, { name: mesh.materialName }) && !isLightingArtwork(object, { name: mesh.materialName })));
   }
   if (object.sortingGroup?.enabled && state.hiddenSortingLayers.has(Number(object.sortingGroup.sortingLayerId) || 0)) return false;
   if (!byId('layerLighting').checked && isLightingArtwork(object, { name: mesh.materialName })) return false;
@@ -2983,11 +2987,13 @@ function buildBatchRoomMetadata(scene, entry, outputName, render, status, error 
     } : null,
     render: {
       profile: 'active-silksong-bundle-renderers', activeRenderersOnly: true,
-      gameBundleTexturesOnly: true, screenEffectsIncluded: render?.screenEffectsIncluded ?? false, viewerAnnotations: false,
+      gameBundleTexturesOnly: true, screenEffectsIncluded: render?.screenEffectsIncluded ?? false,
+      shaderDrivenLightingIncluded: render?.screenEffectsIncluded ?? false, viewerAnnotations: false,
       architectModAssets: false, runtimeLightingSimulation: false, eligibleRendererCount: render?.rendererCount || 0,
       textureCount: render?.textureCount || 0, missingTextureSha256: render?.missingTextures || [],
       sorting: 'Unity sorting group, layer, order, and depth sequence; unresolved layer mappings are excluded',
-      excluded: ['inactive objects', 'disabled renderers', 'destination blend renderers', 'non-bundle textures']
+      excluded: ['inactive objects', 'disabled renderers', 'destination blend renderers',
+        ...(render?.screenEffectsIncluded ? [] : ['shader-driven light/fog effects']), 'non-bundle textures']
     },
     counts: { objectCount: objects.length, ...counts },
     objects: roomObjects,
@@ -3273,7 +3279,7 @@ async function exportAllRooms(serverOutput = false) {
           processedSceneCount: rooms.length, unprocessedSceneCount: allEntries.length - rooms.length,
           counts: partialCounts, sourceFolderName: String(state.source || '').replace(/[\\/]+$/, '').split(/[\\/]/).pop() || null,
           renderProfile: { gameBundleTexturesOnly: true, activeRenderersOnly: true, screenEffectsIncluded: includeScreenEffects,
-            backgroundArtworkIncluded: true, lightingRendererArtworkIncluded: true, runtimeLightingSimulation: false,
+            backgroundArtworkIncluded: true, lightingRendererArtworkIncluded: includeScreenEffects, shaderDrivenLightingIncluded: includeScreenEffects, runtimeLightingSimulation: false,
             viewerAnnotations: false, architectModAssets: false, architectPlacementMetadataIncluded: state.architectScenes.size > 0 },
           navigation, rooms
         };
@@ -3292,7 +3298,7 @@ async function exportAllRooms(serverOutput = false) {
       requestedSceneCount: allEntries.length, processedSceneCount: rooms.length, unprocessedSceneCount: allEntries.length - rooms.length,
       counts, sourceFolderName: String(state.source || '').replace(/[\\/]+$/, '').split(/[\\/]/).pop() || null,
       renderProfile: { gameBundleTexturesOnly: true, activeRenderersOnly: true, screenEffectsIncluded: includeScreenEffects,
-        backgroundArtworkIncluded: true, lightingRendererArtworkIncluded: true, runtimeLightingSimulation: false,
+        backgroundArtworkIncluded: true, lightingRendererArtworkIncluded: includeScreenEffects, shaderDrivenLightingIncluded: includeScreenEffects, runtimeLightingSimulation: false,
         viewerAnnotations: false, architectModAssets: false, architectPlacementMetadataIncluded: state.architectScenes.size > 0,
         png: 'transparent RGBA at native bundle texture density; oversized rooms are tiled and a smaller preview is included for the reader' },
       navigation,

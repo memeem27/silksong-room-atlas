@@ -7,8 +7,28 @@ const GZIP_JSON = Boolean(window.SILKSONG_ATLAS_GZIP_JSON);
 const state = { manifest: null, navigation: null, mode: 'world', area: null, room: null, roomMeta: null,
   roomImage: null, roomViewImage: null, wideImage: null, detailImage: null, imageCache: new Map(), atlasCache: new Map(),
   selectedGauntlet: null, selectedWave: 'all', visiblePlacements: new Map(), selectedAreaName: null, hoverAreaKey: null,
-  cameraSections: [], roomViewKey: 'whole', mapBackdropVisible: false, mapBackdropAuto: false };
+  cameraSections: [], roomViewKey: 'whole', mapBackdropVisible: false, mapBackdropAuto: false,
+  roomStateOverrides: new Map(), roomStateGroups: [], roomStateCandidates: [], showAllInactiveArtwork: false, includeDisabledStateArtwork: false };
 const canvas = $('mapCanvas'), ctx = canvas.getContext('2d');
+
+function setPanelOpen(name, open) {
+  const panel = $(name === 'navigator' ? 'navigator' : 'inspector');
+  const button = $(name === 'navigator' ? 'toggleNavigatorButton' : 'toggleInspectorButton');
+  if (open) {
+    const otherName = name === 'navigator' ? 'inspector' : 'navigator';
+    setPanelOpen(otherName, false);
+  }
+  panel.classList.toggle('is-open', open);
+  panel.setAttribute('aria-hidden', String(!open));
+  button.setAttribute('aria-expanded', String(open));
+}
+
+function closePanel(name) { setPanelOpen(name, false); }
+
+function togglePanel(name) {
+  const panel = $(name === 'navigator' ? 'navigator' : 'inspector');
+  setPanelOpen(name, !panel.classList.contains('is-open'));
+}
 
 function esc(value) { return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
 function cleanLabel(value) { return String(value ?? '').replaceAll('Ã‚Â·','·').replaceAll('Â·','·'); }
@@ -114,24 +134,27 @@ function renderNavigation() {
 }
 
 function showWorld() {
+  closePanel('inspector');
   state.mode='world'; state.area=null; state.room=null; state.roomMeta=null; state.roomImage=null; state.selectedGauntlet=null; state.hoverAreaKey=null;
   $('stageKind').textContent='WIDE WORLD MAP'; $('stageTitle').textContent='World regions'; $('viewFoot').textContent='GAME-AUTHORED WIDE MAP · REAL BUNDLE TEXTURES'; $('imageDimensions').textContent='';
   $('exportPngButton').hidden=true;
   $('toggleMapBackdrop').hidden=true;
   $('roomSummary').innerHTML='<div class="empty">Select a region from the world map or list.</div>';
-  $('roomSectionPanel').hidden=true; $('objectLayers').hidden=true; $('architectPanel').hidden=true; $('metadataPanel').hidden=true; $('closeRoomButton').hidden=true;
+  $('roomSectionPanel').hidden=true; $('objectLayers').hidden=true; $('roomStatePanel').hidden=true; $('architectPanel').hidden=true; $('metadataPanel').hidden=true; $('closeRoomButton').hidden=true;
   renderNavigation(); $('navList').scrollTop=0; const selectedAreaButton=document.querySelector('[data-area].active'); selectedAreaButton?.scrollIntoView({block:'nearest'}); draw();
 }
 function showAllRooms() {
+  closePanel('inspector');
   state.mode='all-rooms'; state.area=null; state.room=null; state.roomMeta=null; state.roomImage=null; state.selectedGauntlet=null;
   $('stageKind').textContent='ALL PREPARED ROOMS'; $('stageTitle').textContent='Browse every scene'; $('viewFoot').textContent='ALL EXPORTED SCENES · GAME ART ONLY'; $('imageDimensions').textContent='';
   $('exportPngButton').hidden=true; $('roomSummary').innerHTML='<div class="empty">Choose any prepared scene, including rooms that are not connected to a map region.</div>';
   $('toggleMapBackdrop').hidden=true;
-  $('roomSectionPanel').hidden=true; $('objectLayers').hidden=true; $('architectPanel').hidden=true; $('metadataPanel').hidden=true; $('closeRoomButton').hidden=true;
+  $('roomSectionPanel').hidden=true; $('objectLayers').hidden=true; $('roomStatePanel').hidden=true; $('architectPanel').hidden=true; $('metadataPanel').hidden=true; $('closeRoomButton').hidden=true;
   renderNavigation(); $('navList').scrollTop=0; draw();
 }
 function showArea(key) {
   const area = findArea(key); if (!area) return;
+  closePanel('inspector');
   if(state.mapBackdropAuto){state.mapBackdropVisible=false;state.mapBackdropAuto=false;}
   if(!area.rooms.some(room=>room.mapSprites?.length)){state.mapBackdropVisible=true;state.mapBackdropAuto=true;}
   state.selectedAreaName=area.key; state.hoverAreaKey=null;
@@ -140,24 +163,27 @@ function showArea(key) {
   $('exportPngButton').hidden=true;
   $('toggleMapBackdrop').hidden=false; $('toggleMapBackdrop').textContent=state.mapBackdropVisible?'Hide full map':'Show full map'; $('toggleMapBackdrop').setAttribute('aria-pressed',String(state.mapBackdropVisible));
   $('roomSummary').innerHTML=`<div class="summary-name">${esc(area.name)}</div><div class="summary-kind">REGION ${esc(area.key)}</div><div class="summary-stat"><span>Mapped rooms</span><strong>${area.rooms.length}</strong></div><div class="summary-stat"><span>Preprocessed images</span><strong>${area.rooms.filter(room=>findRoom(room.name)?.image).length}</strong></div>`;
-  $('roomSectionPanel').hidden=true; $('objectLayers').hidden=true; $('architectPanel').hidden=true; $('metadataPanel').hidden=true; $('closeRoomButton').hidden=true;
+  $('roomSectionPanel').hidden=true; $('objectLayers').hidden=true; $('roomStatePanel').hidden=true; $('architectPanel').hidden=true; $('metadataPanel').hidden=true; $('closeRoomButton').hidden=true;
   renderNavigation(); $('navList').scrollTop=0; draw();
 }
 
 async function openRoom(name) {
   const room = findRoom(name); if (!room) return;
+  setPanelOpen('inspector', true);
   const mappedArea=(state.navigation?.areas||[]).find(area=>area.rooms.some(item=>item.name.toLowerCase()===room.name.toLowerCase()))||null;
   const areaForRoom=state.area?.rooms?.some(item=>item.name.toLowerCase()===room.name.toLowerCase())?state.area:mappedArea;
   state.area=areaForRoom;
   state.mode='room'; state.room=room; state.roomMeta=null; state.roomImage=null; state.selectedGauntlet=null; state.selectedWave='all'; state.visiblePlacements.clear();
+  state.roomStateOverrides=new Map(); state.roomStateGroups=[]; state.roomStateCandidates=[]; state.showAllInactiveArtwork=false; state.includeDisabledStateArtwork=false;
   state.cameraSections=[]; state.roomViewKey='whole';
   $('stageKind').textContent=room.kind?.toUpperCase() || 'ROOM'; $('stageTitle').textContent=fileBase(room.name); $('viewFoot').textContent='CLEAN SILKSONG ROOM IMAGE · OVERLAYS ARE SEPARATE';
   $('canvasLoading').hidden=false; $('canvasNotice').hidden=true; $('closeRoomButton').hidden=false;
   $('exportPngButton').hidden=true;
   $('toggleMapBackdrop').hidden=true;
   $('roomSummary').innerHTML='<div class="empty">Loading the selected room sidecar…</div>';
-  $('roomSectionPanel').hidden=true; $('objectLayers').hidden=true; $('architectPanel').hidden=true; $('metadataPanel').hidden=true;
+  $('roomSectionPanel').hidden=true; $('objectLayers').hidden=true; $('roomStatePanel').hidden=true; $('architectPanel').hidden=true; $('metadataPanel').hidden=true;
   $('toggleEnemies').checked=false; $('toggleSpawns').checked=false; $('toggleChecks').checked=false;
+  $('toggleAllInactiveArtwork').checked=false; $('toggleDisabledStateArtwork').checked=false; $('roomStateSearch').value='';
   $('toggleGauntlets').checked=false; $('toggleArenaChanges').checked=true; $('toggleEnemyTextures').checked=true;
   $('gauntletDetails').hidden=true;
   renderNavigation();
@@ -173,6 +199,7 @@ async function openRoom(name) {
     const counts=meta?.counts||{}; $('enemyCount').textContent=counts.enemyCandidates||0; $('spawnCount').textContent=counts.spawnCandidates||0; $('checkCount').textContent=counts.checkCandidates||0;
     $('roomSummary').innerHTML=`<div class="summary-name">${esc(fileBase(room.name))}</div><div class="summary-kind">${esc(room.kind || 'room')} · ${esc(meta?.status || room.status)}</div><div class="summary-stat"><span>Scene objects</span><strong>${(counts.objectCount||0).toLocaleString()}</strong></div><div class="summary-stat"><span>Renderable artwork</span><strong>${meta?.render?.eligibleRendererCount?.toLocaleString?.()||0} renderers</strong></div><div class="summary-stat"><span>Texture atlases baked</span><strong>${meta?.render?.textureCount||0}</strong></div>`;
     $('objectLayers').hidden=!meta?.objects?.length;
+    renderRoomStateControls(meta);
     $('metadataPanel').hidden=!meta;
     $('metadataRows').innerHTML=meta?[
       ['Image',meta.image?`${meta.image.width.toLocaleString()} × ${meta.image.height.toLocaleString()} px`:'No renderable artwork'],
@@ -188,12 +215,122 @@ async function openRoom(name) {
     const selectedSection=state.cameraSections.find(section=>section.key===state.roomViewKey);
     if(selectedSection?.file)state.roomViewImage=await loadImage(selectedSection.file);
     updateRoomViewDisplay();
-    if(!image){$('canvasNotice').textContent=room.status==='exported'?'Room image is not available in the hosted atlas.':'This room has no renderable game artwork.';$('canvasNotice').hidden=false;}
+    if(!image&&!meta?.objects?.length){$('canvasNotice').textContent=room.status==='exported'?'Room image is not available in the hosted atlas.':'This room has no renderable game artwork.';$('canvasNotice').hidden=false;}
     draw();
   } catch(error) {
     $('canvasLoading').hidden=true; $('canvasNotice').textContent=error.message||String(error); $('canvasNotice').hidden=false;
     $('roomSummary').innerHTML=`<div class="empty">Could not load room metadata: ${esc(error.message||error)}</div>`;
   }
+}
+
+function renderRoomStateControls(meta) {
+  const objects=meta?.objects||[];
+  const renderableCount=objects.reduce((sum,object)=>sum+
+    (object.sprites||[]).filter(sprite=>sprite.textureSha256&&sprite.rectWidth&&sprite.rectHeight).length+
+    (object.meshes||[]).filter(mesh=>mesh.textureSha256).length,0);
+  const inactiveCount=objects.reduce((sum,object)=>sum+(object.activeInRoom===false||object.active===false?
+    (object.sprites||[]).filter(sprite=>sprite.textureSha256&&sprite.rectWidth&&sprite.rectHeight).length+
+    (object.meshes||[]).filter(mesh=>mesh.textureSha256).length:0),0);
+  const disabledRendererCount=objects.reduce((sum,object)=>sum+
+    (object.sprites||[]).filter(sprite=>sprite.textureSha256&&sprite.rectWidth&&sprite.rectHeight&&sprite.rendererEnabled===false).length+
+    (object.meshes||[]).filter(mesh=>mesh.textureSha256&&mesh.rendererEnabled===false).length,0);
+  $('roomStatePanel').hidden=!objects.length||inactiveCount===0&&disabledRendererCount===0;
+  $('roomStateCount').textContent=`${inactiveCount.toLocaleString()} inactive · ${disabledRendererCount.toLocaleString()} disabled · ${renderableCount.toLocaleString()} total`;
+  if(!objects.length||inactiveCount===0&&disabledRendererCount===0)return;
+  const index=buildRoomStateIndex(objects);
+  state.roomStateGroups=index.groups;
+  state.roomStateCandidates=index.candidates;
+  renderRoomStateGroupFilters();
+  renderRoomStateObjectFilters();
+  $('toggleAllInactiveArtwork').onchange=()=>{state.showAllInactiveArtwork=$('toggleAllInactiveArtwork').checked;updateRoomViewDisplay();draw();};
+  $('toggleDisabledStateArtwork').onchange=()=>{state.includeDisabledStateArtwork=$('toggleDisabledStateArtwork').checked;updateRoomViewDisplay();draw();};
+  $('roomStateSearch').oninput=renderRoomStateObjectFilters;
+}
+
+function buildRoomStateIndex(objects) {
+  const byId=new Map(objects.map(object=>[object.id,object])),children=new Map();
+  for(const object of objects){const list=children.get(object.parentId)||[];list.push(object);children.set(object.parentId,list);}
+  const countCache=new Map();
+  function subtreeArtworkCount(object,path=new Set()){
+    if(countCache.has(object.id))return countCache.get(object.id);
+    if(path.has(object.id))return 0;
+    const next=new Set(path);next.add(object.id);
+    const own=(object.sprites||[]).filter(sprite=>sprite.textureSha256&&sprite.rectWidth&&sprite.rectHeight).length+
+      (object.meshes||[]).filter(mesh=>mesh.textureSha256).length;
+    const total=own+(children.get(object.id)||[]).reduce((sum,child)=>sum+subtreeArtworkCount(child,next),0);
+    countCache.set(object.id,total);return total;
+  }
+  const stateTerms=/event|condition|quest|door|destroy|repair|complete|check|active|activat|normal world|black thread|intro|pre.?cleanup|post.?cleanup|before|after|lit|dark|broken|phase|act[123]|bridge|battle/i;
+  const pathCache=new Map();
+  function objectPath(object){
+    if(pathCache.has(object.id))return pathCache.get(object.id);
+    const names=[object.name||'(unnamed)'];let parent=byId.get(object.parentId),depth=0;
+    while(parent&&depth++<12){names.unshift(parent.name||'(unnamed)');parent=byId.get(parent.parentId);}
+    const path=names.join(' / ');pathCache.set(object.id,path);return path;
+  }
+  const searchable=objects.map(object=>{
+    const componentNames=(object.components||[]).map(component=>component.scriptName||component.type||'').join(' '),path=objectPath(object),spriteCount=subtreeArtworkCount(object);
+    const likelyState=stateTerms.test(`${object.name||''} ${componentNames}`);
+    return{object,path,spriteCount,likelyState,searchText:`${path} ${componentNames}`.toLowerCase()};
+  });
+  const candidates=searchable.filter(item=>item.spriteCount>0&&(item.object.active===false||item.object.activeInRoom===false||item.likelyState))
+    .sort((a,b)=>Number(b.likelyState)-Number(a.likelyState)||Number(a.object.activeInRoom)-Number(b.object.activeInRoom)||
+      b.spriteCount-a.spriteCount||a.path.localeCompare(b.path,undefined,{numeric:true}));
+  const grouped=new Map();
+  for(const item of searchable.filter(entry=>(entry.object.activeInRoom===false||entry.object.active===false)&&entry.spriteCount>=20)){
+    const key=item.object.parentId||'__root__',parentName=byId.get(item.object.parentId)?.name||'Other scene states';
+    const group=grouped.get(key)||{key,parentName,options:[]};
+    group.options.push({id:item.object.id,name:item.object.name||'(unnamed)',spriteCount:item.spriteCount,activeInRoom:item.object.activeInRoom===true});
+    grouped.set(key,group);
+  }
+  const groups=[...grouped.values()].filter(group=>group.options.length>1&&(
+    /states?|variants?|phases?|conditions?|alternatives?|versions?/i.test(group.parentName)||
+    (group.options.every(option=>/\bworld\b/i.test(option.name))&&group.options.some(option=>/normal|black|thread|dream|memory|light|dark/i.test(option.name)))
+  ));
+  return{groups,candidates,searchable};
+}
+
+function renderRoomStateGroupFilters() {
+  const root=$('roomStateGroups');
+  root.innerHTML=state.roomStateGroups.length?state.roomStateGroups.map((group,index)=>{
+    const overridden=group.options.some(option=>state.roomStateOverrides.has(option.id));
+    const selected=group.options.find(option=>state.roomStateOverrides.get(option.id)==='show')?.id||'';
+    const options=`<label class="toggle"><input type="radio" name="room-state-group-${index}" data-room-state-group="${index}" value="" ${!overridden?'checked':''}><span>Use saved state</span></label>`+
+      group.options.map(option=>`<label class="toggle"><input type="radio" name="room-state-group-${index}" data-room-state-group="${index}" value="${esc(option.id)}" ${selected===option.id?'checked':''}><span>${esc(option.name)} <small>${option.spriteCount.toLocaleString()} renderers</small></span></label>`).join('');
+    return`<fieldset class="room-state-group"><legend>${esc(group.parentName)}</legend>${options}</fieldset>`;
+  }).join(''):'<span class="hint">No mutually named sibling state sets were found. Use the search below or show all serialized-inactive content.</span>';
+  root.querySelectorAll('[data-room-state-group]').forEach(input=>input.addEventListener('change',()=>{
+    if(!input.checked)return;
+    const group=state.roomStateGroups[Number(input.dataset.roomStateGroup)],selectedId=input.value||null;
+    for(const option of group.options){
+      if(!selectedId)state.roomStateOverrides.delete(option.id);
+      else state.roomStateOverrides.set(option.id,option.id===selectedId?'show':'hide');
+    }
+    renderRoomStateGroupFilters();renderRoomStateObjectFilters();updateRoomViewDisplay();draw();
+  }));
+}
+
+function renderRoomStateObjectFilters() {
+  const root=$('roomStateObjects'),query=$('roomStateSearch').value.trim().toLowerCase();
+  const groupedIds=new Set(state.roomStateGroups.flatMap(group=>group.options.map(option=>option.id)));
+  const all=state.roomStateCandidates.filter(item=>!groupedIds.has(item.object.id));
+  const matches=query?all.filter(item=>item.searchText.includes(query)).sort((a,b)=>
+    Number(b.likelyState)-Number(a.likelyState)||b.spriteCount-a.spriteCount||a.path.localeCompare(b.path,undefined,{numeric:true})):all;
+  const visible=matches.slice(0,query?80:24);
+  if(!visible.length){root.innerHTML=`<span class="hint">${query?'No room objects match that search.':'No separately named state objects were found.'}</span>`;return;}
+  root.innerHTML=visible.map(item=>{
+    const object=item.object,override=state.roomStateOverrides.get(object.id),savedVisible=object.active===true&&object.activeInRoom===true,checked=override?override==='show':savedVisible;
+    const status=savedVisible?'visible in saved state':'hidden in saved state';
+    return`<label class="room-state-object"><input type="checkbox" data-room-state-object="${esc(object.id)}" ${checked?'checked':''}><span>${esc(object.name||'(unnamed)')}<small>${status} · ${item.spriteCount.toLocaleString()} sprites or meshes below</small></span></label>`;
+  }).join('')+(matches.length>visible.length?`<span class="hint">Showing ${visible.length} of ${matches.length.toLocaleString()} matches; search to narrow the list.</span>`:'');
+  root.querySelectorAll('[data-room-state-object]').forEach(input=>input.addEventListener('change',()=>{
+    const id=input.dataset.roomStateObject,item=state.roomStateCandidates.find(candidate=>candidate.object.id===id),baseline=item?.object.active===true&&item?.object.activeInRoom===true;
+    const group=state.roomStateGroups.find(candidate=>candidate.options.some(option=>option.id===id));
+    if(group&&input.checked){for(const option of group.options)state.roomStateOverrides.set(option.id,option.id===id?'show':'hide');}
+    else if(input.checked===baseline)state.roomStateOverrides.delete(id);
+    else state.roomStateOverrides.set(id,input.checked?'show':'hide');
+    renderRoomStateGroupFilters();renderRoomStateObjectFilters();updateRoomViewDisplay();draw();
+  }));
 }
 
 function collectCameraSections(meta) {
@@ -215,7 +352,8 @@ function collectCameraSections(meta) {
 }
 function suggestedCameraSection(sections){
   if(!sections.length)return null;
-  const saved=sections.filter(section=>section.file),source=saved.length?saved:sections;
+  const source=sections.filter(section=>section.file);
+  if(!source.length)return null;
   const candidates=source.filter(section=>section.width>=12&&section.height>=5);
   const pool=candidates.length?candidates:source;
   return pool.slice().sort((a,b)=>{
@@ -244,6 +382,11 @@ function currentRoomViewBounds(meta=state.roomMeta){
 }
 function roomViewDimensions(meta=state.roomMeta){
   const image=meta?.image;if(!image)return '';
+  const dynamic=state.showAllInactiveArtwork||state.includeDisabledStateArtwork||state.roomStateOverrides.size>0;
+  if(dynamic&&state.roomViewKey==='whole'){
+    const bounds=conditionalArtworkBounds(meta,collectConditionalRoomArtwork(meta));
+    if(bounds)return `Auto-fit · ${(bounds.maxX-bounds.minX).toFixed(1)} × ${(bounds.maxY-bounds.minY).toFixed(1)} world units`;
+  }
   if(state.roomViewKey==='whole'||!state.cameraSections.some(section=>section.key===state.roomViewKey))return `${Number(image.width).toLocaleString()} × ${Number(image.height).toLocaleString()} px`;
   const section=state.cameraSections.find(item=>item.key===state.roomViewKey),ppu=Number(image.pixelsPerWorldUnit)||1;
   if(section?.file)return `${Number(section.imageWidth||state.roomViewImage?.naturalWidth||0).toLocaleString()} × ${Number(section.imageHeight||state.roomViewImage?.naturalHeight||0).toLocaleString()} px · ${Number(section.pixelsPerWorldUnit).toFixed(2)} px/unit`;
@@ -257,9 +400,10 @@ function roomViewDimensions(meta=state.roomMeta){
 }
 function updateRoomViewDisplay(){
   const section=state.cameraSections.find(item=>item.key===state.roomViewKey);
+  const conditional=state.showAllInactiveArtwork||state.includeDisabledStateArtwork||state.roomStateOverrides.size>0;
   $('imageDimensions').textContent=roomViewDimensions();
-  $('viewFoot').textContent=section?`${section.name.toUpperCase()} · CAMERA-LOCK ROOM SECTION · CLEAN GAME ART`:'WHOLE ROOM SCENE · CLEAN GAME ART';
-  $('roomViewHint').textContent=section?section.file?`${section.resolutionLimited?'High-density camera render, capped for browser-safe dimensions':'Native-density camera render'} · ${section.width.toFixed(1)} × ${section.height.toFixed(1)} world units. Other room sections remain available in the menu.`:`Showing the ${section.width.toFixed(1)} × ${section.height.toFixed(1)} world-unit camera area from the whole-room composite.`:`Showing the complete prepared scene across all camera areas.`;
+  $('viewFoot').textContent=conditional?'ROOM STATE REBUILT FROM GAME BUNDLE ART':section?`${section.name.toUpperCase()} · CAMERA-LOCK ROOM SECTION · CLEAN GAME ART`:'WHOLE ROOM SCENE · CLEAN GAME ART';
+  $('roomViewHint').textContent=conditional?`Rebuilt from serialized room sprites and meshes. Whole-scene view includes all revealed art; a selected camera view remains clipped to that camera’s bounds. Atlas textures load only while this view is active.`:section?section.file?`${section.resolutionLimited?'High-density camera render, capped for browser-safe dimensions':'Native-density camera render'} · ${section.width.toFixed(1)} × ${section.height.toFixed(1)} world units. Other room sections remain available in the menu.`:`Showing the ${section.width.toFixed(1)} × ${section.height.toFixed(1)} world-unit camera area from the whole-room composite.`:`Showing the complete prepared scene across all camera areas.`;
 }
 function currentRoomImage(){const section=state.cameraSections.find(item=>item.key===state.roomViewKey);return section?.file&&state.roomViewImage?.naturalWidth?state.roomViewImage:state.roomImage;}
 function roomFrame(width,height,image=currentRoomImage(),meta=state.roomMeta){
@@ -432,9 +576,13 @@ function drawGameMapSection(area,transform){
 }
 function drawFallbackNotice(width,height,text){ctx.fillStyle='#aab09f';ctx.font='11px Consolas,monospace';ctx.textAlign='center';ctx.fillText(text,width/2,height/2);}
 function drawRoom(width,height){
-  const image=currentRoomImage(),meta=state.roomMeta;if(!image||!meta?.image)return;
-  const frame=roomFrame(width,height,image,meta);if(!frame)return;
-  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(image,frame.sourceX,frame.sourceY,frame.sourceWidth,frame.sourceHeight,frame.x,frame.y,frame.drawWidth,frame.drawHeight);
+  const image=currentRoomImage(),meta=state.roomMeta;if(!meta?.image)return;
+  const dynamic=state.showAllInactiveArtwork||state.includeDisabledStateArtwork||state.roomStateOverrides.size>0;
+  const renderables=dynamic?collectConditionalRoomArtwork(meta):null;
+  const frame=dynamic?conditionalRoomFrame(width,height,meta,renderables):roomFrame(width,height,image,meta);if(!frame)return;
+  if(dynamic)drawConditionalRoomArtwork(meta,frame,renderables);
+  else if(image){ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(image,frame.sourceX,frame.sourceY,frame.sourceWidth,frame.sourceHeight,frame.x,frame.y,frame.drawWidth,frame.drawHeight);}
+  else drawFallbackNotice(width,height,'The saved room image is unavailable.');
   const visible=[];
   for(const object of meta.objects||[]){const point=object.worldPosition;if(!point)continue;const classification=object.classification||{};
     if(classification.enemy&&$('toggleEnemies').checked)visible.push({object,point,color:'#e69b35',kind:'E'});
@@ -444,6 +592,160 @@ function drawRoom(width,height){
   for(const item of visible){const point=frame.worldPoint(item.point.x,item.point.y),px=point.x,py=point.y;if(px<frame.x||px>frame.x+frame.drawWidth||py<frame.y||py>frame.y+frame.drawHeight)continue;ctx.save();ctx.fillStyle=item.color;ctx.strokeStyle='#0b0d0b';ctx.lineWidth=2;ctx.beginPath();ctx.arc(px,py,5,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#0b0d0b';ctx.font='bold 6px Consolas,monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(item.kind,px,py+.2);ctx.restore();}
   drawArchitect(width,height,frame,meta);
 }
+
+function conditionalRoomFrame(width,height,meta,renderables){
+  const section=state.cameraSections.find(item=>item.key===state.roomViewKey),view=section?.bounds||conditionalArtworkBounds(meta,renderables);
+  if(!view)return null;
+  const spanX=Math.max(.001,view.maxX-view.minX),spanY=Math.max(.001,view.maxY-view.minY);
+  const ppu=Math.max(1,Number(section?.pixelsPerWorldUnit)||Number(meta?.image?.pixelsPerWorldUnit)||1);
+  const scale=Math.min((width-30)/(spanX*ppu),(height-30)/(spanY*ppu));
+  const drawWidth=spanX*ppu*scale,drawHeight=spanY*ppu*scale,x=(width-drawWidth)/2,y=(height-drawHeight)/2;
+  return{view,x,y,drawWidth,drawHeight,scale,sourcePpuX:ppu,sourcePpuY:ppu,dedicated:Boolean(section),
+    worldPoint:(worldX,worldY)=>({x:x+(worldX-view.minX)*ppu*scale,y:y+(view.maxY-worldY)*ppu*scale})};
+}
+
+function conditionalObjectVisibility(object,byId,cache){
+  if(cache.has(object.id))return cache.get(object.id);
+  const chain=[],seen=new Set();let current=object;
+  while(current&&!seen.has(current.id)){seen.add(current.id);chain.push(current);current=byId.get(current.parentId);}
+  let visible=true,forcedState=null;
+  for(const item of chain.reverse()){
+    const override=state.roomStateOverrides.get(item.id);
+    if(override){forcedState=override;visible=override==='show';continue;}
+    if(forcedState==='show'){visible=true;continue;}
+    if(forcedState==='hide'){visible=false;continue;}
+    const inactive=item.activeInRoom===false||item.active===false;
+    if(inactive&&state.showAllInactiveArtwork){forcedState='show';visible=true;continue;}
+    if(inactive)visible=false;
+  }
+  cache.set(object.id,visible);return visible;
+}
+
+function roomShaderEffect(object,artwork){
+  const name=`${object.name||''} ${artwork.name||''} ${artwork.materialName||''}`.toLowerCase();
+  return['black_solid','white_fader','black_fader','vignette','darkness','mask_beam','soft_masker','remasker',
+    'light_effect','white_light','light_beam','water_fog'].some(term=>name.includes(term))||/\b(light|fog|haze|glow)\b/.test(name);
+}
+function roomCanvasBlend(mode){return mode==='additive'?'lighter':mode==='multiply'?'multiply':'source-over';}
+
+function collectConditionalRoomArtwork(meta){
+  const objects=meta.objects||[],byId=new Map(objects.map(object=>[object.id,object])),visibleCache=new Map(),renderables=[];
+  for(let objectIndex=0;objectIndex<objects.length;objectIndex++){
+    const object=objects[objectIndex];
+    if(!conditionalObjectVisibility(object,byId,visibleCache))continue;
+    if(object.sortingGroup?.enabled&&object.sortingGroup.sortingLayerKnown===false)continue;
+    for(let rendererIndex=0;rendererIndex<(object.sprites||[]).length;rendererIndex++){
+      const sprite=object.sprites[rendererIndex];
+      if(!/^[a-f0-9]{64}$/i.test(sprite.textureSha256||'')||!sprite.rectWidth||!sprite.rectHeight||sprite.sortingLayerKnown===false||
+        sprite.blendMode==='destination'||roomShaderEffect(object,sprite)||
+        (sprite.rendererEnabled===false&&!state.includeDisabledStateArtwork))continue;
+      renderables.push({object,artwork:sprite,type:'sprite',objectIndex,rendererIndex});
+    }
+    for(let rendererIndex=0;rendererIndex<(object.meshes||[]).length;rendererIndex++){
+      const mesh=object.meshes[rendererIndex];
+      if(!/^[a-f0-9]{64}$/i.test(mesh.textureSha256||'')||mesh.sortingLayerKnown===false||mesh.blendMode==='destination'||
+        roomShaderEffect(object,mesh)||(mesh.rendererEnabled===false&&!state.includeDisabledStateArtwork))continue;
+      renderables.push({object,artwork:mesh,type:'mesh',objectIndex,rendererIndex});
+    }
+  }
+  return{renderables,meshAssets:new Map((meta.meshAssets||[]).map(asset=>[asset.id,asset]))};
+}
+
+function conditionalArtworkBounds(meta,scene){
+  const base=meta?.image?.bounds;if(!base)return null;
+  const bounds={minX:Infinity,minY:Infinity,maxX:-Infinity,maxY:-Infinity};
+  const include=(x,y)=>{if(Number.isFinite(x)&&Number.isFinite(y)){bounds.minX=Math.min(bounds.minX,x);bounds.maxX=Math.max(bounds.maxX,x);bounds.minY=Math.min(bounds.minY,y);bounds.maxY=Math.max(bounds.maxY,y);}};
+  const renderables=scene?.renderables||[];
+  for(const item of renderables){
+    const point=item.object.worldPosition||{x:0,y:0},artwork=item.artwork;
+    if(item.type==='sprite'){
+      const geometry=spriteGeometry(artwork),m00=Number.isFinite(artwork.worldM00)?artwork.worldM00:1,m01=Number.isFinite(artwork.worldM01)?artwork.worldM01:0;
+      const m10=Number.isFinite(artwork.worldM10)?artwork.worldM10:0,m11=Number.isFinite(artwork.worldM11)?artwork.worldM11:1;
+      for(const [x,y] of [[geometry.left,geometry.bottom],[geometry.left,geometry.bottom+geometry.height],[geometry.left+geometry.width,geometry.bottom],[geometry.left+geometry.width,geometry.bottom+geometry.height]])
+        include(point.x+m00*x+m01*y,point.y+m10*x+m11*y);
+    }else{
+      const asset=scene.meshAssets.get(artwork.meshAssetId),matrix={m00:artwork.worldM00??1,m01:artwork.worldM01??0,m10:artwork.worldM10??0,m11:artwork.worldM11??1};
+      for(const vertex of asset?.vertices||[])include(point.x+matrix.m00*vertex.x+matrix.m01*vertex.y,point.y+matrix.m10*vertex.x+matrix.m11*vertex.y);
+    }
+  }
+  if(!Number.isFinite(bounds.minX)||!Number.isFinite(bounds.minY)||!Number.isFinite(bounds.maxX)||!Number.isFinite(bounds.maxY))return base;
+  return bounds;
+}
+
+function drawConditionalRoomArtwork(meta,frame,scene){
+  const {renderables,meshAssets}=scene;
+  const unitsById=new Map();
+  for(const renderable of renderables){
+    const group=renderable.object.sortingGroup?.enabled?renderable.object.sortingGroup:null;
+    const unitId=group?`group:${group.objectId||renderable.object.parentId||renderable.object.id}`:`single:${renderable.objectIndex}:${renderable.type}:${renderable.rendererIndex}`;
+    let unit=unitsById.get(unitId);
+    if(!unit){unit={group,items:[],layer:Number(group?.sortingLayerValue??renderable.artwork.sortingLayerValue)||0,
+      order:Number(group?.sortingOrder??renderable.artwork.sortingOrder)||0,z:Number(group?.worldPosition?.z??renderable.object.worldPosition?.z)||0,stableIndex:renderable.objectIndex};unitsById.set(unitId,unit);}
+    unit.items.push(renderable);
+  }
+  const itemOrder=(a,b)=>(Number(a.artwork.sortingLayerValue)||0)-(Number(b.artwork.sortingLayerValue)||0)||
+    (Number(a.artwork.sortingOrder)||0)-(Number(b.artwork.sortingOrder)||0)||a.objectIndex-b.objectIndex||a.rendererIndex-b.rendererIndex;
+  const units=[...unitsById.values()].sort((a,b)=>a.layer-b.layer||a.order-b.order||b.z-a.z||a.stableIndex-b.stableIndex);
+  for(const unit of units)for(const item of unit.items.sort(itemOrder)){
+    if(item.type==='sprite')drawConditionalSprite(item.object,item.artwork,frame);
+    else drawConditionalMesh(item.object,item.artwork,meshAssets,frame);
+  }
+}
+
+function drawConditionalSprite(object,sprite,frame){
+  const image=mapSpriteImage(sprite.textureSha256);if(!image.complete||!image.naturalWidth)return;
+  const ppu=Math.max(1,Number(sprite.pixelsPerUnit)||100),rotated=Number(sprite.packingRotation)===4;
+  const width=(rotated?sprite.rectHeight:sprite.rectWidth)/ppu,height=(rotated?sprite.rectWidth:sprite.rectHeight)/ppu;
+  const originalWidth=(sprite.originalWidth||sprite.rectWidth)/ppu,originalHeight=(sprite.originalHeight||sprite.rectHeight)/ppu;
+  const left=(sprite.trimOffsetX||0)/ppu-(Number(sprite.pivotX??.5)*originalWidth),bottom=(sprite.trimOffsetY||0)/ppu-(Number(sprite.pivotY??.5)*originalHeight);
+  const point=object.worldPosition||{x:0,y:0},position=frame.worldPoint(point.x,point.y);
+  const m00=Number.isFinite(sprite.worldM00)?sprite.worldM00:1,m01=Number.isFinite(sprite.worldM01)?sprite.worldM01:0;
+  const m10=Number.isFinite(sprite.worldM10)?sprite.worldM10:0,m11=Number.isFinite(sprite.worldM11)?sprite.worldM11:1;
+  const scaleX=frame.sourcePpuX*frame.scale,scaleY=frame.sourcePpuY*frame.scale;
+  const tintR=Math.max(0,Math.min(1,Number(sprite.tintR??1)*Number(sprite.materialTintR??1)));
+  const tintG=Math.max(0,Math.min(1,Number(sprite.tintG??1)*Number(sprite.materialTintG??1)));
+  const tintB=Math.max(0,Math.min(1,Number(sprite.tintB??1)*Number(sprite.materialTintB??1)));
+  const tintA=Math.max(0,Math.min(1,(Number(sprite.tintA??1))*(Number(sprite.materialTintA??1))));
+  ctx.save();ctx.globalAlpha=tintA;ctx.globalCompositeOperation=roomCanvasBlend(sprite.blendMode);
+  ctx.filter=`brightness(${(tintR+tintG+tintB)/3})`;ctx.translate(position.x,position.y);
+  ctx.transform(m00*scaleX,-m10*scaleY,m01*scaleX,-m11*scaleY,0,0);
+  ctx.scale(sprite.flipX?-1:1,sprite.flipY?-1:1);ctx.translate(left+width/2,bottom+height/2);
+  const vertices=sprite.meshVertices||[],indices=sprite.meshIndices||[];
+  if(vertices.length>=3&&indices.length>=3){ctx.beginPath();for(let i=0;i+2<indices.length;i+=3){
+    const a=vertices[indices[i]],b=vertices[indices[i+1]],c=vertices[indices[i+2]];if(!a||!b||!c)continue;
+    const px=v=>v.x-(left+width/2),py=v=>v.y-(bottom+height/2);ctx.moveTo(px(a),py(a));ctx.lineTo(px(b),py(b));ctx.lineTo(px(c),py(c));ctx.closePath();}ctx.clip();}
+  ctx.scale(1,-1);if(Number(sprite.packingRotation)===1)ctx.scale(-1,1);else if(Number(sprite.packingRotation)===2)ctx.scale(1,-1);
+  else if(Number(sprite.packingRotation)===3)ctx.rotate(Math.PI);else if(rotated)ctx.rotate(-Math.PI/2);
+  const sourceWidth=rotated?height:width,sourceHeight=rotated?width:height,sourceY=Number(sprite.textureHeight)-Number(sprite.rectY)-Number(sprite.rectHeight);
+  ctx.drawImage(image,Number(sprite.rectX),sourceY,Number(sprite.rectWidth),Number(sprite.rectHeight),-sourceWidth/2,-sourceHeight/2,sourceWidth,sourceHeight);
+  ctx.restore();
+}
+
+function drawConditionalMesh(object,mesh,meshAssets,frame){
+  const asset=meshAssets.get(mesh.meshAssetId),submesh=asset?.submeshes?.[mesh.submeshIndex];
+  const image=mapSpriteImage(mesh.textureSha256);if(!asset||!submesh||submesh.topology!==0||!image.complete||!image.naturalWidth)return;
+  const vertices=asset.vertices||[],indices=submesh.indices||[],point=object.worldPosition||{x:0,y:0};
+  const matrix={m00:mesh.worldM00??1,m01:mesh.worldM01??0,m10:mesh.worldM10??0,m11:mesh.worldM11??1};
+  const textureWidth=mesh.textureWidth||image.naturalWidth,textureHeight=mesh.textureHeight||image.naturalHeight,transformed=new Array(vertices.length);
+  const vertexAt=index=>{const vertex=vertices[index];if(!vertex)return null;if(!transformed[index]){
+    const worldX=point.x+matrix.m00*vertex.x+matrix.m01*vertex.y,worldY=point.y+matrix.m10*vertex.x+matrix.m11*vertex.y,screen=frame.worldPoint(worldX,worldY);
+    transformed[index]={x:screen.x,y:screen.y,u:(vertex.u*mesh.textureScaleX+mesh.textureOffsetX)*textureWidth,
+      v:textureHeight-(vertex.v*mesh.textureScaleY+mesh.textureOffsetY)*textureHeight,r:vertex.r??1,g:vertex.g??1,b:vertex.b??1,a:vertex.a??1};}
+    return transformed[index];};
+  for(let i=0;i+2<indices.length;i+=3){
+    const a=vertexAt(indices[i]),b=vertexAt(indices[i+1]),c=vertexAt(indices[i+2]);if(!a||!b||!c)continue;
+    const determinant=(b.u-a.u)*(c.v-a.v)-(c.u-a.u)*(b.v-a.v),screenArea=(b.x-a.x)*(c.y-a.y)-(c.x-a.x)*(b.y-a.y);
+    if(Math.abs(determinant)<1e-6||Math.abs(screenArea)<1e-6)continue;
+    const sx1=b.u-a.u,sy1=b.v-a.v,sx2=c.u-a.u,sy2=c.v-a.v,dx1=b.x-a.x,dy1=b.y-a.y,dx2=c.x-a.x,dy2=c.y-a.y;
+    const aa=(dx1*sy2-dx2*sy1)/determinant,cc=(sx1*dx2-sx2*dx1)/determinant,bb=(dy1*sy2-dy2*sy1)/determinant,dd=(sx1*dy2-sx2*dy1)/determinant;
+    const ee=a.x-aa*a.u-cc*a.v,ff=a.y-bb*a.u-dd*a.v,tintR=mesh.tintR??1,tintG=mesh.tintG??1,tintB=mesh.tintB??1;
+    const brightness=Math.max(0,Math.min(2,((a.r+b.r+c.r)/3*tintR+(a.g+b.g+c.g)/3*tintG+(a.b+b.b+c.b)/3*tintB)/3));
+    ctx.save();ctx.globalCompositeOperation=roomCanvasBlend(mesh.blendMode);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(c.x,c.y);ctx.closePath();ctx.clip();
+    ctx.globalAlpha=Math.max(0,Math.min(1,(mesh.tintA??1)*(a.a+b.a+c.a)/3));ctx.filter=`brightness(${brightness})`;ctx.transform(aa,bb,cc,dd,ee,ff);
+    ctx.drawImage(image,0,0,textureWidth,textureHeight);ctx.restore();
+  }
+}
+
 function drawArchitect(width,height,frame,meta){
   const architect=meta.architect;if(!architect)return;
   if($('toggleGauntlets').checked){
@@ -473,7 +775,7 @@ function selectWorldAt(point){const area=worldAreaAt(point);if(area)showArea(are
 function selectRoomAt(point){const bounds=state.area?.detailBounds||state.area?.wideBounds,t=fitTransform(bounds,...Object.values(canvasSize()),34),world=worldAt(point,t);const matches=(state.area?.rooms||[]).map(room=>{const b=room.bounds;const inside=world.x>=b.minX&&world.x<=b.maxX&&world.y>=b.minY&&world.y<=b.maxY;return{room,inside,distance:Math.hypot(room.center.x-world.x,room.center.y-world.y)*t.scale};}).filter(item=>findRoom(item.room.name)&&(item.inside||item.distance<13)).sort((a,b)=>(a.inside===b.inside?a.distance-b.distance:a.inside?-1:1));if(matches[0])openRoom(matches[0].room.name);}
 canvas.addEventListener('pointermove',event=>{if(state.mode!=='world'&&state.mode!=='all-rooms')return;const rect=canvas.getBoundingClientRect(),area=worldAreaAt({x:event.clientX-rect.left,y:event.clientY-rect.top}),key=area?.key||null;if(key!==state.hoverAreaKey){state.hoverAreaKey=key;canvas.style.cursor=key?'pointer':'default';draw();}});
 canvas.addEventListener('pointerleave',()=>{if(state.hoverAreaKey){state.hoverAreaKey=null;canvas.style.cursor='default';draw();}});
-canvas.addEventListener('click',event=>{const rect=canvas.getBoundingClientRect(),point={x:event.clientX-rect.left,y:event.clientY-rect.top};if(state.mode==='world'||state.mode==='all-rooms')selectWorldAt(point);else if(state.mode==='area')selectRoomAt(point);else if($('toggleGauntlets').checked){const image=currentRoomImage(),meta=state.roomMeta;if(!image||!meta)return;const{width,height}=canvasSize(),frame=roomFrame(width,height,image,meta);if(!frame)return;let best=null;for(const [i,marker] of (meta.architect?.markers||[]).entries()){if(!marker.worldPosition)continue;const screen=frame.worldPoint(marker.worldPosition.x,marker.worldPosition.y),d=Math.hypot(point.x-screen.x,point.y-screen.y);if(screen.x<frame.x||screen.x>frame.x+frame.drawWidth||screen.y<frame.y||screen.y>frame.y+frame.drawHeight)continue;if(d<15&&(!best||d<best.d))best={i,d};}if(best)selectGauntlet(best.i);}});
+canvas.addEventListener('click',event=>{const rect=canvas.getBoundingClientRect(),point={x:event.clientX-rect.left,y:event.clientY-rect.top};if(state.mode==='world'||state.mode==='all-rooms')selectWorldAt(point);else if(state.mode==='area')selectRoomAt(point);else if($('toggleGauntlets').checked){const image=currentRoomImage(),meta=state.roomMeta;if(!meta)return;const{width,height}=canvasSize(),dynamic=state.showAllInactiveArtwork||state.includeDisabledStateArtwork||state.roomStateOverrides.size>0,scene=dynamic?collectConditionalRoomArtwork(meta):null,frame=dynamic?conditionalRoomFrame(width,height,meta,scene):roomFrame(width,height,image,meta);if(!frame)return;let best=null;for(const [i,marker] of (meta.architect?.markers||[]).entries()){if(!marker.worldPosition)continue;const screen=frame.worldPoint(marker.worldPosition.x,marker.worldPosition.y),d=Math.hypot(point.x-screen.x,point.y-screen.y);if(screen.x<frame.x||screen.x>frame.x+frame.drawWidth||screen.y<frame.y||screen.y>frame.y+frame.drawHeight)continue;if(d<15&&(!best||d<best.d))best={i,d};}if(best)selectGauntlet(best.i);}});
 
 function exportJson(value,name){const blob=new Blob([JSON.stringify(value,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 async function exportCleanPng() {
@@ -519,6 +821,11 @@ async function exportCleanPng() {
   } finally {button.disabled=false;button.textContent=originalText;}
 }
 $('search').addEventListener('input',renderNavigation);$('worldButton').addEventListener('click',()=>state.mode==='room'&&!state.area?showAllRooms():showWorld());$('areaButton').addEventListener('click',()=>state.area?showArea(state.area.key):showAllRooms());$('allRoomsButton').addEventListener('click',showAllRooms);$('closeRoomButton').addEventListener('click',()=>state.area?showArea(state.area.key):showAllRooms());
+$('toggleNavigatorButton').addEventListener('click',()=>togglePanel('navigator'));$('toggleInspectorButton').addEventListener('click',()=>togglePanel('inspector'));
+$('closeNavigatorButton').addEventListener('click',()=>closePanel('navigator'));$('closeInspectorButton').addEventListener('click',()=>closePanel('inspector'));
+$('fullscreenButton').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{}});
+document.addEventListener('fullscreenchange',()=>{$('fullscreenButton').setAttribute('aria-pressed',String(Boolean(document.fullscreenElement)));$('fullscreenButton').title=document.fullscreenElement?'Exit fullscreen':'Toggle fullscreen';});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'){closePanel('navigator');closePanel('inspector');}});
 $('fitButton').addEventListener('click',draw);$('refreshButton').addEventListener('click',loadDataset);
 $('toggleMapBackdrop').addEventListener('click',()=>{state.mapBackdropVisible=!state.mapBackdropVisible;state.mapBackdropAuto=false;$('toggleMapBackdrop').textContent=state.mapBackdropVisible?'Hide full map':'Show full map';$('toggleMapBackdrop').setAttribute('aria-pressed',String(state.mapBackdropVisible));draw();});
 $('exportPngButton').addEventListener('click',exportCleanPng);

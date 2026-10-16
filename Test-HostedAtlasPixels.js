@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 const crypto = require('node:crypto');
+const zlib = require('node:zlib');
 const { spawnSync } = require('node:child_process');
 
 const sceneViewerRoot = __dirname;
@@ -63,6 +64,12 @@ function runWebpSample(name, sourcePath, hostedPath) {
 }
 
 const results = [];
+const hostedManifest = JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(hostedRoot, 'manifest.json.gz'))).toString('utf8'));
+const cameraImageFiles = fs.readdirSync(path.join(hostedRoot, 'images')).filter(name => /-camera-\d+\.(?:webp|png)$/i.test(name));
+if (hostedManifest.cameraViewImagesIncluded === false) {
+  if (cameraImageFiles.length || hostedManifest.cameraViewImageCount !== 0) throw new Error('The package says camera-view images are excluded, but camera images are present or still referenced.');
+  results.push({ sample: 'camera-section image policy', separateImages: 0, retainedRoomAreas: hostedManifest.cameraSectionSummary?.viewCount || 0 });
+}
 results.push(runWebpSample('bone_01 room',
   path.join(preprocessedRoot, 'images', 'bone_01.png'),
   path.join(hostedRoot, 'images', 'bone_01.webp')));

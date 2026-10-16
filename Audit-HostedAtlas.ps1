@@ -61,6 +61,9 @@ $roomImageCount = 0
 $cameraViewCount = 0
 $cameraRoomCount = 0
 $cappedCameraViewCount = 0
+$cameraViewImageCount = 0
+$cameraViewImagesIncluded = $true
+if ($null -ne $manifest.cameraViewImagesIncluded) { $cameraViewImagesIncluded = [bool]$manifest.cameraViewImagesIncluded }
 $cameraFallbackRooms = @($manifest.rooms | Where-Object { $_.cameraViewFallback -eq 'full-scene-image-no-authored-camera-bounds' })
 foreach ($room in $manifest.rooms) {
     $metadataPath = Join-Path $dataRoot ($room.metadata + '.gz')
@@ -81,9 +84,14 @@ foreach ($room in $manifest.rooms) {
     foreach ($view in $roomCameraViews) {
         $cameraViewCount++
         if ($view.resolutionLimited) { $cappedCameraViewCount++ }
-        $cameraPath = Join-Path $dataRoot ([string]$view.file)
-        if (-not $view.file -or -not (Test-Path -LiteralPath $cameraPath) -or (Get-Item -LiteralPath $cameraPath).Length -eq 0) {
-            $missingImages.Add([string]$view.file)
+        if ($view.file) {
+            $cameraViewImageCount++
+            $cameraPath = Join-Path $dataRoot ([string]$view.file)
+            if (-not (Test-Path -LiteralPath $cameraPath) -or (Get-Item -LiteralPath $cameraPath).Length -eq 0) {
+                $missingImages.Add([string]$view.file)
+            }
+        } elseif ($cameraViewImagesIncluded) {
+            $issues.Add("Camera image reference is missing for $($room.name).")
         }
         if ([double]$view.pixelsPerWorldUnit -le 0 -or [int]$view.width -le 0 -or [int]$view.height -le 0 -or -not $view.bounds) {
             $issues.Add("Invalid native-density camera view metadata for $($room.name).")
@@ -123,6 +131,7 @@ $roomPngCount = @(Get-ChildItem -LiteralPath (Join-Path $dataRoot 'images') -Fil
 $roomWebpCount = @(Get-ChildItem -LiteralPath (Join-Path $dataRoot 'images') -Filter '*.webp' -File).Count
 $mapWebpCount = @(Get-ChildItem -LiteralPath (Join-Path $dataRoot 'maps') -Filter '*.webp' -File).Count
 $atlasWebpCount = @(Get-ChildItem -LiteralPath (Join-Path $dataRoot 'artwork') -Filter '*.webp' -File).Count
+$unreferencedCameraImages = @(Get-ChildItem -LiteralPath (Join-Path $dataRoot 'images') -File | Where-Object { $_.BaseName -match '-camera-\d+$' })
 $indexedImageCount = @($assetIndex.images).Count
 $packageFiles = @(Get-ChildItem -LiteralPath $dataRoot -Recurse -File)
 $actualImageFileCount = @(Get-ChildItem -LiteralPath $dataRoot -Recurse -File | Where-Object { $_.Extension -in @('.png', '.webp') }).Count
@@ -157,6 +166,9 @@ if ($missingImages.Count) { $issues.Add("Missing image references: $($missingIma
 if ($missingSidecars.Count) { $issues.Add("Missing room sidecars: $($missingSidecars.Count).") }
 if ($missingIndexedAssets.Count) { $issues.Add("Missing indexed assets: $($missingIndexedAssets.Count).") }
 if ($badGzipFiles.Count) { $issues.Add("Invalid gzip files: $($badGzipFiles.Count).") }
+if ($manifest.cameraViewImageCount -ne $cameraViewImageCount) { $issues.Add('Camera-view image count does not match the package references.') }
+if (-not $cameraViewImagesIncluded -and $unreferencedCameraImages.Count) { $issues.Add('Camera-section images were excluded, but camera image files remain in the package.') }
+if ($unreferencedCameraImages.Count -ne $cameraViewImageCount) { $issues.Add('Camera-section image files do not match the manifest references.') }
 if ($nativeFiles.Count) { $issues.Add("Native retry or partial files entered the package: $($nativeFiles.Count).") }
 if ($nonLosslessWebpFiles.Count) { $issues.Add("WebP files without a lossless VP8L image chunk: $($nonLosslessWebpFiles.Count).") }
 if ($nonMatchingPngCopies.Count) { $issues.Add("Oversized PNG fallbacks differ from their source renders: $($nonMatchingPngCopies.Count).") }
@@ -175,6 +187,8 @@ $report = [pscustomobject]@{
     roomPreviews = $roomPreviewCount
     cameraViewRooms = $cameraRoomCount
     cameraViews = $cameraViewCount
+    cameraViewImagesIncluded = $cameraViewImagesIncluded
+    cameraViewImageFiles = $cameraViewImageCount
     cappedCameraViews = $cappedCameraViewCount
     fullSceneFallbackRooms = $cameraFallbackRooms.Count
     roomWebp = $roomWebpCount
