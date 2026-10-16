@@ -26,28 +26,30 @@ Open <http://127.0.0.1:5181/>. The server reads the already-prepared package and
 
 ## Hosting layout
 
-For a no-storage-bill setup, put the small viewer shell on Cloudflare Pages and the pre-rendered files in GitHub Releases. `Upload-HostedAtlas-GitHub.ps1` hashes each relative filename, spreads the objects across releases capped at 900 files each, and writes `site/release-assets.json`. The Pages Function proxies only the selected room, map, and metadata requests from those public releases. The viewer does not load every image at startup. GitHub permits up to 1,000 assets per release, requires each asset to be under 2 GiB, and documents no total release-size or bandwidth cap. The script enforces the per-file limit and stays below the per-release count. Cloudflare Pages Free permits 100,000 function requests per day; its static asset requests are free and unlimited. See the current [GitHub Releases limits](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) and [Cloudflare Pages Functions pricing](https://developers.cloudflare.com/pages/functions/pricing/).
+Use Cloudflare Pages for the viewer and GitHub Releases for its pre-rendered files. Upload-HostedAtlas-GitHub.ps1 hashes each relative filename, splits the package into releases of at most 900 assets, and writes site/release-assets.json. The Pages Function proxies only requested room, map, and metadata files, so the viewer does not download every image at startup. The uploader checks the current GitHub per-release asset-count and per-file-size limits before publishing.
 
-To publish after the audit passes, create a public GitHub repository for the viewer source and use GitHub CLI from `D:\SSrip\SceneViewer`:
+The source repository is [memeem27/silksong-room-atlas](https://github.com/memeem27/silksong-room-atlas). After the audited release upload finishes, commit and push the generated mapping file:
 
-```powershell
-gh auth login
-git init
-git add .
-git commit -m "Prepare Silksong room atlas"
-gh repo create YOURNAME/silksong-room-atlas --public --source . --remote origin --push
-.\Upload-HostedAtlas-GitHub.ps1 -Repository YOURNAME/silksong-room-atlas
-git add .\HostedAtlas\site\release-assets.json
-git commit -m "Add hosted atlas release map"
-git push
-npx wrangler login
-npx wrangler pages project create silksong-room-atlas --production-branch main
-cd .\HostedAtlas\site
-npx wrangler pages deploy . --project-name silksong-room-atlas --config .\wrangler.github.toml
-```
+    git add HostedAtlas/site/release-assets.json
+    git commit -m "Add hosted atlas release map"
+    git push
 
-`r2-data/` and generated worker files are excluded from Git, while `site/release-assets.json` is meant to be committed after upload. This project also includes an R2 option: `Upload-HostedAtlas.ps1` uploads the same files to the bucket named in `site/wrangler.toml`. R2 includes 10 GB-month of Standard storage and charges $0.015 per GB-month above that, with free internet egress. Use `site/wrangler.toml` for R2 or `site/wrangler.github.toml` for the GitHub Releases proxy. See [R2 pricing](https://developers.cloudflare.com/r2/pricing/) for current terms.
+Create the viewer on Cloudflare Pages using **Git integration** so pushes to main deploy automatically. In the Cloudflare dashboard, open **Workers & Pages → Create application → Pages → Connect to Git**, choose memeem27/silksong-room-atlas, and use these settings:
 
+| Setting | Value |
+| --- | --- |
+| Project name | silksong-room-atlas |
+| Production branch | main |
+| Framework preset | None |
+| Root directory | HostedAtlas/site |
+| Build command | Leave blank |
+| Build output directory | . |
+
+The Pages Function lives in HostedAtlas/site/functions, so keep that folder at the Pages project root. Do not create a Direct Upload Pages project for this repository: Cloudflare does not let a Direct Upload project switch to Git integration later. If Cloudflare asks to install its GitHub app, limit the installation to this repository when that option is available.
+
+r2-data/ and generated worker files are excluded from Git, while site/release-assets.json is committed after upload. This project also includes an R2 option: Upload-HostedAtlas.ps1 uploads the same files to the bucket named in site/wrangler.toml. Use site/wrangler.toml for R2 or site/wrangler.github.toml for the GitHub Releases proxy. See [R2 pricing](https://developers.cloudflare.com/r2/pricing/) for current terms.
+
+The game files used to generate this package are local source data and are not redistributed by these hosting instructions. Confirm that any public release follows the applicable game asset permissions.
 ## Rebuilding and checks
 
 To rebuild the data package from the preprocessed workspace and cached game artwork, run:
