@@ -3,7 +3,8 @@ param(
     [string]$DataDirectory = (Join-Path $PSScriptRoot 'HostedAtlas\r2-data'),
     [string]$ReleasePrefix = 'silksong-atlas-data',
     [ValidateRange(1, 1000)][int]$AssetsPerRelease = 900,
-    [ValidateRange(1, 100)][int]$UploadBatchSize = 25
+    [ValidateRange(1, 100)][int]$UploadBatchSize = 25,
+    [switch]$Resume
 )
 
 $ErrorActionPreference = 'Stop'
@@ -32,29 +33,32 @@ if (-not $files.Count) { throw 'The R2 data package is empty.' }
 $maxReleaseAssetBytes = [int64]2GB
 $assetMap = [ordered]@{}
 $groups = [Collections.Generic.List[object]]::new()
-$hash = [Security.Cryptography.SHA256]::Create()
-try {
-    for ($index = 0; $index -lt $files.Count; $index++) {
-        $file = $files[$index]
-        if ($file.Length -ge $maxReleaseAssetBytes) { throw "GitHub Releases requires files under 2 GiB; '$($file.Name)' is $($file.Length) bytes." }
-        $relative = $file.FullName.Substring($dataRoot.Length + 1).Replace('\', '/')
-        $hashHex = [BitConverter]::ToString($hash.ComputeHash([Text.Encoding]::UTF8.GetBytes($relative))).Replace('-', '').ToLowerInvariant()
-        $assetName = $hashHex + $file.Extension.ToLowerInvariant()
-        $groupIndex = [int][Math]::Floor($index / $AssetsPerRelease)
-        $tag = '{0}-{1:D3}' -f $ReleasePrefix, ($groupIndex + 1)
-        if ($groupIndex -ge $groups.Count) {
-            $groups.Add([pscustomobject]@{ Tag = $tag; Assets = [Collections.Generic.List[object]]::new() })
-        }
-        $groups[$groupIndex].Assets.Add([pscustomobject]@{ Path = $relative; FullName = $file.FullName; AssetName = $assetName })
-        $assetMap[$relative] = [pscustomobject]@{ tag = $tag; name = $assetName }
+for ($index = 0; $index -lt $files.Count; $index++) {
+    $file = $files[$index]
+    if ($file.Length -ge $maxReleaseAssetBytes) { throw "GitHub Releases requires files under 2 GiB; '$($file.Name)' is $($file.Length) bytes." }
+    $relative = $file.FullName.Substring($dataRoot.Length + 1).Replace('\', '/')
+    $assetName = $file.Name
+    $groupIndex = [int][Math]::Floor($index / $AssetsPerRelease)
+    $tag = '{0}-{1:D3}' -f $ReleasePrefix, ($groupIndex + 1)
+    if ($groupIndex -ge $groups.Count) {
+        $groups.Add([pscustomobject]@{
+            Tag = $tag
+            Assets = [Collections.Generic.List[object]]::new()
+            AssetNames = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+        })
     }
-} finally { $hash.Dispose() }
+    if (-not $groups[$groupIndex].AssetNames.Add($assetName)) {
+        throw "Two files in release group $($groupIndex + 1) have the same basename '$assetName'; rename or regroup them before upload."
+    }
+    $groups[$groupIndex].Assets.Add([pscustomobject]@{ Path = $relative; FullName = $file.FullName; AssetName = $assetName })
+    $assetMap[$relative] = [pscustomobject]@{ tag = $tag; name = $assetName }
+}
 
 $existingJson = (& gh release list --repo $Repository --json tagName --limit 1000 2>&1 | Out-String)
 if ($LASTEXITCODE -ne 0) { throw "Could not list existing releases: $existingJson" }
 $existingTags = @($existingJson | ConvertFrom-Json | ForEach-Object { $_.tagName })
 $conflicts = @($groups | Where-Object { $_.Tag -in $existingTags })
-if ($conflicts.Count) { throw "Release tag '$($conflicts[0].Tag)' already exists. Choose a new ReleasePrefix to avoid overwriting published data." }
+if ($conflicts.Count -and -not $Resume) { throw "Release tag '$($conflicts[0].Tag)' already exists. Use -Resume to continue this package without re-uploading existing assets, or choose a new ReleasePrefix for a different package." }
 
 $siteRoot = Join-Path $PSScriptRoot 'HostedAtlas\site'
 $mapPath = Join-Path $siteRoot 'release-assets.json'
@@ -74,21 +78,33 @@ try {
     for ($groupIndex = 0; $groupIndex -lt $groups.Count; $groupIndex++) {
         $group = $groups[$groupIndex]
         $title = 'Silksong atlas data {0}/{1}' -f ($groupIndex + 1), $groups.Count
-        & gh release create $group.Tag --repo $Repository --title $title --notes 'Pre-rendered game-derived room images and compressed metadata for the Silksong Room Atlas.'
-        if ($LASTEXITCODE -ne 0) { throw "Could not create release '$($group.Tag)'." }
+        $uploadedNames = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+        if ($group.Tag -in $existingTags) {
+            if (-not $Resume) { throw "Release '$($group.Tag)' already exists. Re-run with -Resume to continue safely." }
+            $releaseJson = (& gh release view $group.Tag --repo $Repository --json name,assets 2>&1 | Out-String)
+            if ($LASTEXITCODE -ne 0) { throw "Could not inspect existing release '$($group.Tag)': $releaseJson" }
+            $release = $releaseJson | ConvertFrom-Json
+            if ($release.name -ne $title) { throw "Existing tag '$($group.Tag)' belongs to a different release ('$($release.name)'). Refusing to add atlas data to it." }
+            foreach ($existingAsset in $release.assets) { [void]$uploadedNames.Add($existingAsset.name) }
+            Write-Output ("Resuming release {0}/{1}: {2} already has {3} assets." -f ($groupIndex + 1), $groups.Count, $group.Tag, $uploadedNames.Count)
+        } else {
+            & gh release create $group.Tag --repo $Repository --title $title --notes 'Pre-rendered game-derived room images and compressed metadata for the Silksong Room Atlas.'
+            if ($LASTEXITCODE -ne 0) { throw "Could not create release '$($group.Tag)'." }
+        }
 
-        for ($start = 0; $start -lt $group.Assets.Count; $start += $UploadBatchSize) {
-            $end = [Math]::Min($start + $UploadBatchSize, $group.Assets.Count)
+        $pendingAssets = @($group.Assets | Where-Object { -not $uploadedNames.Contains($_.AssetName) })
+        for ($start = 0; $start -lt $pendingAssets.Count; $start += $UploadBatchSize) {
+            $end = [Math]::Min($start + $UploadBatchSize, $pendingAssets.Count)
             $arguments = [Collections.Generic.List[string]]::new()
             $arguments.Add('release'); $arguments.Add('upload'); $arguments.Add($group.Tag)
             for ($index = $start; $index -lt $end; $index++) {
-                $asset = $group.Assets[$index]
-                $arguments.Add("$($asset.FullName)#$($asset.AssetName)")
+                $asset = $pendingAssets[$index]
+                $arguments.Add($asset.FullName)
             }
             $arguments.Add('--repo'); $arguments.Add($Repository)
             & gh @arguments
-            if ($LASTEXITCODE -ne 0) { throw "Upload failed for release '$($group.Tag)' near asset $($start + 1). Existing releases are retained; use a new ReleasePrefix to retry safely." }
-            $uploaded = $start + ($end - $start)
+            if ($LASTEXITCODE -ne 0) { throw "Upload failed for release '$($group.Tag)' near pending asset $($start + 1). Existing uploads are retained; wait for GitHub's rate limit to clear, then rerun with -Resume." }
+            $uploaded = $uploadedNames.Count + $end
             Write-Progress -Activity 'Uploading Silksong atlas data to GitHub Releases' -Status "$($group.Tag): $uploaded / $($group.Assets.Count)" -PercentComplete (($uploaded / $group.Assets.Count) * 100)
         }
         Write-Progress -Activity 'Uploading Silksong atlas data to GitHub Releases' -Completed

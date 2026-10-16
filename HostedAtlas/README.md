@@ -26,9 +26,17 @@ Open <http://127.0.0.1:5181/>. The server reads the already-prepared package and
 
 ## Hosting layout
 
-Use Cloudflare Pages for the viewer and GitHub Releases for its pre-rendered files. Upload-HostedAtlas-GitHub.ps1 hashes each relative filename, splits the package into releases of at most 900 assets, and writes site/release-assets.json. The Pages Function proxies only requested room, map, and metadata files, so the viewer does not download every image at startup. The uploader checks the current GitHub per-release asset-count and per-file-size limits before publishing.
+Use Cloudflare Pages for the viewer and GitHub Releases for its pre-rendered files. Upload-HostedAtlas-GitHub.ps1 indexes each relative package path, uses the original filename for its release asset, splits the package into releases of at most 900 assets, and writes site/release-assets.json. The Pages Function proxies only requested room, map, and metadata files, so the viewer does not download every image at startup. The uploader checks the current GitHub per-release asset-count and per-file-size limits before publishing.
 
-The source repository is [memeem27/silksong-room-atlas](https://github.com/memeem27/silksong-room-atlas). After the audited release upload finishes, commit and push the generated mapping file:
+The source repository is [memeem27/silksong-room-atlas](https://github.com/memeem27/silksong-room-atlas). Start the data upload with:
+
+    .\Upload-HostedAtlas-GitHub.ps1 -Repository 'memeem27/silksong-room-atlas'
+
+If GitHub rate-limits the upload, wait for its cooldown (at least one minute) and resume with:
+
+    .\Upload-HostedAtlas-GitHub.ps1 -Repository 'memeem27/silksong-room-atlas' -Resume
+
+After the release upload finishes, commit and push the generated mapping file:
 
     git add HostedAtlas/site/release-assets.json
     git commit -m "Add hosted atlas release map"
