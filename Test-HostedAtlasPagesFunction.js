@@ -21,12 +21,15 @@ async function main() {
 
   try {
     const imageName = `${'a'.repeat(64)}.webp`;
-    const jsonName = `${'b'.repeat(64)}.gz`;
+    const jsonName = 'bone_01.json.gz';
+    const manifestName = 'manifest.json.gz';
     const map = {
       repository: 'atlas-owner/atlas-repo',
       assets: {
         'images/sample.webp': { tag: 'silksong-atlas-data-001', name: imageName },
-        'rooms/sample.json.gz': { tag: 'silksong-atlas-data-002', name: jsonName }
+        'rooms/sample.json.gz': { tag: 'silksong-atlas-data-002', name: jsonName },
+        'manifest.json.gz': { tag: 'silksong-atlas-data-002', name: manifestName },
+        'rooms/unsafe.json.gz': { tag: 'silksong-atlas-data-002', name: '../unsafe.json.gz' }
       }
     };
     const env = { ASSETS: { async fetch(request) {
@@ -55,6 +58,21 @@ async function main() {
     assert.equal(jsonResponse.headers.get('Content-Type'), 'application/json; charset=utf-8');
     assert.equal(jsonResponse.headers.get('Content-Encoding'), 'gzip');
     assert.equal(fetches[1].url, `https://github.com/atlas-owner/atlas-repo/releases/download/silksong-atlas-data-002/${jsonName}`);
+
+    const manifestResponse = await pagesFunction.onRequest({
+      ...context,
+      request: new Request('https://atlas.example/atlas-data/manifest.json')
+    });
+    assert.equal(manifestResponse.status, 200);
+    assert.equal(manifestResponse.headers.get('Content-Encoding'), 'gzip');
+    assert.equal(fetches[2].url, `https://github.com/atlas-owner/atlas-repo/releases/download/silksong-atlas-data-002/${manifestName}`);
+
+    const unsafeFilenameResponse = await pagesFunction.onRequest({
+      ...context,
+      request: new Request('https://atlas.example/atlas-data/rooms/unsafe.json')
+    });
+    assert.equal(unsafeFilenameResponse.status, 404);
+    assert.equal(fetches.length, 3);
 
     const invalidResponse = await pagesFunction.onRequest({
       ...context,

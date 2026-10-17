@@ -43,7 +43,10 @@ export async function onRequest(context) {
 
   const index = await getReleaseIndex(env, request.url);
   const record = index.assets?.[objectKey];
-  if (!record || !/^[a-z0-9][a-z0-9-]{0,63}$/i.test(record.tag) || !/^[a-f0-9]{64}\.(?:webp|png|gz)$/i.test(record.name)) {
+  const safeFilename = typeof record?.name === 'string'
+    && /^[a-z0-9][a-z0-9_.-]{0,127}\.(?:webp|png|gz)$/i.test(record.name)
+    && !record.name.includes('..');
+  if (!record || !/^[a-z0-9][a-z0-9-]{0,63}$/i.test(record.tag) || !safeFilename) {
     return new Response('Not found', { status: 404 });
   }
   if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(index.repository || '')) {
