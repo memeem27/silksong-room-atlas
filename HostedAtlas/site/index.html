@@ -7,7 +7,7 @@
   <title>Silksong Room Atlas</title>
   <link rel="stylesheet" href="./reader.css?v=atlas-6" />
   <script src="./host-config.js"></script>
-  <script src="./reader.js?v=atlas-7" defer></script>
+  <script src="./reader.js?v=atlas-8" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -40,7 +40,7 @@
       </div>
       <label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Find an area or room…" autocomplete="off" /></label>
       <div id="navList" class="nav-list"><div class="empty">Preparing the room index…</div></div>
-      <div class="nav-foot"><span id="datasetCounts">Loading map data…</span><span>Only the selected room image and sidecar load.</span></div>
+      <div class="nav-foot"><span id="datasetCounts">Loading map data…</span><span>Room images, metadata, and texture atlases load on demand.</span></div>
     </aside>
 
     <section class="stage" aria-label="Map and room image">
@@ -70,7 +70,8 @@
         <label class="toggle"><input id="toggleMappedMapArtwork" type="checkbox" checked />Mapped room artwork</label>
         <label class="toggle"><input id="toggleUnmappedMapArtwork" type="checkbox" checked />Additional / unmapped artwork <small id="mapPieceCount">0 sprites</small></label>
         <label class="toggle"><input id="toggleConditionalMapArtwork" type="checkbox" />Conditional map changes <small id="mapStateCount">0 sprites</small></label>
-        <p class="hint">Extra room pieces stay on to fill map gaps. Named changes such as broken, fixed, secret, or destroyed variants stay off until you turn them on.</p>
+        <label class="toggle"><input id="toggleArchitectMapMarkers" type="checkbox" /><span class="swatch gauntlet">G</span>Architect / GauntletSong <small id="architectMapCount">0 rooms</small></label>
+        <p class="hint">Extra room pieces stay on to fill map gaps. Small R markers show authored room positions without tile art; optional G markers open rooms with Architect data. Named map changes stay off until selected.</p>
       </section>
 
       <section id="roomSectionPanel" class="control-section" hidden>

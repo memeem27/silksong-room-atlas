@@ -3,6 +3,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 async function main() {
+  const releaseIndex = JSON.parse(fs.readFileSync(path.join(__dirname, 'HostedAtlas', 'site', 'release-assets.json'), 'utf8'));
+  assert.deepEqual(releaseIndex.assets['maps/navigation.json.gz'], {
+    tag: 'silksong-atlas-data-006', name: 'navigation.json.gz'
+  });
   const functionPath = path.join(__dirname, 'HostedAtlas', 'site', 'functions', 'atlas-data', '[[path]].js');
   const source = fs.readFileSync(functionPath, 'utf8');
   const pagesFunction = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
@@ -37,7 +41,7 @@ async function main() {
         'images/sample.webp': { tag: 'silksong-atlas-data-001', name: imageName },
         'rooms/sample.json.gz': { tag: 'silksong-atlas-data-002', name: jsonName },
         'manifest.json.gz': { tag: 'silksong-atlas-data-002', name: manifestName },
-        'maps/navigation.json.gz': { tag: 'silksong-atlas-data-004', name: 'navigation.json.gz' },
+        'maps/navigation.json.gz': { tag: 'silksong-atlas-data-006', name: 'navigation.json.gz' },
         'rooms/unsafe.json.gz': { tag: 'silksong-atlas-data-002', name: '../unsafe.json.gz' }
       }
     };
@@ -81,10 +85,10 @@ async function main() {
       request: new Request('https://atlas.example/atlas-data/maps/navigation.json')
     });
     assert.equal(mapResponse.status, 200);
-    assert.equal(fetches[3].url, 'https://github.com/atlas-owner/atlas-repo/releases/download/silksong-atlas-data-004/navigation.json.gz');
+    assert.equal(fetches[3].url, 'https://github.com/atlas-owner/atlas-repo/releases/download/silksong-atlas-data-006/navigation.json.gz');
     const mapCacheKey = cacheWrites[3].request.url;
-    assert.equal(new URL(mapCacheKey).searchParams.get('__atlas_release'), 'silksong-atlas-data-004');
-    assert.equal(new URL(cacheReads[3].url).search, '?__atlas_release=silksong-atlas-data-004');
+    assert.equal(new URL(mapCacheKey).searchParams.get('__atlas_release'), 'silksong-atlas-data-006');
+    assert.equal(new URL(cacheReads[3].url).search, '?__atlas_release=silksong-atlas-data-006');
     assert.notEqual(await mapResponse.text(), 'stale cached map');
 
     const unsafeFilenameResponse = await pagesFunction.onRequest({

@@ -144,6 +144,32 @@ async function main() {
   const mapRoot = objects.find(object => object.Name === 'Game_Map_Hornet' && !object.ParentId);
   if (!mapRoot) throw new Error('The extracted Game_Map_Hornet map hierarchy was not found.');
   const roomNames = new Map((manifest.rooms || []).map(room => [normalize(room.name), room.name]));
+  const manifestRooms = new Map((manifest.rooms || []).map(room => [normalize(room.name), room]));
+  const architectSummaryCache = new Map();
+  function architectSummary(roomName) {
+    const key = normalize(roomName);
+    if (!key || architectSummaryCache.has(key)) return architectSummaryCache.get(key) || null;
+    const room = manifestRooms.get(key);
+    let summary = null;
+    if (room?.metadata) {
+      try {
+        const sidecarPath = path.resolve(path.dirname(manifestPath), room.metadata);
+        const metadata = JSON.parse(fs.readFileSync(sidecarPath, 'utf8'));
+        const architect = metadata.architect;
+        const markers = (architect?.markers || []).map(marker => ({
+          key: marker.key, label: marker.label, kind: marker.kind,
+          virtualEvent: marker.virtualEvent, virtualEndEvent: marker.virtualEndEvent,
+          placementCount: marker.placementCount || 0
+        }));
+        if (markers.length) summary = { markerCount: markers.length, placementCount: architect.placements?.length || 0,
+          waveCount: architect.eventGroups?.length || 0, markers };
+      } catch (error) {
+        summary = { markerCount: 0, placementCount: 0, waveCount: 0, markers: [], error: error.message };
+      }
+    }
+    architectSummaryCache.set(key, summary);
+    return summary;
+  }
   const sourceAreas = (navigation.areas || []).filter(area => !area.supplemental);
   const areasByKey = new Map(sourceAreas.map(area => [area.key, { ...area, rooms: [], unmappedMapArtwork: [], conditionalMapArtwork: [] }]));
   const labels = mapLabels(objects);
@@ -153,7 +179,6 @@ async function main() {
 
   for (const [objectOrder, object] of objects.entries()) {
     if (!object.Components?.some(component => component.ScriptName === 'GameMapScene')) continue;
-    if (object.ActiveInHierarchy === false || !(object.Sprites || []).some(sprite => sprite.RendererEnabled !== false)) continue;
     const roomName = roomNames.get(normalize(object.Name));
     let parent = byId.get(object.ParentId);
     let group = parent?.Name || '';
@@ -164,18 +189,27 @@ async function main() {
       group = parent.Name || group;
     }
     const bounds = spriteBounds(object);
-    if (!bounds) continue;
-    const center = { x: (bounds.minX + bounds.maxX) / 2, y: (bounds.minY + bounds.maxY) / 2 };
-    const mapGroup = group || 'Other';
     const sprites = mapSprites(object, objectOrder);
-    if (!sprites.length) continue;
-    const row = { name: roomName || object.Name, roomMapped: Boolean(roomName), bounds, center, mapGroup,
-      mapObjectName: object.Name, conditionalMapState: isConditionalMapState(object.Name), mapSprites: sprites };
-    if (!mapArtworkGroups.has(mapGroup)) mapArtworkGroups.set(mapGroup, []);
-    mapArtworkGroups.get(mapGroup).push(row);
+    const mapAnchor = !sprites.length && roomName && object.WorldPosition &&
+      Number.isFinite(object.WorldPosition.X) && Number.isFinite(object.WorldPosition.Y);
+    const anchorBounds = mapAnchor ? { minX: object.WorldPosition.X - .65, maxX: object.WorldPosition.X + .65,
+      minY: object.WorldPosition.Y - .65, maxY: object.WorldPosition.Y + .65 } : null;
+    const effectiveBounds = sprites.length ? bounds : anchorBounds;
+    if (!effectiveBounds) continue;
+    const center = { x: (effectiveBounds.minX + effectiveBounds.maxX) / 2, y: (effectiveBounds.minY + effectiveBounds.maxY) / 2 };
+    const mapGroup = group || 'Other';
+    if (!sprites.length && !mapAnchor) continue;
+    const row = { name: roomName || object.Name, roomMapped: Boolean(roomName), bounds: effectiveBounds, center, mapGroup,
+      mapObjectName: object.Name, mapObjectOrder: objectOrder, mapAnchor: Boolean(mapAnchor),
+      conditionalMapState: isConditionalMapState(object.Name) || object.ActiveInHierarchy === false,
+      ...(roomName ? { architect: architectSummary(roomName) } : {}), mapSprites: sprites };
+    if (sprites.length) {
+      if (!mapArtworkGroups.has(mapGroup)) mapArtworkGroups.set(mapGroup, []);
+      mapArtworkGroups.get(mapGroup).push(row);
+    }
     if (!roomName) continue;
     const score = (object.ActiveInHierarchy === true ? 4 : 0)
-      + ((object.Sprites || []).some(sprite => sprite.RendererEnabled !== false) ? 2 : 0)
+      + (sprites.length ? 2 : 0)
       + (groupToArea.has(normalize(mapGroup)) ? 1 : 0);
     const previous = mappedRooms.get(normalize(roomName));
     if (!previous || score > previous.score) mappedRooms.set(normalize(roomName), { row, score });
@@ -185,6 +219,7 @@ async function main() {
 
   // Keep only the selected representation when a room has duplicate map objects.
   const selectedRooms = new Map([...mappedRooms.values()].map(({ row }) => [normalize(row.name), row]));
+  const selectedMapObjectOrders = new Set([...selectedRooms.values()].map(row => row.mapObjectOrder));
   const assigned = new Set();
   for (const row of selectedRooms.values()) {
     const key = groupToArea.get(normalize(row.mapGroup));
@@ -247,7 +282,7 @@ async function main() {
   for (const [group, rows] of mapArtworkGroups) {
     const key = groupToArea.get(normalize(group));
     const area = (key && areasByKey.get(key)) || supplementalByGroup.get(normalize(group));
-    const extras = rows.filter(row => !row.roomMapped);
+    const extras = rows.filter(row => !row.roomMapped || !selectedMapObjectOrders.has(row.mapObjectOrder));
     expectedExtraArtworkCount += extras.length;
     if (!area) continue;
     area.unmappedMapArtwork ||= [];
@@ -269,8 +304,8 @@ async function main() {
     return b.widePosition.y - a.widePosition.y || a.widePosition.x - b.widePosition.x || a.name.localeCompare(b.name);
   });
   const result = { ...navigation, format: 'silksong-room-atlas-navigation', formatVersion: 4,
-    roomPositionSource: 'Game_Map_Hornet GameMapScene sprites and their authored parent map sections',
-    unmappedMapArtworkSource: 'All additional real GameMapScene sprites grouped by authored region; event-state variants remain separately toggleable',
+    roomPositionSource: 'Game_Map_Hornet GameMapScene sprites; sprite-less room positions use the authored GameMapScene transform',
+    unmappedMapArtworkSource: 'All additional and duplicate real GameMapScene sprites grouped by authored region; event-state variants remain separately toggleable',
     areas };
   const sourceBytes = Buffer.from(JSON.stringify(result));
   await fs.promises.writeFile(navigationPath, sourceBytes);
@@ -278,11 +313,14 @@ async function main() {
   await fs.promises.mkdir(path.dirname(hostedNavigationPath), { recursive: true });
   await fs.promises.writeFile(hostedNavigationPath, zlib.gzipSync(Buffer.from(hostedJson), { level: 9 }));
   const summary = areas.map(area => ({ key: area.key, name: area.name, roomCount: area.rooms.length,
+    mapAnchorCount: area.rooms.filter(room => room.mapAnchor).length,
+    architectRoomCount: area.rooms.filter(room => room.architect?.markerCount).length,
     additionalArtworkCount: area.unmappedMapArtwork?.length || 0,
     conditionalArtworkCount: (area.conditionalMapArtwork?.length || 0) + area.rooms.filter(room => room.conditionalMapState && room.mapSprites?.length).length,
     supplemental: Boolean(area.supplemental), sourceGroup: area.sourceGroup || null }));
   process.stdout.write(JSON.stringify({ status: 'ready', source: 'Game_Map_Hornet GameMapScene objects',
-    matchedRoomCount: selectedRooms.size, areaCount: areas.length,
+    matchedRoomCount: selectedRooms.size, mapAnchorCount: [...selectedRooms.values()].filter(room => room.mapAnchor).length,
+    architectRoomCount: [...selectedRooms.values()].filter(room => room.architect?.markerCount).length, areaCount: areas.length,
     worldRegionCount: areas.filter(area => area.widePosition).length,
     supplementalSectionCount: supplemental.length, expectedExtraArtworkCount,
     assignedExtraArtworkCount, matchedRoomCountByRegion: summary }, null, 2) + '\n');

@@ -8,10 +8,12 @@ const state = { manifest: null, navigation: null, mode: 'world', area: null, roo
   roomImage: null, roomViewImage: null, wideImage: null, detailImage: null, imageCache: new Map(), atlasCache: new Map(),
   selectedGauntlet: null, selectedWave: 'all', visiblePlacements: new Map(), selectedAreaName: null, hoverAreaKey: null,
   cameraSections: [], roomViewKey: 'whole', mapBackdropVisible: false, mapBackdropAuto: false,
-  viewport: { key: '', zoom: 1, offsetX: 0, offsetY: 0 }, hoverRoomName: null, mapSpriteTintCache: new Map(),
+  viewport: { key: '', zoom: 1, offsetX: 0, offsetY: 0 }, hoverRoomName: null, mapSpriteTintCache: new Map(), mapRoomCache: new Map(),
   drag: null, suppressClickUntil: 0,
   showMappedMapArtwork: true, showUnmappedMapArtwork: true, showConditionalMapArtwork: false,
-  roomStateOverrides: new Map(), roomStateGroups: [], roomStateCandidates: [], showAllInactiveArtwork: false, includeDisabledStateArtwork: false };
+  showArchitectMapMarkers: false,
+  roomStateOverrides: new Map(), roomStateGroups: [], roomStateCandidates: [], showAllInactiveArtwork: false,
+  includeDisabledStateArtwork: false, conditionalCache: null, conditionalBuildVersion: 0 };
 const canvas = $('mapCanvas'), ctx = canvas.getContext('2d');
 
 function setPanelOpen(name, open) {
@@ -32,6 +34,7 @@ function togglePanel(name) {
   const panel = $(name === 'navigator' ? 'navigator' : 'inspector');
   setPanelOpen(name, !panel.classList.contains('is-open'));
 }
+function clearConditionalCache(){state.conditionalBuildVersion++;state.conditionalCache=null;}
 
 function esc(value) { return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
 function cleanLabel(value) { return String(value ?? '').replaceAll('Ã‚Â·','·').replaceAll('Â·','·'); }
@@ -127,16 +130,19 @@ function renderNavigation() {
     document.querySelectorAll('[data-room]').forEach(button => button.addEventListener('click', () => openRoom(button.dataset.room)));
   } else {
     const area = state.area;
-    $('navDescription').textContent = state.mode === 'room' ? `${area?.name || 'Area'} · selected room` : `${area?.rooms.length || 0} mapped rooms · choose one to open its pre-rendered image.`;
+    const anchorCount=area?.rooms.filter(room=>room.mapAnchor).length||0;
+    const architectCount=area?.rooms.filter(room=>room.architect?.markerCount).length||0;
+    $('navDescription').textContent = state.mode === 'room' ? `${area?.name || 'Area'} · selected room` : `${area?.rooms.length || 0} room locations · choose one to open its pre-rendered image.${anchorCount?` ${anchorCount} use game scene positions where the map has no tile art.`:''}${architectCount?` ${architectCount} rooms contain Architect markers.`:''}`;
     $('search').placeholder = 'Find a room…';
     const mapped = (area?.rooms || []).map(item => ({ ...item, export: findRoom(item.name) })).filter(item => item.export);
     const filtered = mapped.filter(item => !query || item.name.toLowerCase().includes(query));
-    $('navList').innerHTML = filtered.map((room,index) => `<button class="nav-row ${state.room?.name===room.name?'active':''}" data-room="${esc(room.name)}"><span class="nav-index">${String(index+1).padStart(2,'0')}</span><span class="nav-copy"><span class="nav-name">${esc(fileBase(room.name))}</span><span class="nav-meta">${room.export.status}${room.export.image?' · image':''}</span></span><span class="nav-arrow">›</span></button>`).join('') || (area?.rooms.length ? '<div class="empty">No preprocessed rooms in this area match the search.</div>' : '<div class="empty">No room markers are recorded for this map region. Use All rooms to browse the prepared scenes.</div>');
+    $('navList').innerHTML = filtered.map((room,index) => `<button class="nav-row ${state.room?.name===room.name?'active':''}" data-room="${esc(room.name)}"><span class="nav-index">${String(index+1).padStart(2,'0')}</span><span class="nav-copy"><span class="nav-name">${esc(fileBase(room.name))}</span><span class="nav-meta">${room.export.status}${room.export.image?' · image':''}${room.mapAnchor?' · game map position':''}${room.architect?.markerCount?` · G${room.architect.markerCount}`:''}</span></span><span class="nav-arrow">›</span></button>`).join('') || (area?.rooms.length ? '<div class="empty">No preprocessed rooms in this area match the search.</div>' : '<div class="empty">No room markers are recorded for this map region. Use All rooms to browse the prepared scenes.</div>');
     document.querySelectorAll('[data-room]').forEach(button => button.addEventListener('click', () => openRoom(button.dataset.room)));
   }
 }
 
 function showWorld() {
+  clearConditionalCache();
   closePanel('inspector');
   state.mode='world'; state.area=null; state.room=null; state.roomMeta=null; state.roomImage=null; state.selectedGauntlet=null; state.hoverAreaKey=null;
   $('stageKind').textContent='WIDE WORLD MAP'; $('stageTitle').textContent='World regions'; $('viewFoot').textContent='GAME-AUTHORED WIDE MAP · SCROLL TO ZOOM · DRAG TO PAN'; $('imageDimensions').textContent='';
@@ -148,6 +154,7 @@ function showWorld() {
   renderNavigation(); $('navList').scrollTop=0; const selectedAreaButton=document.querySelector('[data-area].active'); selectedAreaButton?.scrollIntoView({block:'nearest'}); draw();
 }
 function showAllRooms() {
+  clearConditionalCache();
   closePanel('inspector');
   state.mode='all-rooms'; state.area=null; state.room=null; state.roomMeta=null; state.roomImage=null; state.selectedGauntlet=null;
   $('stageKind').textContent='ALL PREPARED ROOMS'; $('stageTitle').textContent='Browse every scene'; $('viewFoot').textContent='ALL EXPORTED SCENES · SCROLL TO ZOOM · DRAG TO PAN'; $('imageDimensions').textContent='';
@@ -158,9 +165,10 @@ function showAllRooms() {
 }
 function showArea(key) {
   const area = findArea(key); if (!area) return;
+  clearConditionalCache();
   closePanel('inspector');
   if(state.mapBackdropAuto){state.mapBackdropVisible=false;state.mapBackdropAuto=false;}
-  const hasDefaultMapArtwork=area.rooms.some(room=>room.mapSprites?.length&&!room.conditionalMapState)||(area.unmappedMapArtwork||[]).length>0;
+  const hasDefaultMapArtwork=area.rooms.some(room=>(room.mapSprites?.length||room.mapAnchor)&&!room.conditionalMapState)||(area.unmappedMapArtwork||[]).length>0;
   if(!hasDefaultMapArtwork){state.mapBackdropVisible=true;state.mapBackdropAuto=true;}
   state.selectedAreaName=area.key; state.hoverAreaKey=null; state.hoverRoomName=null;
   state.mode='area'; state.area=area; state.room=null; state.roomMeta=null; state.roomImage=null; state.selectedGauntlet=null;
@@ -172,11 +180,13 @@ function showArea(key) {
   $('mapPieceCount').textContent=`${(area.unmappedMapArtwork||[]).reduce((count,object)=>count+(object.mapSprites?.length||0),0)} sprites`;
   const conditionalRows=[...(area.conditionalMapArtwork||[]),...(area.rooms||[]).filter(room=>room.conditionalMapState)];
   $('mapStateCount').textContent=`${conditionalRows.reduce((count,object)=>count+(object.mapSprites?.length||0),0)} sprites`;
+  $('architectMapCount').textContent=`${area.rooms.filter(room=>room.architect?.markerCount).length} rooms`;
+  $('toggleArchitectMapMarkers').checked=state.showArchitectMapMarkers;
   $('mapLayers').hidden=false; $('roomSectionPanel').hidden=true; $('objectLayers').hidden=true; $('roomStatePanel').hidden=true; $('architectPanel').hidden=true; $('metadataPanel').hidden=true; $('closeRoomButton').hidden=true;
   renderNavigation(); $('navList').scrollTop=0; draw();
 }
 
-async function openRoom(name) {
+async function openRoom(name, options = {}) {
   const room = findRoom(name); if (!room) return;
   setPanelOpen('inspector', true);
   const mappedArea=(state.navigation?.areas||[]).find(area=>area.rooms.some(item=>item.name.toLowerCase()===room.name.toLowerCase()))||null;
@@ -185,6 +195,7 @@ async function openRoom(name) {
   $('inspectorEyebrow').textContent='ROOM LAYERS'; $('inspectorTitle').textContent=fileBase(room.name);
   state.mode='room'; state.room=room; state.roomMeta=null; state.roomImage=null; state.selectedGauntlet=null; state.selectedWave='all'; state.visiblePlacements.clear();
   state.roomStateOverrides=new Map(); state.roomStateGroups=[]; state.roomStateCandidates=[]; state.showAllInactiveArtwork=false; state.includeDisabledStateArtwork=false;
+  clearConditionalCache();
   state.cameraSections=[]; state.roomViewKey='whole';
   $('stageKind').textContent=room.kind?.toUpperCase() || 'ROOM'; $('stageTitle').textContent=fileBase(room.name); $('viewFoot').textContent='CLEAN SILKSONG ROOM IMAGE · SCROLL TO ZOOM · DRAG TO PAN';
   $('canvasLoading').hidden=false; $('canvasNotice').hidden=true; $('closeRoomButton').hidden=false;
@@ -224,6 +235,7 @@ async function openRoom(name) {
     if(hasArchitect) setupArchitect(architect);
     const selectedSection=state.cameraSections.find(section=>section.key===state.roomViewKey);
     if(selectedSection?.file)state.roomViewImage=await loadImage(selectedSection.file);
+    if(Number.isInteger(options.architectMarkerIndex)&&architect?.markers?.length){$('toggleGauntlets').checked=true;selectGauntlet(Math.min(options.architectMarkerIndex,architect.markers.length-1));}
     updateRoomViewDisplay();
     if(!image&&!meta?.objects?.length){$('canvasNotice').textContent=room.status==='exported'?'Room image is not available in the hosted atlas.':'This room has no renderable game artwork.';$('canvasNotice').hidden=false;}
     draw();
@@ -394,7 +406,7 @@ function roomViewDimensions(meta=state.roomMeta){
   const image=meta?.image;if(!image)return '';
   const dynamic=state.showAllInactiveArtwork||state.includeDisabledStateArtwork||state.roomStateOverrides.size>0;
   if(dynamic&&state.roomViewKey==='whole'){
-    const bounds=conditionalArtworkBounds(meta,collectConditionalRoomArtwork(meta));
+    const cache=conditionalCacheFor(meta),bounds=cache?.scene.renderables.length?cache.bounds:null;
     if(bounds)return `Auto-fit · ${(bounds.maxX-bounds.minX).toFixed(1)} × ${(bounds.maxY-bounds.minY).toFixed(1)} world units`;
   }
   if(state.roomViewKey==='whole'||!state.cameraSections.some(section=>section.key===state.roomViewKey))return `${Number(image.width).toLocaleString()} × ${Number(image.height).toLocaleString()} px`;
@@ -411,9 +423,10 @@ function roomViewDimensions(meta=state.roomMeta){
 function updateRoomViewDisplay(){
   const section=state.cameraSections.find(item=>item.key===state.roomViewKey);
   const conditional=state.showAllInactiveArtwork||state.includeDisabledStateArtwork||state.roomStateOverrides.size>0;
+  const cache=conditional?conditionalCacheFor():null;
   $('imageDimensions').textContent=roomViewDimensions();
-  $('viewFoot').textContent=conditional?'ROOM STATE REBUILT FROM GAME BUNDLE ART · SCROLL TO ZOOM · DRAG TO PAN':section?`${section.name.toUpperCase()} · CAMERA-LOCK ROOM SECTION · SCROLL TO ZOOM · DRAG TO PAN`:'WHOLE ROOM SCENE · SCROLL TO ZOOM · DRAG TO PAN';
-  $('roomViewHint').textContent=conditional?`Rebuilt from serialized room sprites and meshes. Whole-scene view includes all revealed art; a selected camera view remains clipped to that camera’s bounds. Atlas textures load only while this view is active.`:section?section.file?`${section.resolutionLimited?'High-density camera render, capped for browser-safe dimensions':'Native-density camera render'} · ${section.width.toFixed(1)} × ${section.height.toFixed(1)} world units. Other room sections remain available in the menu.`:`Showing the ${section.width.toFixed(1)} × ${section.height.toFixed(1)} world-unit camera area from the whole-room composite.`:`Showing the complete prepared scene across all camera areas.`;
+  $('viewFoot').textContent=conditional?'ROOM STATE COMPOSED ONCE, THEN CACHED · SCROLL TO ZOOM · DRAG TO PAN':section?`${section.name.toUpperCase()} · CAMERA-LOCK ROOM SECTION · SCROLL TO ZOOM · DRAG TO PAN`:'WHOLE ROOM SCENE · SCROLL TO ZOOM · DRAG TO PAN';
+  $('roomViewHint').textContent=conditional?cache&&!cache.scene.renderables.length?`This scene has no supported serialized renderer art to rebuild. The saved room image remains available.`:cache?.raster?`Composed from the selected real game sprites and meshes, then cached for smooth zoom and pan. The state image is kept in browser memory only.`:`Preparing this state from serialized game sprites and meshes. Atlas textures load only for the selected room; the result is cached in browser memory.`:section?section.file?`${section.resolutionLimited?'High-density camera render, capped for browser-safe dimensions':'Native-density camera render'} · ${section.width.toFixed(1)} × ${section.height.toFixed(1)} world units. Other room sections remain available in the menu.`:`Showing the ${section.width.toFixed(1)} × ${section.height.toFixed(1)} world-unit camera area from the whole-room composite.`:`Showing the complete prepared scene across all camera areas.`;
 }
 function currentRoomImage(){const section=state.cameraSections.find(item=>item.key===state.roomViewKey);return section?.file&&state.roomViewImage?.naturalWidth?state.roomViewImage:state.roomImage;}
 function roomFrame(width,height,image=currentRoomImage(),meta=state.roomMeta){
@@ -596,14 +609,18 @@ function drawArea(width,height,transform,image,imageRecord) {
     drawGameMapSection(area,transform,1);
     const hovered=(area.rooms||[]).find(room=>room.name===state.hoverRoomName);
     if(hovered)drawHoveredRoom(hovered,transform,width,height);
-    if(!areaMapArtwork(area).length)drawFallbackNotice(width,height,'No room map artwork is recorded here. Choose a room from the list.');
+    if(!areaMapArtwork(area).length&&!areaMapRooms(area,state.showConditionalMapArtwork).some(room=>room.mapAnchor))drawFallbackNotice(width,height,'No room map artwork is recorded here. Choose a room from the list.');
   }
+  drawMapRoomAnchors(area,transform);
+  if(state.showArchitectMapMarkers)drawArchitectMapMarkers(area,transform);
 }
 function mapVariantKey(name){return fileBase(name).toLowerCase().replace(/(?:[_-](?:destroyed|ruined|broken|break|collapsed|completed|quiet|creature|activated|inactive|restored|secret|opened|closed|flooded|repaired|revealed|shortcut))+$/,'');}
 function mapVariantRank(name){return mapVariantKey(name)===fileBase(name).toLowerCase()?0:1;}
 function boundsIoU(a,b){if(!a||!b)return 0;const w=Math.max(0,Math.min(a.maxX,b.maxX)-Math.max(a.minX,b.minX)),h=Math.max(0,Math.min(a.maxY,b.maxY)-Math.max(a.minY,b.minY)),intersection=w*h,union=(a.maxX-a.minX)*(a.maxY-a.minY)+(b.maxX-b.minX)*(b.maxY-b.minY)-intersection;return union>0?intersection/union:0;}
 function areaMapRooms(area,includeConditional=false){
-  const rooms=(area?.rooms||[]).filter(room=>room.mapSprites?.length&&findRoom(room.name)&&(includeConditional||!room.conditionalMapState)).slice().sort((a,b)=>mapVariantRank(a.name)-mapVariantRank(b.name)||a.name.localeCompare(b.name));
+  const cacheKey=`${area?.key||''}|${Number(includeConditional)}`;
+  if(state.mapRoomCache.has(cacheKey))return state.mapRoomCache.get(cacheKey);
+  const rooms=(area?.rooms||[]).filter(room=>(room.mapSprites?.length||room.mapAnchor)&&findRoom(room.name)&&(includeConditional||!room.conditionalMapState)).slice().sort((a,b)=>mapVariantRank(a.name)-mapVariantRank(b.name)||a.name.localeCompare(b.name));
   const kept=[];
   for(const room of rooms){
     const duplicate=!room.conditionalMapState&&kept.some(previous=>{
@@ -612,7 +629,7 @@ function areaMapRooms(area,includeConditional=false){
     });
     if(!duplicate)kept.push(room);
   }
-  return kept;
+  state.mapRoomCache.set(cacheKey,kept);return kept;
 }
 function areaMapArtwork(area){
   const mapped=state.showMappedMapArtwork?areaMapRooms(area).flatMap(room=>room.mapSprites||[]):[];
@@ -633,8 +650,30 @@ function drawHoveredRoom(room,transform,width,height){
   const label=fileBase(room.name);ctx.font='600 11px Segoe UI,Arial,sans-serif';const labelWidth=ctx.measureText(label).width+14,labelHeight=22,left=Math.max(7,Math.min(width-labelWidth-7,topLeft.x)),top=topLeft.y-labelHeight-5<7?Math.min(height-labelHeight-7,bottomRight.y+5):topLeft.y-labelHeight-5;
   ctx.fillStyle='rgba(8,12,9,.95)';ctx.strokeStyle='rgba(228,255,188,.85)';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(left,top,labelWidth,labelHeight,4);ctx.fill();ctx.stroke();ctx.fillStyle='#eff8df';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,left+labelWidth/2,top+labelHeight/2);ctx.restore();
 }
+function drawMapRoomAnchors(area,transform){
+  const anchors=areaMapRooms(area,state.showConditionalMapArtwork).filter(room=>room.mapAnchor);
+  const {width,height}=canvasSize();
+  const clusters=[];
+  for(const room of anchors){
+    const point=screenPoint(room.center,transform),near=clusters.find(item=>Math.hypot(item.point.x-point.x,item.point.y-point.y)<13);
+    if(near)near.rooms.push(room);else clusters.push({point,rooms:[room]});
+  }
+  for(const cluster of clusters){
+    const {x,y}=cluster.point;if(x<-12||y<-12||x>width+12||y>height+12)continue;
+    ctx.save();ctx.fillStyle='rgba(12,16,13,.94)';ctx.strokeStyle='#c9dda9';ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(x,y,7,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#eff8df';ctx.font='bold 7px Consolas,monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(cluster.rooms.length>1?String(cluster.rooms.length):'R',x,y+.25);ctx.restore();
+  }
+}
+function drawArchitectMapMarkers(area,transform){
+  const {width,height}=canvasSize();
+  for(const room of areaMapRooms(area,state.showConditionalMapArtwork).filter(item=>item.architect?.markerCount)){
+    const {x,y}=screenPoint(room.center,transform);if(x<-16||y<-16||x>width+16||y>height+16)continue;
+    ctx.save();ctx.fillStyle='rgba(40,28,54,.96)';ctx.strokeStyle='#c8a8ed';ctx.lineWidth=1.4;ctx.beginPath();ctx.arc(x,y,9,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#f1e6ff';ctx.font='bold 8px Consolas,monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(`G${room.architect.markerCount}`,x,y+.25);ctx.restore();
+  }
+}
 function mapSpriteGeometry(sprite){const ppu=Math.max(1,Number(sprite.pixelsPerUnit)||100),rotated=Number(sprite.packingRotation)===4,width=(rotated?Number(sprite.rectHeight||0):Number(sprite.rectWidth||0))/ppu,height=(rotated?Number(sprite.rectWidth||0):Number(sprite.rectHeight||0))/ppu,originalWidth=Number(sprite.originalWidth||(rotated?sprite.rectHeight:sprite.rectWidth)||0)/ppu,originalHeight=Number(sprite.originalHeight||(rotated?sprite.rectWidth:sprite.rectHeight)||0)/ppu;return{width,height,left:Number(sprite.trimOffsetX||0)/ppu-(Number(sprite.pivotX??.5)*originalWidth),bottom:Number(sprite.trimOffsetY||0)/ppu-(Number(sprite.pivotY??.5)*originalHeight)};}
-function mapSpriteImage(hash){let image=state.atlasCache.get(hash);if(!image){image=new Image();state.atlasCache.set(hash,image);image.onload=draw;image.onerror=()=>{};image.src=`${ARTWORK_BASE}${hash}.${ARTWORK_EXTENSION}`;}return image;}
+function mapSpriteImage(hash,requestDraw=true){let image=state.atlasCache.get(hash);if(!image){image=new Image();image._requestDraw=Boolean(requestDraw);state.atlasCache.set(hash,image);image.onload=()=>{if(image._requestDraw)draw();};image.onerror=()=>{};image.src=`${ARTWORK_BASE}${hash}.${ARTWORK_EXTENSION}`;}else if(requestDraw&&!image.complete)image._requestDraw=true;return image;}
 function drawGameMapSection(area,transform,opacity=1){
   const sprites=areaMapArtwork(area).filter(sprite=>sprite.textureSha256&&sprite.worldPosition).sort((a,b)=>(Number(a.sortingLayerValue)||0)-(Number(b.sortingLayerValue)||0)||(Number(a.sortingOrder)||0)-(Number(b.sortingOrder)||0)||(Number(b.worldPosition.z)||0)-(Number(a.worldPosition.z)||0)||(Number(a.mapObjectOrder)||0)-(Number(b.mapObjectOrder)||0)||(Number(a.mapSpriteOrder)||0)-(Number(b.mapSpriteOrder)||0));
   for(const sprite of sprites){
@@ -672,9 +711,15 @@ function drawFallbackNotice(width,height,text){ctx.fillStyle='#aab09f';ctx.font=
 function drawRoom(width,height){
   const image=currentRoomImage(),meta=state.roomMeta;if(!meta?.image)return;
   const dynamic=state.showAllInactiveArtwork||state.includeDisabledStateArtwork||state.roomStateOverrides.size>0;
-  const renderables=dynamic?collectConditionalRoomArtwork(meta):null;
-  const frame=zoomRoomFrame(dynamic?conditionalRoomFrame(width,height,meta,renderables):roomFrame(width,height,image,meta));if(!frame)return;
-  if(dynamic)drawConditionalRoomArtwork(meta,frame,renderables);
+  const cache=dynamic?conditionalCacheFor(meta):null;
+  const rebuild=Boolean(dynamic&&cache?.scene.renderables.length);
+  const baseFrame=rebuild?(cache?.raster?conditionalRasterFrame(width,height,meta,cache):conditionalRoomFrame(width,height,meta,cache?.scene)):roomFrame(width,height,image,meta);
+  const frame=zoomRoomFrame(baseFrame);if(!frame)return;
+  if(rebuild&&cache?.raster){ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(cache.raster,frame.sourceX,frame.sourceY,frame.sourceWidth,frame.sourceHeight,frame.x,frame.y,frame.drawWidth,frame.drawHeight);}
+  else if(rebuild){
+    if(image)drawSavedRoomImage(image,meta,frame);
+    drawFallbackNotice(width,height,cache?.error?'Could not compose this room state; showing the saved image.':'Preparing the selected room state…');
+  }
   else if(image){ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(image,frame.sourceX,frame.sourceY,frame.sourceWidth,frame.sourceHeight,frame.x,frame.y,frame.drawWidth,frame.drawHeight);}
   else drawFallbackNotice(width,height,'The saved room image is unavailable.');
   const visible=[];
@@ -687,6 +732,21 @@ function drawRoom(width,height){
   drawArchitect(width,height,frame,meta);
 }
 
+function drawSavedRoomImage(image,meta,frame){
+  const section=state.cameraSections.find(item=>item.key===state.roomViewKey),dedicated=Boolean(section?.file&&image===state.roomViewImage);
+  const bounds=dedicated?section.bounds:meta.image?.bounds,metadataWidth=Number(dedicated?section.imageWidth:meta.image?.width)||image.naturalWidth,
+    metadataHeight=Number(dedicated?section.imageHeight:meta.image?.height)||image.naturalHeight;
+  if(!bounds)return;
+  const pixelsPerUnit=Number(dedicated?section.pixelsPerWorldUnit:meta.image?.pixelsPerWorldUnit)||1,
+    pixelsX=image.naturalWidth/metadataWidth,pixelsY=image.naturalHeight/metadataHeight,
+    targetScaleX=frame.sourcePpuX*frame.scale,targetScaleY=frame.sourcePpuY*frame.scale,
+    sourcePpuX=pixelsPerUnit*pixelsX,sourcePpuY=pixelsPerUnit*pixelsY;
+  const x=frame.x+(bounds.minX-frame.view.minX)*targetScaleX-2*targetScaleX/sourcePpuX,
+    y=frame.y+(frame.view.maxY-bounds.maxY)*targetScaleY-2*targetScaleY/sourcePpuY,
+    width=image.naturalWidth*targetScaleX/sourcePpuX,height=image.naturalHeight*targetScaleY/sourcePpuY;
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(image,x,y,width,height);
+}
+
 function conditionalRoomFrame(width,height,meta,renderables){
   const section=state.cameraSections.find(item=>item.key===state.roomViewKey),view=section?.bounds||conditionalArtworkBounds(meta,renderables);
   if(!view)return null;
@@ -695,6 +755,17 @@ function conditionalRoomFrame(width,height,meta,renderables){
   const scale=Math.min((width-30)/(spanX*ppu),(height-30)/(spanY*ppu));
   const drawWidth=spanX*ppu*scale,drawHeight=spanY*ppu*scale,x=(width-drawWidth)/2,y=(height-drawHeight)/2;
   return{view,x,y,drawWidth,drawHeight,scale,sourcePpuX:ppu,sourcePpuY:ppu,dedicated:Boolean(section),
+    worldPoint:(worldX,worldY)=>({x:x+(worldX-view.minX)*ppu*scale,y:y+(view.maxY-worldY)*ppu*scale})};
+}
+
+function conditionalRasterFrame(width,height,meta,cache){
+  const section=state.cameraSections.find(item=>item.key===state.roomViewKey),bounds=cache.bounds,view=section?.bounds||bounds;
+  if(!bounds||!view)return null;
+  const ppu=cache.pixelsPerWorldUnit,sourceX=(view.minX-bounds.minX)*ppu,sourceY=(bounds.maxY-view.maxY)*ppu;
+  const sourceWidth=(view.maxX-view.minX)*ppu,sourceHeight=(view.maxY-view.minY)*ppu;
+  const scale=Math.min((width-30)/Math.max(1,sourceWidth),(height-30)/Math.max(1,sourceHeight));
+  const drawWidth=sourceWidth*scale,drawHeight=sourceHeight*scale,x=(width-drawWidth)/2,y=(height-drawHeight)/2;
+  return{bounds,view,ppu,sourcePpuX:ppu,sourcePpuY:ppu,sourceX,sourceY,sourceWidth,sourceHeight,scale,x,y,drawWidth,drawHeight,
     worldPoint:(worldX,worldY)=>({x:x+(worldX-view.minX)*ppu*scale,y:y+(view.maxY-worldY)*ppu*scale})};
 }
 
@@ -745,6 +816,85 @@ function collectConditionalRoomArtwork(meta){
   return{renderables,meshAssets:new Map((meta.meshAssets||[]).map(asset=>[asset.id,asset]))};
 }
 
+function conditionalStateKey(meta){
+  const overrides=[...state.roomStateOverrides.entries()].sort(([a],[b])=>String(a).localeCompare(String(b))).map(([id,value])=>`${id}:${value}`).join(',');
+  return`${meta?.scene?.name||state.room?.name||''}|${state.roomViewKey}|${Number(state.showAllInactiveArtwork)}|${Number(state.includeDisabledStateArtwork)}|${overrides}`;
+}
+
+function conditionalCacheFor(meta=state.roomMeta){
+  if(!meta?.image)return null;
+  const key=conditionalStateKey(meta);
+  if(state.conditionalCache?.meta===meta&&state.conditionalCache.key===key)return state.conditionalCache;
+  const scene=collectConditionalRoomArtwork(meta),section=state.cameraSections.find(item=>item.key===state.roomViewKey),bounds=section?.bounds||conditionalArtworkBounds(meta,scene);
+  const cache={meta,key,scene,bounds,raster:null,building:false,error:null,version:++state.conditionalBuildVersion,pixelsPerWorldUnit:1};
+  state.conditionalCache=cache;
+  void buildConditionalRaster(cache);
+  return cache;
+}
+
+function orderedConditionalRenderables(scene){
+  const unitsById=new Map();
+  for(const renderable of scene.renderables){
+    const group=renderable.object.sortingGroup?.enabled?renderable.object.sortingGroup:null;
+    const unitId=group?`group:${group.objectId||renderable.object.parentId||renderable.object.id}`:`single:${renderable.objectIndex}:${renderable.type}:${renderable.rendererIndex}`;
+    let unit=unitsById.get(unitId);
+    if(!unit){unit={items:[],layer:Number(group?.sortingLayerValue??renderable.artwork.sortingLayerValue)||0,
+      order:Number(group?.sortingOrder??renderable.artwork.sortingOrder)||0,z:Number(group?.worldPosition?.z??renderable.object.worldPosition?.z)||0,stableIndex:renderable.objectIndex};unitsById.set(unitId,unit);}
+    unit.items.push(renderable);
+  }
+  const itemOrder=(a,b)=>(Number(a.artwork.sortingLayerValue)||0)-(Number(b.artwork.sortingLayerValue)||0)||
+    (Number(a.artwork.sortingOrder)||0)-(Number(b.artwork.sortingOrder)||0)||a.objectIndex-b.objectIndex||a.rendererIndex-b.rendererIndex;
+  return[...unitsById.values()].sort((a,b)=>a.layer-b.layer||a.order-b.order||b.z-a.z||a.stableIndex-b.stableIndex)
+    .flatMap(unit=>unit.items.sort(itemOrder));
+}
+
+function waitForAtlas(hash){
+  const image=mapSpriteImage(hash,false);
+  if(image.complete)return Promise.resolve(image.naturalWidth?image:null);
+  return new Promise(resolve=>{
+    let settled=false;const finish=value=>{if(settled)return;settled=true;clearTimeout(timer);resolve(value);};
+    const timer=setTimeout(()=>finish(null),25000);
+    image.addEventListener('load',()=>finish(image.naturalWidth?image:null),{once:true});
+    image.addEventListener('error',()=>finish(null),{once:true});
+  });
+}
+
+async function buildConditionalRaster(cache){
+  if(cache.building||!cache.bounds)return;
+  cache.building=true;
+  try{
+    const hashes=[...new Set(cache.scene.renderables.map(item=>item.artwork.textureSha256).filter(Boolean))],cursor={index:0};
+    await Promise.all(Array.from({length:8},async()=>{while(cursor.index<hashes.length){const hash=hashes[cursor.index++];await waitForAtlas(hash);if(state.conditionalCache!==cache)return;}}));
+    if(state.conditionalCache!==cache)return;
+    const b=cache.bounds,section=state.cameraSections.find(item=>item.key===state.roomViewKey),spanX=Math.max(.01,b.maxX-b.minX),spanY=Math.max(.01,b.maxY-b.minY),desired=Math.max(1,Number(section?.pixelsPerWorldUnit)||Number(cache.meta.image?.pixelsPerWorldUnit)||1);
+    const ppu=Math.max(.1,Math.min(desired,8192/spanX,8192/spanY,Math.sqrt(16000000/(spanX*spanY))));
+    const width=Math.max(1,Math.ceil(spanX*ppu)),height=Math.max(1,Math.ceil(spanY*ppu)),raster=document.createElement('canvas');raster.width=width;raster.height=height;
+    const rasterContext=raster.getContext('2d');if(!rasterContext)throw new Error('The browser could not allocate a room state image.');
+    rasterContext.imageSmoothingEnabled=true;rasterContext.imageSmoothingQuality='high';cache.pixelsPerWorldUnit=ppu;
+    const frame={view:b,x:0,y:0,drawWidth:width,drawHeight:height,scale:1,sourcePpuX:ppu,sourcePpuY:ppu,
+      worldPoint:(x,y)=>({x:(x-b.minX)*ppu,y:(b.maxY-y)*ppu})};
+    const items=orderedConditionalRenderables(cache.scene);let index=0;
+    await new Promise((resolve,reject)=>{
+      const drawBatch=()=>{
+        if(state.conditionalCache!==cache){resolve();return;}
+        try{const end=Math.min(items.length,index+30);for(;index<end;index++){const item=items[index];
+          if(item.type==='sprite')drawConditionalSprite(item.object,item.artwork,frame,rasterContext);
+          else drawConditionalMesh(item.object,item.artwork,cache.scene.meshAssets,frame,rasterContext);
+        }
+          if(index<items.length)requestAnimationFrame(drawBatch);else resolve();
+        }catch(error){reject(error);}
+      };
+      requestAnimationFrame(drawBatch);
+    });
+    if(state.conditionalCache!==cache)return;
+    cache.raster=raster;
+  }catch(error){if(state.conditionalCache===cache){cache.error=error?.message||String(error);console.warn('Could not build conditional room composite:',error);}}
+  finally{
+    cache.building=false;
+    if(state.conditionalCache===cache){updateRoomViewDisplay();draw();}
+  }
+}
+
 function conditionalArtworkBounds(meta,scene){
   const base=meta?.image?.bounds;if(!base)return null;
   const bounds={minX:Infinity,minY:Infinity,maxX:-Infinity,maxY:-Infinity};
@@ -766,28 +916,8 @@ function conditionalArtworkBounds(meta,scene){
   return bounds;
 }
 
-function drawConditionalRoomArtwork(meta,frame,scene){
-  const {renderables,meshAssets}=scene;
-  const unitsById=new Map();
-  for(const renderable of renderables){
-    const group=renderable.object.sortingGroup?.enabled?renderable.object.sortingGroup:null;
-    const unitId=group?`group:${group.objectId||renderable.object.parentId||renderable.object.id}`:`single:${renderable.objectIndex}:${renderable.type}:${renderable.rendererIndex}`;
-    let unit=unitsById.get(unitId);
-    if(!unit){unit={group,items:[],layer:Number(group?.sortingLayerValue??renderable.artwork.sortingLayerValue)||0,
-      order:Number(group?.sortingOrder??renderable.artwork.sortingOrder)||0,z:Number(group?.worldPosition?.z??renderable.object.worldPosition?.z)||0,stableIndex:renderable.objectIndex};unitsById.set(unitId,unit);}
-    unit.items.push(renderable);
-  }
-  const itemOrder=(a,b)=>(Number(a.artwork.sortingLayerValue)||0)-(Number(b.artwork.sortingLayerValue)||0)||
-    (Number(a.artwork.sortingOrder)||0)-(Number(b.artwork.sortingOrder)||0)||a.objectIndex-b.objectIndex||a.rendererIndex-b.rendererIndex;
-  const units=[...unitsById.values()].sort((a,b)=>a.layer-b.layer||a.order-b.order||b.z-a.z||a.stableIndex-b.stableIndex);
-  for(const unit of units)for(const item of unit.items.sort(itemOrder)){
-    if(item.type==='sprite')drawConditionalSprite(item.object,item.artwork,frame);
-    else drawConditionalMesh(item.object,item.artwork,meshAssets,frame);
-  }
-}
-
-function drawConditionalSprite(object,sprite,frame){
-  const image=mapSpriteImage(sprite.textureSha256);if(!image.complete||!image.naturalWidth)return;
+function drawConditionalSprite(object,sprite,frame,target=ctx){
+  const image=mapSpriteImage(sprite.textureSha256,false);if(!image.complete||!image.naturalWidth)return;
   const ppu=Math.max(1,Number(sprite.pixelsPerUnit)||100),rotated=Number(sprite.packingRotation)===4;
   const width=(rotated?sprite.rectHeight:sprite.rectWidth)/ppu,height=(rotated?sprite.rectWidth:sprite.rectHeight)/ppu;
   const originalWidth=(sprite.originalWidth||sprite.rectWidth)/ppu,originalHeight=(sprite.originalHeight||sprite.rectHeight)/ppu;
@@ -800,24 +930,24 @@ function drawConditionalSprite(object,sprite,frame){
   const tintG=Math.max(0,Math.min(1,Number(sprite.tintG??1)*Number(sprite.materialTintG??1)));
   const tintB=Math.max(0,Math.min(1,Number(sprite.tintB??1)*Number(sprite.materialTintB??1)));
   const tintA=Math.max(0,Math.min(1,(Number(sprite.tintA??1))*(Number(sprite.materialTintA??1))));
-  ctx.save();ctx.globalAlpha=tintA;ctx.globalCompositeOperation=roomCanvasBlend(sprite.blendMode);
-  ctx.filter=`brightness(${(tintR+tintG+tintB)/3})`;ctx.translate(position.x,position.y);
-  ctx.transform(m00*scaleX,-m10*scaleY,m01*scaleX,-m11*scaleY,0,0);
-  ctx.scale(sprite.flipX?-1:1,sprite.flipY?-1:1);ctx.translate(left+width/2,bottom+height/2);
+  target.save();target.globalAlpha=tintA;target.globalCompositeOperation=roomCanvasBlend(sprite.blendMode);
+  target.filter=`brightness(${(tintR+tintG+tintB)/3})`;target.translate(position.x,position.y);
+  target.transform(m00*scaleX,-m10*scaleY,m01*scaleX,-m11*scaleY,0,0);
+  target.scale(sprite.flipX?-1:1,sprite.flipY?-1:1);target.translate(left+width/2,bottom+height/2);
   const vertices=sprite.meshVertices||[],indices=sprite.meshIndices||[];
-  if(vertices.length>=3&&indices.length>=3){ctx.beginPath();for(let i=0;i+2<indices.length;i+=3){
+  if(vertices.length>=3&&indices.length>=3){target.beginPath();for(let i=0;i+2<indices.length;i+=3){
     const a=vertices[indices[i]],b=vertices[indices[i+1]],c=vertices[indices[i+2]];if(!a||!b||!c)continue;
-    const px=v=>v.x-(left+width/2),py=v=>v.y-(bottom+height/2);ctx.moveTo(px(a),py(a));ctx.lineTo(px(b),py(b));ctx.lineTo(px(c),py(c));ctx.closePath();}ctx.clip();}
-  ctx.scale(1,-1);if(Number(sprite.packingRotation)===1)ctx.scale(-1,1);else if(Number(sprite.packingRotation)===2)ctx.scale(1,-1);
-  else if(Number(sprite.packingRotation)===3)ctx.rotate(Math.PI);else if(rotated)ctx.rotate(-Math.PI/2);
+    const px=v=>v.x-(left+width/2),py=v=>v.y-(bottom+height/2);target.moveTo(px(a),py(a));target.lineTo(px(b),py(b));target.lineTo(px(c),py(c));target.closePath();}target.clip();}
+  target.scale(1,-1);if(Number(sprite.packingRotation)===1)target.scale(-1,1);else if(Number(sprite.packingRotation)===2)target.scale(1,-1);
+  else if(Number(sprite.packingRotation)===3)target.rotate(Math.PI);else if(rotated)target.rotate(-Math.PI/2);
   const sourceWidth=rotated?height:width,sourceHeight=rotated?width:height,sourceY=Number(sprite.textureHeight)-Number(sprite.rectY)-Number(sprite.rectHeight);
-  ctx.drawImage(image,Number(sprite.rectX),sourceY,Number(sprite.rectWidth),Number(sprite.rectHeight),-sourceWidth/2,-sourceHeight/2,sourceWidth,sourceHeight);
-  ctx.restore();
+  target.drawImage(image,Number(sprite.rectX),sourceY,Number(sprite.rectWidth),Number(sprite.rectHeight),-sourceWidth/2,-sourceHeight/2,sourceWidth,sourceHeight);
+  target.restore();
 }
 
-function drawConditionalMesh(object,mesh,meshAssets,frame){
+function drawConditionalMesh(object,mesh,meshAssets,frame,target=ctx){
   const asset=meshAssets.get(mesh.meshAssetId),submesh=asset?.submeshes?.[mesh.submeshIndex];
-  const image=mapSpriteImage(mesh.textureSha256);if(!asset||!submesh||submesh.topology!==0||!image.complete||!image.naturalWidth)return;
+  const image=mapSpriteImage(mesh.textureSha256,false);if(!asset||!submesh||submesh.topology!==0||!image.complete||!image.naturalWidth)return;
   const vertices=asset.vertices||[],indices=submesh.indices||[],point=object.worldPosition||{x:0,y:0};
   const matrix={m00:mesh.worldM00??1,m01:mesh.worldM01??0,m10:mesh.worldM10??0,m11:mesh.worldM11??1};
   const textureWidth=mesh.textureWidth||image.naturalWidth,textureHeight=mesh.textureHeight||image.naturalHeight,transformed=new Array(vertices.length);
@@ -834,9 +964,9 @@ function drawConditionalMesh(object,mesh,meshAssets,frame){
     const aa=(dx1*sy2-dx2*sy1)/determinant,cc=(sx1*dx2-sx2*dx1)/determinant,bb=(dy1*sy2-dy2*sy1)/determinant,dd=(sx1*dy2-sx2*dy1)/determinant;
     const ee=a.x-aa*a.u-cc*a.v,ff=a.y-bb*a.u-dd*a.v,tintR=mesh.tintR??1,tintG=mesh.tintG??1,tintB=mesh.tintB??1;
     const brightness=Math.max(0,Math.min(2,((a.r+b.r+c.r)/3*tintR+(a.g+b.g+c.g)/3*tintG+(a.b+b.b+c.b)/3*tintB)/3));
-    ctx.save();ctx.globalCompositeOperation=roomCanvasBlend(mesh.blendMode);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(c.x,c.y);ctx.closePath();ctx.clip();
-    ctx.globalAlpha=Math.max(0,Math.min(1,(mesh.tintA??1)*(a.a+b.a+c.a)/3));ctx.filter=`brightness(${brightness})`;ctx.transform(aa,bb,cc,dd,ee,ff);
-    ctx.drawImage(image,0,0,textureWidth,textureHeight);ctx.restore();
+    target.save();target.globalCompositeOperation=roomCanvasBlend(mesh.blendMode);target.beginPath();target.moveTo(a.x,a.y);target.lineTo(b.x,b.y);target.lineTo(c.x,c.y);target.closePath();target.clip();
+    target.globalAlpha=Math.max(0,Math.min(1,(mesh.tintA??1)*(a.a+b.a+c.a)/3));target.filter=`brightness(${brightness})`;target.transform(aa,bb,cc,dd,ee,ff);
+    target.drawImage(image,0,0,textureWidth,textureHeight);target.restore();
   }
 }
 
@@ -872,6 +1002,16 @@ function areaRoomAt(point){
     .filter(item=>item.inside||item.distance<17).sort((a,b)=>a.inside===b.inside?(a.inside?a.area-b.area:a.distance-b.distance):a.inside?-1:1);
   return matches[0]?.room||null;
 }
+function architectRoomAt(point){
+  if(!state.showArchitectMapMarkers||!state.area)return null;
+  const bounds=state.mapBackdropVisible?allDetailBounds():(visibleAreaDetailBounds(state.area)||state.area.wideBounds),t=mapTransform(bounds,...Object.values(canvasSize()),34);
+  return areaMapRooms(state.area,state.showConditionalMapArtwork).filter(room=>room.architect?.markerCount).map(room=>({room,distance:Math.hypot(screenPoint(room.center,t).x-point.x,screenPoint(room.center,t).y-point.y)})).filter(item=>item.distance<=15).sort((a,b)=>a.distance-b.distance)[0]?.room||null;
+}
+function mapAnchorAt(point){
+  if(!state.area)return null;
+  const bounds=state.mapBackdropVisible?allDetailBounds():(visibleAreaDetailBounds(state.area)||state.area?.wideBounds),t=mapTransform(bounds,...Object.values(canvasSize()),34);
+  return areaMapRooms(state.area,state.showConditionalMapArtwork).filter(room=>room.mapAnchor).map(room=>({room,distance:Math.hypot(screenPoint(room.center,t).x-point.x,screenPoint(room.center,t).y-point.y)})).filter(item=>item.distance<=12).sort((a,b)=>a.distance-b.distance)[0]?.room||null;
+}
 function selectRoomAt(point){const room=areaRoomAt(point);if(room)openRoom(room.name);}
 canvas.addEventListener('wheel',event=>{event.preventDefault();const rect=canvas.getBoundingClientRect();zoomAt({x:event.clientX-rect.left,y:event.clientY-rect.top},event.deltaY);},{passive:false});
 canvas.addEventListener('pointerdown',event=>{
@@ -895,7 +1035,7 @@ canvas.addEventListener('pointermove',event=>{
 function endCanvasPan(event){const drag=state.drag;if(!drag||drag.pointerId!==event.pointerId)return;state.drag=null;canvas.classList.remove('is-panning');if(canvas.hasPointerCapture(event.pointerId))canvas.releasePointerCapture(event.pointerId);if(drag.moved){state.suppressClickUntil=performance.now()+250;state.hoverAreaKey=null;state.hoverRoomName=null;draw();}canvas.style.cursor='grab';}
 canvas.addEventListener('pointerup',endCanvasPan);canvas.addEventListener('pointercancel',endCanvasPan);
 canvas.addEventListener('pointerleave',()=>{if(state.drag)return;let changed=false;if(state.hoverAreaKey){state.hoverAreaKey=null;changed=true;}if(state.hoverRoomName){state.hoverRoomName=null;changed=true;}canvas.style.cursor='grab';if(changed)draw();});
-canvas.addEventListener('click',event=>{if(performance.now()<state.suppressClickUntil){state.suppressClickUntil=0;event.preventDefault();return;}const rect=canvas.getBoundingClientRect(),point={x:event.clientX-rect.left,y:event.clientY-rect.top};if(state.mode==='world'||state.mode==='all-rooms')selectWorldAt(point);else if(state.mode==='area')selectRoomAt(point);else if($('toggleGauntlets').checked){const image=currentRoomImage(),meta=state.roomMeta;if(!meta)return;const{width,height}=canvasSize(),dynamic=state.showAllInactiveArtwork||state.includeDisabledStateArtwork||state.roomStateOverrides.size>0,scene=dynamic?collectConditionalRoomArtwork(meta):null,frame=zoomRoomFrame(dynamic?conditionalRoomFrame(width,height,meta,scene):roomFrame(width,height,image,meta));if(!frame)return;let best=null;for(const [i,marker] of (meta.architect?.markers||[]).entries()){if(!marker.worldPosition)continue;const screen=frame.worldPoint(marker.worldPosition.x,marker.worldPosition.y),d=Math.hypot(point.x-screen.x,point.y-screen.y);if(screen.x<frame.x||screen.x>frame.x+frame.drawWidth||screen.y<frame.y||screen.y>frame.y+frame.drawHeight)continue;if(d<15&&(!best||d<best.d))best={i,d};}if(best)selectGauntlet(best.i);}});
+canvas.addEventListener('click',event=>{if(performance.now()<state.suppressClickUntil){state.suppressClickUntil=0;event.preventDefault();return;}const rect=canvas.getBoundingClientRect(),point={x:event.clientX-rect.left,y:event.clientY-rect.top};if(state.mode==='world'||state.mode==='all-rooms')selectWorldAt(point);else if(state.mode==='area'){const architectRoom=architectRoomAt(point),anchorRoom=architectRoom?null:mapAnchorAt(point);if(architectRoom)openRoom(architectRoom.name,{architectMarkerIndex:0});else if(anchorRoom)openRoom(anchorRoom.name);else selectRoomAt(point);}else if($('toggleGauntlets').checked){const image=currentRoomImage(),meta=state.roomMeta;if(!meta)return;const{width,height}=canvasSize(),dynamic=state.showAllInactiveArtwork||state.includeDisabledStateArtwork||state.roomStateOverrides.size>0,cache=dynamic?conditionalCacheFor(meta):null,rebuild=Boolean(dynamic&&cache?.scene.renderables.length),frame=zoomRoomFrame(rebuild?(cache?.raster?conditionalRasterFrame(width,height,meta,cache):conditionalRoomFrame(width,height,meta,cache.scene)):roomFrame(width,height,image,meta));if(!frame)return;let best=null;for(const [i,marker] of (meta.architect?.markers||[]).entries()){if(!marker.worldPosition)continue;const screen=frame.worldPoint(marker.worldPosition.x,marker.worldPosition.y),d=Math.hypot(point.x-screen.x,point.y-screen.y);if(screen.x<frame.x||screen.x>frame.x+frame.drawWidth||screen.y<frame.y||screen.y>frame.y+frame.drawHeight)continue;if(d<15&&(!best||d<best.d))best={i,d};}if(best)selectGauntlet(best.i);}});
 
 function exportJson(value,name){const blob=new Blob([JSON.stringify(value,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 async function exportCleanPng() {
@@ -951,6 +1091,7 @@ $('toggleMapBackdrop').addEventListener('click',()=>{state.mapBackdropVisible=!s
 $('toggleMappedMapArtwork').addEventListener('change',event=>{state.showMappedMapArtwork=event.target.checked;draw();});
 $('toggleUnmappedMapArtwork').addEventListener('change',event=>{state.showUnmappedMapArtwork=event.target.checked;draw();});
 $('toggleConditionalMapArtwork').addEventListener('change',event=>{state.showConditionalMapArtwork=event.target.checked;draw();});
+$('toggleArchitectMapMarkers').addEventListener('change',event=>{state.showArchitectMapMarkers=event.target.checked;draw();});
 $('exportPngButton').addEventListener('click',exportCleanPng);
 for(const id of ['toggleEnemies','toggleSpawns','toggleChecks'])$(id).addEventListener('change',draw);
 new ResizeObserver(resizeCanvas).observe(canvas);window.addEventListener('resize',resizeCanvas);
