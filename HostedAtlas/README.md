@@ -48,7 +48,7 @@ The Pages Function lives in `HostedAtlas/site/functions`, so keep that folder at
 
 To publish a future replacement dataset, rebuild and audit it, then use `Upload-HostedAtlas-GitHub.ps1` with a new `-ReleasePrefix` so existing releases remain intact. Commit and push the new `site/release-assets.json` only after every upload has completed. Use `-Resume` only when continuing the same interrupted upload.
 
-r2-data/ and generated worker files are excluded from Git, while site/release-assets.json is committed after upload. This project also includes an R2 option: Upload-HostedAtlas.ps1 uploads the same files to the bucket named in site/wrangler.toml. Use site/wrangler.toml for R2 or site/wrangler.github.toml for the GitHub Releases proxy. See [R2 pricing](https://developers.cloudflare.com/r2/pricing/) for current terms.
+r2-data/ and generated worker files are excluded from Git, while site/release-assets.json is committed after upload. The Pages Git integration uses `site/wrangler.toml` with the GitHub Releases proxy and no R2 binding, so it works without an account-specific bucket. The optional R2 configuration is preserved in `site/wrangler.r2.toml`; use it only after creating the configured bucket. `site/wrangler.github.toml` is the matching GitHub Releases configuration for explicit Wrangler CLI use. See [R2 pricing](https://developers.cloudflare.com/r2/pricing/) for current terms.
 
 The game files used to generate this package are local source data and are not redistributed by these hosting instructions. Confirm that any public release follows the applicable game asset permissions.
 ## Rebuilding and checks

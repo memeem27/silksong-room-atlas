@@ -1,0 +1,7 @@
+name = "silksong-room-atlas"
+compatibility_date = "2026-10-16"
+pages_build_output_dir = "."
+
+[[r2_buckets]]
+binding = "ATLAS_DATA"
+bucket_name = "silksong-gauntlet-atlas-data"
