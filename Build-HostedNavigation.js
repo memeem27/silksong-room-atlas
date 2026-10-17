@@ -9,6 +9,10 @@ const navigationPath = path.join(root, 'workspace', 'preprocessed', 'maps', 'nav
 const hostedNavigationPath = path.join(root, 'HostedAtlas', 'r2-data', 'maps', 'navigation.json.gz');
 
 function normalize(value) { return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+const conditionalMapStateTokens = new Set(['destroyed', 'broken', 'fixed', 'ruined', 'collapsed', 'completed', 'quiet', 'creature', 'activated', 'inactive', 'restored', 'secret', 'opened', 'closed', 'flooded', 'repaired', 'revealed']);
+function isConditionalMapState(name) {
+  return String(name || '').split(/[_\s-]+/).some(part => conditionalMapStateTokens.has(normalize(part)));
+}
 
 // These are the parent groups in Team Cherry's Game_Map_Hornet hierarchy.
 // Group membership is a more reliable region signal than assigning each room
@@ -55,9 +59,10 @@ function spriteBounds(object) {
   return Number.isFinite(minX) ? { minX, maxX, minY, maxY } : null;
 }
 
-function mapSprites(object) {
+function mapSprites(object, objectOrder) {
   const position = object.WorldPosition || { X: 0, Y: 0 };
-  return (object.Sprites || []).filter(sprite => sprite.RendererEnabled !== false).flatMap(sprite => {
+  return (object.Sprites || []).flatMap((sprite, spriteOrder) => {
+    if (sprite.RendererEnabled === false) return [];
     const textureSha256 = String(sprite.ImageUrl || '').match(/\/([a-f0-9]{64})\.png$/i)?.[1]?.toLowerCase();
     if (!textureSha256) return [];
     return [{
@@ -68,10 +73,11 @@ function mapSprites(object) {
       originalWidth: sprite.OriginalWidth, originalHeight: sprite.OriginalHeight,
       trimOffsetX: sprite.TrimOffsetX, trimOffsetY: sprite.TrimOffsetY,
       packingRotation: sprite.PackingRotation, flipX: sprite.FlipX, flipY: sprite.FlipY,
-      worldPosition: { x: position.X, y: position.Y },
+      worldPosition: { x: position.X, y: position.Y, z: Number(position.Z) || 0 },
       worldM00: sprite.WorldM00, worldM01: sprite.WorldM01, worldM10: sprite.WorldM10, worldM11: sprite.WorldM11,
       tintR: sprite.TintR, tintG: sprite.TintG, tintB: sprite.TintB, tintA: sprite.TintA,
-      sortingLayerValue: sprite.SortingLayerValue, sortingOrder: sprite.SortingOrder
+      sortingLayerValue: sprite.SortingLayerValue, sortingOrder: sprite.SortingOrder,
+      mapObjectOrder: objectOrder, mapSpriteOrder: spriteOrder
     }];
   });
 }
@@ -127,12 +133,12 @@ async function main() {
   const labels = mapLabels(objects);
   const mappedRooms = new Map();
   const objectGroups = new Map();
+  const mapArtworkGroups = new Map();
 
-  for (const object of objects) {
+  for (const [objectOrder, object] of objects.entries()) {
     if (!object.Components?.some(component => component.ScriptName === 'GameMapScene')) continue;
     if (object.ActiveInHierarchy === false || !(object.Sprites || []).some(sprite => sprite.RendererEnabled !== false)) continue;
     const roomName = roomNames.get(normalize(object.Name));
-    if (!roomName) continue;
     let parent = byId.get(object.ParentId);
     let group = parent?.Name || '';
     while (parent && parent.Id !== mapRoot.Id && !parent.Components?.some(component => component.ScriptName === 'GameMapScene')) {
@@ -145,7 +151,13 @@ async function main() {
     if (!bounds) continue;
     const center = { x: (bounds.minX + bounds.maxX) / 2, y: (bounds.minY + bounds.maxY) / 2 };
     const mapGroup = group || 'Other';
-    const row = { name: roomName, bounds, center, mapGroup, mapObjectName: object.Name, mapSprites: mapSprites(object) };
+    const sprites = mapSprites(object, objectOrder);
+    if (!sprites.length) continue;
+    const row = { name: roomName || object.Name, roomMapped: Boolean(roomName), bounds, center, mapGroup,
+      mapObjectName: object.Name, conditionalMapState: isConditionalMapState(object.Name), mapSprites: sprites };
+    if (!mapArtworkGroups.has(mapGroup)) mapArtworkGroups.set(mapGroup, []);
+    mapArtworkGroups.get(mapGroup).push(row);
+    if (!roomName) continue;
     const score = (object.ActiveInHierarchy === true ? 4 : 0)
       + ((object.Sprites || []).some(sprite => sprite.RendererEnabled !== false) ? 2 : 0)
       + (groupToArea.has(normalize(mapGroup)) ? 1 : 0);
@@ -166,6 +178,18 @@ async function main() {
     assigned.add(normalize(row.name));
   }
 
+  // Several authored map sections are assembled from extra GameMapScene
+  // sprite objects whose names are not exported scene names. Preserve those
+  // real assets so composite rooms do not appear as blank gaps in the atlas.
+  for (const [group, rows] of mapArtworkGroups) {
+    const key = groupToArea.get(normalize(group));
+    const area = key && areasByKey.get(key);
+    if (!area) continue;
+    const unmapped = rows.filter(row => !row.roomMapped);
+    area.unmappedMapArtwork = unmapped.filter(row => !row.conditionalMapState);
+    area.conditionalMapArtwork = unmapped.filter(row => row.conditionalMapState);
+  }
+
   // Preserve valid locations from older prepared navigation when their source
   // object is unavailable in this map bundle, without duplicating remapped rooms.
   for (const area of areasByKey.values()) {
@@ -177,7 +201,7 @@ async function main() {
       assigned.add(id);
     }
     area.rooms.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
-    const bounds = unionBounds(area.rooms.map(room => room.bounds).filter(Boolean));
+    const bounds = unionBounds([...area.rooms, ...(area.unmappedMapArtwork || []), ...(area.conditionalMapArtwork || [])].map(room => room.bounds).filter(Boolean));
     if (bounds) area.detailBounds = expandBounds(bounds);
   }
 
@@ -212,8 +236,9 @@ async function main() {
     if (a.supplemental) return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
     return b.widePosition.y - a.widePosition.y || a.widePosition.x - b.widePosition.x || a.name.localeCompare(b.name);
   });
-  const result = { ...navigation, format: 'silksong-room-atlas-navigation', formatVersion: 2,
+  const result = { ...navigation, format: 'silksong-room-atlas-navigation', formatVersion: 3,
     roomPositionSource: 'Game_Map_Hornet GameMapScene sprites and their authored parent map sections',
+    unmappedMapArtworkSource: 'Additional real GameMapScene sprites in authored map groups that do not match an exported room name; named state variants remain separately toggleable',
     areas };
   const sourceBytes = Buffer.from(JSON.stringify(result));
   await fs.promises.writeFile(navigationPath, sourceBytes);

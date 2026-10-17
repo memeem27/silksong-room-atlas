@@ -19,7 +19,7 @@
   <main class="layout">
     <nav class="map-rail" aria-label="Map controls">
       <button id="toggleNavigatorButton" class="rail-button" type="button" aria-controls="navigator" aria-expanded="false" title="Browse areas and rooms"><span class="rail-glyph" aria-hidden="true">⌖</span><span>Browse</span></button>
-      <button id="toggleInspectorButton" class="rail-button" type="button" aria-controls="inspector" aria-expanded="false" title="Open room layers and details"><span class="rail-glyph" aria-hidden="true">☷</span><span>Layers</span></button>
+      <button id="toggleInspectorButton" class="rail-button" type="button" aria-controls="inspector" aria-expanded="false" title="Open map and room layers"><span class="rail-glyph" aria-hidden="true">☷</span><span>Layers</span></button>
       <span class="rail-divider" aria-hidden="true"></span>
       <button id="fullscreenButton" class="rail-button rail-icon-only" type="button" aria-label="Toggle fullscreen" title="Toggle fullscreen"><span class="rail-glyph" aria-hidden="true">⛶</span></button>
     </nav>
@@ -54,16 +54,24 @@
         </div>
       </div>
       <div class="canvas-wrap">
-        <canvas id="mapCanvas" aria-label="Silksong map or room. Scroll to zoom; map markers stay the same size." title="Scroll to zoom · markers keep the same size"></canvas>
+        <canvas id="mapCanvas" aria-label="Silksong map or room. Scroll to zoom, drag to pan; map markers stay the same size." title="Scroll to zoom · drag to pan · markers keep the same size"></canvas>
         <div id="canvasNotice" class="canvas-notice" hidden></div>
         <div id="canvasLoading" class="canvas-loading" hidden>Loading selected room…</div>
       </div>
-      <div class="stage-foot"><span id="viewFoot">REAL GAME MAP ART · SCROLL TO ZOOM</span><span id="imageDimensions"></span></div>
+      <div class="stage-foot"><span id="viewFoot">REAL GAME MAP ART · SCROLL TO ZOOM · DRAG TO PAN</span><span id="imageDimensions"></span></div>
     </section>
 
     <aside id="inspector" class="inspector" aria-label="Room controls and details" aria-hidden="true">
-      <div class="inspector-head"><div><span class="eyebrow">ROOM LAYERS</span><h2 id="inspectorTitle">Room information</h2></div><div class="inspector-head-actions"><button id="closeRoomButton" type="button" title="Return to area map" aria-label="Return to area map" hidden>↩</button><button id="closeInspectorButton" class="panel-close" type="button" aria-label="Close room details" title="Close">×</button></div></div>
+      <div class="inspector-head"><div><span class="eyebrow" id="inspectorEyebrow">LAYERS</span><h2 id="inspectorTitle">Room information</h2></div><div class="inspector-head-actions"><button id="closeRoomButton" type="button" title="Return to area map" aria-label="Return to area map" hidden>↩</button><button id="closeInspectorButton" class="panel-close" type="button" aria-label="Close room details" title="Close">×</button></div></div>
       <div id="roomSummary" class="summary"><div class="empty">Select a region, then choose a room.</div></div>
+
+      <section id="mapLayers" class="control-section" hidden>
+        <div class="section-title">MAP ARTWORK <span>REAL GAME SPRITES</span></div>
+        <label class="toggle"><input id="toggleMappedMapArtwork" type="checkbox" checked />Mapped room artwork</label>
+        <label class="toggle"><input id="toggleUnmappedMapArtwork" type="checkbox" checked />Additional / unmapped artwork <small id="mapPieceCount">0 sprites</small></label>
+        <label class="toggle"><input id="toggleConditionalMapArtwork" type="checkbox" />Conditional map changes <small id="mapStateCount">0 sprites</small></label>
+        <p class="hint">Extra room pieces stay on to fill map gaps. Named changes such as broken, fixed, secret, or destroyed variants stay off until you turn them on.</p>
+      </section>
 
       <section id="roomSectionPanel" class="control-section" hidden>
         <div class="section-title">ROOM SECTION <span>GAME CAMERA AREA</span></div>
