@@ -160,7 +160,8 @@ function showArea(key) {
   const area = findArea(key); if (!area) return;
   closePanel('inspector');
   if(state.mapBackdropAuto){state.mapBackdropVisible=false;state.mapBackdropAuto=false;}
-  if(!area.rooms.some(room=>room.mapSprites?.length)&&!area.unmappedMapArtwork?.length&&!area.conditionalMapArtwork?.length){state.mapBackdropVisible=true;state.mapBackdropAuto=true;}
+  const hasDefaultMapArtwork=area.rooms.some(room=>room.mapSprites?.length&&!room.conditionalMapState)||(area.unmappedMapArtwork||[]).length>0;
+  if(!hasDefaultMapArtwork){state.mapBackdropVisible=true;state.mapBackdropAuto=true;}
   state.selectedAreaName=area.key; state.hoverAreaKey=null; state.hoverRoomName=null;
   state.mode='area'; state.area=area; state.room=null; state.roomMeta=null; state.roomImage=null; state.selectedGauntlet=null;
   $('stageKind').textContent='REGION DETAIL'; $('stageTitle').textContent=area.name; $('viewFoot').textContent=`${area.key} · ${area.detailBounds?'ROOM SECTIONS':'WIDE MAP REGION'} · SCROLL TO ZOOM · DRAG TO PAN`; $('imageDimensions').textContent='';
@@ -169,7 +170,8 @@ function showArea(key) {
   $('toggleMapBackdrop').hidden=false; $('toggleMapBackdrop').textContent=state.mapBackdropVisible?'Hide other regions':'Show all regions'; $('toggleMapBackdrop').setAttribute('aria-pressed',String(state.mapBackdropVisible));
   $('roomSummary').innerHTML=`<div class="summary-name">${esc(area.name)}</div><div class="summary-kind">REGION ${esc(area.key)}</div><div class="summary-stat"><span>Mapped rooms</span><strong>${area.rooms.length}</strong></div><div class="summary-stat"><span>Preprocessed images</span><strong>${area.rooms.filter(room=>findRoom(room.name)?.image).length}</strong></div>`;
   $('mapPieceCount').textContent=`${(area.unmappedMapArtwork||[]).reduce((count,object)=>count+(object.mapSprites?.length||0),0)} sprites`;
-  $('mapStateCount').textContent=`${(area.conditionalMapArtwork||[]).reduce((count,object)=>count+(object.mapSprites?.length||0),0)} sprites`;
+  const conditionalRows=[...(area.conditionalMapArtwork||[]),...(area.rooms||[]).filter(room=>room.conditionalMapState)];
+  $('mapStateCount').textContent=`${conditionalRows.reduce((count,object)=>count+(object.mapSprites?.length||0),0)} sprites`;
   $('mapLayers').hidden=false; $('roomSectionPanel').hidden=true; $('objectLayers').hidden=true; $('roomStatePanel').hidden=true; $('architectPanel').hidden=true; $('metadataPanel').hidden=true; $('closeRoomButton').hidden=true;
   renderNavigation(); $('navList').scrollTop=0; draw();
 }
@@ -545,11 +547,12 @@ function screenPoint(point,transform){return{x:transform.x+point.x*transform.sca
 function worldAt(screen,transform){return{x:(screen.x-transform.x)/transform.scale,y:(transform.y-screen.y)/transform.scale};}
 function mapBoundsForMode(){
   if(state.mode==='world'||state.mode==='all-rooms')return state.navigation?.maps?.wide?.bounds;
-  if(state.mode==='area')return state.mapBackdropVisible?(allDetailBounds()||state.area?.detailBounds||state.area?.wideBounds):(state.area?.detailBounds||state.area?.wideBounds);
+  if(state.mode==='area')return state.mapBackdropVisible?(allDetailBounds()||visibleAreaDetailBounds(state.area)||state.area?.wideBounds):(visibleAreaDetailBounds(state.area)||state.area?.wideBounds);
   return null;
 }
+function visibleAreaDetailBounds(area){return state.showConditionalMapArtwork?(area?.detailBoundsWithConditional||area?.detailBounds):area?.detailBounds;}
 function allDetailBounds(){
-  const bounds=(state.navigation?.areas||[]).map(area=>area.detailBounds).filter(Boolean);if(!bounds.length)return null;
+  const bounds=(state.navigation?.areas||[]).map(visibleAreaDetailBounds).filter(Boolean);if(!bounds.length)return null;
   return{minX:Math.min(...bounds.map(b=>b.minX)),maxX:Math.max(...bounds.map(b=>b.maxX)),minY:Math.min(...bounds.map(b=>b.minY)),maxY:Math.max(...bounds.map(b=>b.maxY))};
 }
 function draw() {
@@ -596,14 +599,14 @@ function drawArea(width,height,transform,image,imageRecord) {
     if(!areaMapArtwork(area).length)drawFallbackNotice(width,height,'No room map artwork is recorded here. Choose a room from the list.');
   }
 }
-function mapVariantKey(name){return fileBase(name).toLowerCase().replace(/(?:[_-](?:destroyed|ruined|broken|collapsed|completed|quiet|creature|activated|inactive|restored))+$/,'');}
+function mapVariantKey(name){return fileBase(name).toLowerCase().replace(/(?:[_-](?:destroyed|ruined|broken|break|collapsed|completed|quiet|creature|activated|inactive|restored|secret|opened|closed|flooded|repaired|revealed|shortcut))+$/,'');}
 function mapVariantRank(name){return mapVariantKey(name)===fileBase(name).toLowerCase()?0:1;}
 function boundsIoU(a,b){if(!a||!b)return 0;const w=Math.max(0,Math.min(a.maxX,b.maxX)-Math.max(a.minX,b.minX)),h=Math.max(0,Math.min(a.maxY,b.maxY)-Math.max(a.minY,b.minY)),intersection=w*h,union=(a.maxX-a.minX)*(a.maxY-a.minY)+(b.maxX-b.minX)*(b.maxY-b.minY)-intersection;return union>0?intersection/union:0;}
-function areaMapRooms(area){
-  const rooms=(area?.rooms||[]).filter(room=>room.mapSprites?.length&&findRoom(room.name)).slice().sort((a,b)=>mapVariantRank(a.name)-mapVariantRank(b.name)||a.name.localeCompare(b.name));
+function areaMapRooms(area,includeConditional=false){
+  const rooms=(area?.rooms||[]).filter(room=>room.mapSprites?.length&&findRoom(room.name)&&(includeConditional||!room.conditionalMapState)).slice().sort((a,b)=>mapVariantRank(a.name)-mapVariantRank(b.name)||a.name.localeCompare(b.name));
   const kept=[];
   for(const room of rooms){
-    const duplicate=kept.some(previous=>{
+    const duplicate=!room.conditionalMapState&&kept.some(previous=>{
       const related=mapVariantKey(previous.name)===mapVariantKey(room.name)||mapVariantRank(previous.name)>0||mapVariantRank(room.name)>0;
       return related&&boundsIoU(previous.bounds,room.bounds)>.58;
     });
@@ -614,11 +617,14 @@ function areaMapRooms(area){
 function areaMapArtwork(area){
   const mapped=state.showMappedMapArtwork?areaMapRooms(area).flatMap(room=>room.mapSprites||[]):[];
   const unassigned=state.showUnmappedMapArtwork?(area?.unmappedMapArtwork||[]).flatMap(object=>object.mapSprites||[]):[];
-  const conditional=state.showConditionalMapArtwork?(area?.conditionalMapArtwork||[]).flatMap(object=>object.mapSprites||[]):[];
+  const conditional=state.showConditionalMapArtwork?[
+    ...(area?.conditionalMapArtwork||[]).flatMap(object=>object.mapSprites||[]),
+    ...(area?.rooms||[]).filter(room=>room.conditionalMapState).flatMap(room=>room.mapSprites||[])
+  ]:[];
   return [...mapped,...unassigned,...conditional];
 }
 function drawAreaBounds(area,transform,color,dashed=false,detailOnly=false){
-  const b=detailOnly?area.detailBounds:(area.detailBounds||area.wideBounds);if(!b)return;const topLeft=screenPoint({x:b.minX,y:b.maxY},transform),bottomRight=screenPoint({x:b.maxX,y:b.minY},transform);
+  const b=detailOnly?visibleAreaDetailBounds(area):(visibleAreaDetailBounds(area)||area.wideBounds);if(!b)return;const topLeft=screenPoint({x:b.minX,y:b.maxY},transform),bottomRight=screenPoint({x:b.maxX,y:b.minY},transform);
   ctx.save();ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.setLineDash(dashed?[6,4]:[]);ctx.strokeRect(topLeft.x,topLeft.y,bottomRight.x-topLeft.x,bottomRight.y-topLeft.y);ctx.restore();
 }
 function drawHoveredRoom(room,transform,width,height){
@@ -861,8 +867,8 @@ function drawEnemyTexture(record,px,py,roomScale,roomPpu,target){
 function worldAreaAt(point){let best=null;const transform=mapTransform(state.navigation?.maps?.wide?.bounds,...Object.values(canvasSize()),34);for(const area of state.navigation?.areas||[]){if(!area.widePosition)continue;const screen=screenPoint(area.widePosition,transform),distance=Math.hypot(screen.x-point.x,screen.y-point.y);if(distance<=17&&(!best||distance<best.distance))best={area,distance};}return best?.area||null;}
 function selectWorldAt(point){const area=worldAreaAt(point);if(area)showArea(area.key);}
 function areaRoomAt(point){
-  const bounds=state.mapBackdropVisible?allDetailBounds():(state.area?.detailBounds||state.area?.wideBounds),t=mapTransform(bounds,...Object.values(canvasSize()),34),world=worldAt(point,t);
-  const matches=areaMapRooms(state.area).map(room=>{const b=room.bounds,inside=world.x>=b.minX&&world.x<=b.maxX&&world.y>=b.minY&&world.y<=b.maxY;return{room,inside,area:(b.maxX-b.minX)*(b.maxY-b.minY),distance:Math.hypot(room.center.x-world.x,room.center.y-world.y)*t.scale};})
+  const bounds=state.mapBackdropVisible?allDetailBounds():(visibleAreaDetailBounds(state.area)||state.area?.wideBounds),t=mapTransform(bounds,...Object.values(canvasSize()),34),world=worldAt(point,t);
+  const matches=areaMapRooms(state.area,state.showConditionalMapArtwork).map(room=>{const b=room.bounds,inside=world.x>=b.minX&&world.x<=b.maxX&&world.y>=b.minY&&world.y<=b.maxY;return{room,inside,area:(b.maxX-b.minX)*(b.maxY-b.minY),distance:Math.hypot(room.center.x-world.x,room.center.y-world.y)*t.scale};})
     .filter(item=>item.inside||item.distance<17).sort((a,b)=>a.inside===b.inside?(a.inside?a.area-b.area:a.distance-b.distance):a.inside?-1:1);
   return matches[0]?.room||null;
 }

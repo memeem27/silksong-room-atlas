@@ -9,7 +9,7 @@ const navigationPath = path.join(root, 'workspace', 'preprocessed', 'maps', 'nav
 const hostedNavigationPath = path.join(root, 'HostedAtlas', 'r2-data', 'maps', 'navigation.json.gz');
 
 function normalize(value) { return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
-const conditionalMapStateTokens = new Set(['destroyed', 'broken', 'fixed', 'ruined', 'collapsed', 'completed', 'quiet', 'creature', 'activated', 'inactive', 'restored', 'secret', 'opened', 'closed', 'flooded', 'repaired', 'revealed']);
+const conditionalMapStateTokens = new Set(['destroyed', 'broken', 'break', 'fixed', 'ruined', 'collapsed', 'completed', 'quiet', 'creature', 'activated', 'inactive', 'restored', 'secret', 'opened', 'closed', 'flooded', 'repaired', 'revealed', 'shortcut']);
 function isConditionalMapState(name) {
   return String(name || '').split(/[_\s-]+/).some(part => conditionalMapStateTokens.has(normalize(part)));
 }
@@ -96,6 +96,22 @@ function unionBounds(bounds) {
     minY: Math.min(...bounds.map(bound => bound.minY)), maxY: Math.max(...bounds.map(bound => bound.maxY)) };
 }
 
+function areaBounds(area, includeConditional = false) {
+  const rows = [
+    ...(area.rooms || []).filter(room => includeConditional || !room.conditionalMapState),
+    ...(area.unmappedMapArtwork || []),
+    ...(includeConditional ? (area.conditionalMapArtwork || []) : [])
+  ];
+  return unionBounds(rows.map(row => row.bounds).filter(Boolean));
+}
+
+function expandAreaBounds(area) {
+  const defaultBounds = areaBounds(area);
+  const allBounds = areaBounds(area, true);
+  area.detailBounds = expandBounds(defaultBounds || allBounds);
+  area.detailBoundsWithConditional = expandBounds(allBounds || defaultBounds);
+}
+
 function mapLabels(objects) {
   return objects.filter(object => object.Name?.startsWith('Area Name') && object.WorldPosition?.X < -100).flatMap(object => {
     let key = '', text = '';
@@ -129,7 +145,7 @@ async function main() {
   if (!mapRoot) throw new Error('The extracted Game_Map_Hornet map hierarchy was not found.');
   const roomNames = new Map((manifest.rooms || []).map(room => [normalize(room.name), room.name]));
   const sourceAreas = (navigation.areas || []).filter(area => !area.supplemental);
-  const areasByKey = new Map(sourceAreas.map(area => [area.key, { ...area, rooms: [] }]));
+  const areasByKey = new Map(sourceAreas.map(area => [area.key, { ...area, rooms: [], unmappedMapArtwork: [], conditionalMapArtwork: [] }]));
   const labels = mapLabels(objects);
   const mappedRooms = new Map();
   const objectGroups = new Map();
@@ -178,18 +194,6 @@ async function main() {
     assigned.add(normalize(row.name));
   }
 
-  // Several authored map sections are assembled from extra GameMapScene
-  // sprite objects whose names are not exported scene names. Preserve those
-  // real assets so composite rooms do not appear as blank gaps in the atlas.
-  for (const [group, rows] of mapArtworkGroups) {
-    const key = groupToArea.get(normalize(group));
-    const area = key && areasByKey.get(key);
-    if (!area) continue;
-    const unmapped = rows.filter(row => !row.roomMapped);
-    area.unmappedMapArtwork = unmapped.filter(row => !row.conditionalMapState);
-    area.conditionalMapArtwork = unmapped.filter(row => row.conditionalMapState);
-  }
-
   // Preserve valid locations from older prepared navigation when their source
   // object is unavailable in this map bundle, without duplicating remapped rooms.
   for (const area of areasByKey.values()) {
@@ -201,44 +205,72 @@ async function main() {
       assigned.add(id);
     }
     area.rooms.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
-    const bounds = unionBounds([...area.rooms, ...(area.unmappedMapArtwork || []), ...(area.conditionalMapArtwork || [])].map(room => room.bounds).filter(Boolean));
-    if (bounds) area.detailBounds = expandBounds(bounds);
   }
 
   // Add map sections that exist in the authored detailed map but do not have a
-  // corresponding tile on the game's current wide-map screen. They remain
-  // reachable from the region list and use their real map positions.
+  // corresponding tile on the game's current wide-map screen. Include groups
+  // that contain only extra sprite pieces so undiscovered sections are not lost.
   const supplemental = [];
-  for (const [group, rows] of objectGroups) {
-    if (groupToArea.has(normalize(group))) continue;
+  const allMapGroups = new Set([...objectGroups.keys(), ...mapArtworkGroups.keys()]);
+  for (const group of allMapGroups) {
+    const mappedAreaKey = groupToArea.get(normalize(group));
+    if (mappedAreaKey && areasByKey.has(mappedAreaKey)) continue;
+    const rows = objectGroups.get(group) || [];
+    const extraRows = (mapArtworkGroups.get(group) || []).filter(row => !row.roomMapped);
     const rooms = [...new Map(rows.map(row => [normalize(row.name), selectedRooms.get(normalize(row.name)) || row])).values()]
       .filter(row => row && !assigned.has(normalize(row.name)));
-    if (!rooms.length) continue;
-    const bounds = unionBounds(rooms.map(room => room.bounds).filter(Boolean));
+    if (!rooms.length && !extraRows.length) continue;
+    const bounds = unionBounds([...rooms, ...extraRows].map(room => room.bounds).filter(Boolean));
     if (!bounds) continue;
     const center = { x: (bounds.minX + bounds.maxX) / 2, y: (bounds.minY + bounds.maxY) / 2 };
     const titleCounts = new Map();
-    for (const room of rooms) {
-      const label = nearestLabel(room.center, labels);
+    for (const item of [...rooms, ...extraRows]) {
+      const label = nearestLabel(item.center, labels);
       const title = label?.text || group;
       titleCounts.set(title, (titleCounts.get(title) || 0) + 1);
     }
     const title = [...titleCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] || group;
     const key = `MAP_SECTION_${normalize(group).toUpperCase()}`;
-    supplemental.push({ key, name: title, widePosition: null, wideBounds: null, detailBounds: expandBounds(bounds),
+    supplemental.push({ key, name: title, widePosition: null, wideBounds: null,
       rooms: rooms.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })),
       sourceGroup: group, supplemental: true });
   }
 
   const areas = [...areasByKey.values(), ...supplemental];
+  const supplementalByGroup = new Map(supplemental.map(area => [normalize(area.sourceGroup), area]));
+
+  // Several authored GameMapScene groups contribute pieces to one visible
+  // region (for example Song, Library, Hang, and Cog all contribute to the
+  // Citadel). Aggregate by destination region instead of overwriting the
+  // previous group's pieces. Supplemental areas are matched by source group.
+  let expectedExtraArtworkCount = 0;
+  for (const [group, rows] of mapArtworkGroups) {
+    const key = groupToArea.get(normalize(group));
+    const area = (key && areasByKey.get(key)) || supplementalByGroup.get(normalize(group));
+    const extras = rows.filter(row => !row.roomMapped);
+    expectedExtraArtworkCount += extras.length;
+    if (!area) continue;
+    area.unmappedMapArtwork ||= [];
+    area.conditionalMapArtwork ||= [];
+    area.unmappedMapArtwork.push(...extras.filter(row => !row.conditionalMapState));
+    area.conditionalMapArtwork.push(...extras.filter(row => row.conditionalMapState));
+  }
+
+  const assignedExtraArtworkCount = areas.reduce((count, area) => count
+    + (area.unmappedMapArtwork?.length || 0) + (area.conditionalMapArtwork?.length || 0), 0);
+  if (assignedExtraArtworkCount !== expectedExtraArtworkCount) {
+    throw new Error(`Map artwork assignment is incomplete: assigned ${assignedExtraArtworkCount} of ${expectedExtraArtworkCount} extra sprite objects.`);
+  }
+  for (const area of areas) expandAreaBounds(area);
+
   areas.sort((a, b) => {
     if (a.supplemental !== b.supplemental) return a.supplemental ? 1 : -1;
     if (a.supplemental) return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
     return b.widePosition.y - a.widePosition.y || a.widePosition.x - b.widePosition.x || a.name.localeCompare(b.name);
   });
-  const result = { ...navigation, format: 'silksong-room-atlas-navigation', formatVersion: 3,
+  const result = { ...navigation, format: 'silksong-room-atlas-navigation', formatVersion: 4,
     roomPositionSource: 'Game_Map_Hornet GameMapScene sprites and their authored parent map sections',
-    unmappedMapArtworkSource: 'Additional real GameMapScene sprites in authored map groups that do not match an exported room name; named state variants remain separately toggleable',
+    unmappedMapArtworkSource: 'All additional real GameMapScene sprites grouped by authored region; event-state variants remain separately toggleable',
     areas };
   const sourceBytes = Buffer.from(JSON.stringify(result));
   await fs.promises.writeFile(navigationPath, sourceBytes);
@@ -246,11 +278,14 @@ async function main() {
   await fs.promises.mkdir(path.dirname(hostedNavigationPath), { recursive: true });
   await fs.promises.writeFile(hostedNavigationPath, zlib.gzipSync(Buffer.from(hostedJson), { level: 9 }));
   const summary = areas.map(area => ({ key: area.key, name: area.name, roomCount: area.rooms.length,
+    additionalArtworkCount: area.unmappedMapArtwork?.length || 0,
+    conditionalArtworkCount: (area.conditionalMapArtwork?.length || 0) + area.rooms.filter(room => room.conditionalMapState && room.mapSprites?.length).length,
     supplemental: Boolean(area.supplemental), sourceGroup: area.sourceGroup || null }));
   process.stdout.write(JSON.stringify({ status: 'ready', source: 'Game_Map_Hornet GameMapScene objects',
     matchedRoomCount: selectedRooms.size, areaCount: areas.length,
     worldRegionCount: areas.filter(area => area.widePosition).length,
-    supplementalSectionCount: supplemental.length, matchedRoomCountByRegion: summary }, null, 2) + '\n');
+    supplementalSectionCount: supplemental.length, expectedExtraArtworkCount,
+    assignedExtraArtworkCount, matchedRoomCountByRegion: summary }, null, 2) + '\n');
 }
 
 main().catch(error => { console.error(error.stack || error); process.exitCode = 1; });
