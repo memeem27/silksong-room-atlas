@@ -116,6 +116,12 @@ button[hidden], [hidden] { display: none !important; }
 .metadata-rows { display: flex; flex-direction: column; gap: 6px; }
 .metadata-row { display: flex; justify-content: space-between; gap: 8px; color: #666; font: 9px Consolas, monospace; }
 .metadata-row strong { color: #222; font-weight: 500; text-align: right; overflow-wrap: anywhere; }
+.area-transition-list { display: flex; flex-direction: column; gap: 5px; padding-top: 8px; margin-top: 8px; border-top: 1px solid #e5e8e4; }
+.area-transition-button { width: 100%; display: flex; align-items: center; gap: 7px; min-height: 33px; padding: 5px 7px; border-color: #d5ddd1; border-radius: 4px; background: #f8faf7; text-align: left; font-size: 10px; }
+.area-transition-button:hover { border-color: #9caf90; background: #edf3e9; }
+.area-transition-button > span:last-child { display: flex; flex-direction: column; gap: 2px; }
+.area-transition-button small { color: #687168; font: 8px Consolas,monospace; }
+.transition-arrow { color: #526d45; font-size: 15px; }
 .inspector-foot { margin-top: auto; padding: 10px 2px 0; color: #666; font: 9px/1.5 Consolas, monospace; }
 
 @media (max-width: 1050px) {

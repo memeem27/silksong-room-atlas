@@ -97,6 +97,17 @@ if (!atlasName) throw new Error('No source texture atlas found for the pixel tes
 results.push(runWebpSample('game texture atlas',
   path.join(atlasSourceDir, atlasName),
   path.join(hostedRoot, 'artwork', `${path.parse(atlasName).name}.webp`)));
+const deltaPath = path.join(sceneViewerRoot, 'HostedAtlas', 'delta-assets.json');
+if (fs.existsSync(deltaPath)) {
+  const delta = JSON.parse(fs.readFileSync(deltaPath, 'utf8'));
+  const newEnemyAtlases = (delta.changedFiles || []).filter(relative => /^artwork\/[a-f0-9]{64}\.webp$/i.test(relative));
+  for (const relative of newEnemyAtlases) {
+    const fileName = path.basename(relative);
+    const hash = path.parse(fileName).name;
+    results.push(runWebpSample(`Architect enemy atlas ${hash.slice(0, 12)}`,
+      path.join(atlasSourceDir, `${hash}.png`), path.join(hostedRoot, relative)));
+  }
+}
 
 const sourcePng = path.join(preprocessedRoot, 'images', 'abandoned_town.png');
 const hostedPng = path.join(hostedRoot, 'images', 'abandoned_town.png');

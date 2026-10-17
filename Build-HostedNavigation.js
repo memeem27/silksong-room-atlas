@@ -73,6 +73,9 @@ function mapSprites(object, objectOrder) {
       originalWidth: sprite.OriginalWidth, originalHeight: sprite.OriginalHeight,
       trimOffsetX: sprite.TrimOffsetX, trimOffsetY: sprite.TrimOffsetY,
       packingRotation: sprite.PackingRotation, flipX: sprite.FlipX, flipY: sprite.FlipY,
+      meshVertices: (sprite.MeshVertices || []).map(vertex => ({
+        x: Number(vertex.X ?? vertex.x), y: Number(vertex.Y ?? vertex.y)
+      })), meshIndices: sprite.MeshIndices || [],
       worldPosition: { x: position.X, y: position.Y, z: Number(position.Z) || 0 },
       worldM00: sprite.WorldM00, worldM01: sprite.WorldM01, worldM10: sprite.WorldM10, worldM11: sprite.WorldM11,
       tintR: sprite.TintR, tintG: sprite.TintG, tintB: sprite.TintB, tintA: sprite.TintA,
@@ -154,7 +157,9 @@ async function main() {
     if (room?.metadata) {
       try {
         const sidecarPath = path.resolve(path.dirname(manifestPath), room.metadata);
-        const metadata = JSON.parse(fs.readFileSync(sidecarPath, 'utf8'));
+        const raw = fs.readFileSync(sidecarPath, 'utf8');
+        if (!/"architect"\s*:/.test(raw)) { architectSummaryCache.set(key, null); return null; }
+        const metadata = JSON.parse(raw);
         const architect = metadata.architect;
         const markers = (architect?.markers || []).map(marker => ({
           key: marker.key, label: marker.label, kind: marker.kind,
@@ -176,6 +181,14 @@ async function main() {
   const mappedRooms = new Map();
   const objectGroups = new Map();
   const mapArtworkGroups = new Map();
+  const mapAliases = new Map([
+    ['aqueduct_05_caravan', 'aqueduct_05'], ['aqueduct_05_festival', 'aqueduct_05'], ['aqueduct_05_pre', 'aqueduct_05'],
+    ['bellshrine_lore_additive', 'bellshrine'], ['belltown_room_doctor', 'belltown'],
+    ['bonetown_boss', 'bonetown'], ['bone_05_boss', 'bone_05'],
+    ['bone_east_08_boss_beastfly', 'bone_east_08'], ['bone_east_08_boss_golem_rest', 'bone_east_08'],
+    ['cog_dancers_boss', 'cog_dancers'], ['greymoor_08_caravan', 'greymoor_08'], ['hang_04_boss', 'hang_04'],
+    ['memory_ant_queen', 'ant_queen'], ['shellwood_11b_memory', 'shellwood_11b'], ['ward_02_boss', 'ward_02b']
+  ]);
 
   for (const [objectOrder, object] of objects.entries()) {
     if (!object.Components?.some(component => component.ScriptName === 'GameMapScene')) continue;
@@ -227,6 +240,26 @@ async function main() {
     if (!area) continue;
     area.rooms.push(row);
     assigned.add(normalize(row.name));
+  }
+
+  // Story, boss, and additive scenes that share a physical map tile get an
+  // explicit secondary room anchor at that authored location. This records
+  // discoverable renderable scenes without pretending that their scene-local
+  // coordinates are global map coordinates.
+  let aliasedRoomCount = 0;
+  for (const [sceneName, baseName] of mapAliases) {
+    const id = normalize(sceneName), baseId = normalize(baseName);
+    if (assigned.has(id)) continue;
+    const base = selectedRooms.get(baseId);
+    const baseAreaKey = base && groupToArea.get(normalize(base.mapGroup));
+    const area = baseAreaKey && areasByKey.get(baseAreaKey);
+    if (!base || !area) continue;
+    const room = { ...base, name: sceneName, roomMapped: true,
+      bounds: { minX: base.center.x - .2, maxX: base.center.x + .2, minY: base.center.y - .2, maxY: base.center.y + .2 },
+      mapAnchor: true, mapVariantOf: base.name, mapSprites: [], architect: architectSummary(sceneName) };
+    area.rooms.push(room);
+    assigned.add(id);
+    aliasedRoomCount++;
   }
 
   // Preserve valid locations from older prepared navigation when their source
@@ -298,15 +331,90 @@ async function main() {
   }
   for (const area of areas) expandAreaBounds(area);
 
+  // The game's transition components identify exits but do not serialize a
+  // destination scene. Use actual neighboring GameMapScene bounds and confirm
+  // both scenes contain a serialized transition point before exposing a link.
+  const transitionCountCache = new Map();
+  function transitionCount(roomName) {
+    const id = normalize(roomName);
+    if (transitionCountCache.has(id)) return transitionCountCache.get(id);
+    const room = manifestRooms.get(id);
+    let count = 0;
+    if (room?.metadata) {
+      try {
+        const sidecarPath = path.resolve(path.dirname(manifestPath), room.metadata);
+        const raw = fs.readFileSync(sidecarPath, 'utf8');
+        if (!/"scriptName"\s*:\s*"(?:TransitionPoint|SceneTransitionZone)"/.test(raw)) {
+          transitionCountCache.set(id, 0);
+          return 0;
+        }
+        const metadata = JSON.parse(raw);
+        count = (metadata.objects || []).filter(object => (object.components || [])
+          .some(component => /^(TransitionPoint|SceneTransitionZone)$/.test(component.scriptName || ''))).length;
+      } catch { count = 0; }
+    }
+    transitionCountCache.set(id, count);
+    return count;
+  }
+  function boundsGap(a, b) {
+    const x = Math.max(0, a.bounds.minX - b.bounds.maxX, b.bounds.minX - a.bounds.maxX);
+    const y = Math.max(0, a.bounds.minY - b.bounds.maxY, b.bounds.minY - a.bounds.maxY);
+    return Math.hypot(x, y);
+  }
+  const transitionPairs = [];
+  const mappedAreas = areas.filter(area => !area.supplemental);
+  for (let i = 0; i < mappedAreas.length; i++) for (let j = i + 1; j < mappedAreas.length; j++) {
+    const from = mappedAreas[i], to = mappedAreas[j];
+    const fromRooms = from.rooms.filter(room => !room.mapVariantOf && room.bounds && transitionCount(room.name));
+    const toRooms = to.rooms.filter(room => !room.mapVariantOf && room.bounds && transitionCount(room.name));
+    const nearestFrom = new Map(), nearestTo = new Map();
+    for (const a of fromRooms) {
+      for (const b of toRooms) {
+        const gap = boundsGap(a, b);
+        if (gap > .3) continue;
+        const oldB = nearestFrom.get(a.name);
+        if (!oldB || gap < oldB.gap) nearestFrom.set(a.name, { room: b, gap });
+        const oldA = nearestTo.get(b.name);
+        if (!oldA || gap < oldA.gap) nearestTo.set(b.name, { room: a, gap });
+      }
+    }
+    for (const a of fromRooms) {
+      const match = nearestFrom.get(a.name);
+      if (!match || nearestTo.get(match.room.name)?.room !== a) continue;
+      const b = match.room, gap = match.gap;
+      const pair = { fromArea: from.key, fromAreaName: from.name, fromRoom: a.name,
+        fromCenter: a.center, toArea: to.key, toAreaName: to.name, toRoom: b.name,
+        toCenter: b.center, edgeGap: gap, source: 'mutually nearest authored GameMapScene boundaries with serialized transition components' };
+      transitionPairs.push(pair);
+      a.areaTransitions ||= [];
+      a.areaTransitions.push({ areaKey: to.key, areaName: to.name, roomName: b.name, edgeGap: gap });
+      b.areaTransitions ||= [];
+      b.areaTransitions.push({ areaKey: from.key, areaName: from.name, roomName: a.name, edgeGap: gap });
+      from.transitions ||= [];
+      from.transitions.push({ areaKey: to.key, areaName: to.name, fromRoom: a.name, toRoom: b.name,
+        fromCenter: a.center, toCenter: b.center, edgeGap: gap });
+      to.transitions ||= [];
+      to.transitions.push({ areaKey: from.key, areaName: from.name, fromRoom: b.name, toRoom: a.name,
+        fromCenter: b.center, toCenter: a.center, edgeGap: gap });
+    }
+  }
+
+  const placedNames = new Set(areas.flatMap(area => area.rooms.map(room => normalize(room.name))));
+  const unplacedRooms = (manifest.rooms || []).filter(room => room.image && !placedNames.has(normalize(room.name)))
+    .map(room => ({ name: room.name, kind: room.kind, status: room.status, hasImage: true, reason: 'No authored GameMapScene position was available for this scene.' }));
+  if (unplacedRooms.length) areas.push({ key: 'UNPLACED_SCENES', name: 'Other prepared scenes', widePosition: null, wideBounds: null,
+    rooms: unplacedRooms.map(room => ({ ...room, roomMapped: false, bounds: null, center: null, mapAnchor: false, mapSprites: [], architect: architectSummary(room.name) })),
+    supplemental: true, archive: true, sourceGroup: 'Unplaced scenes' });
+
   areas.sort((a, b) => {
     if (a.supplemental !== b.supplemental) return a.supplemental ? 1 : -1;
     if (a.supplemental) return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
     return b.widePosition.y - a.widePosition.y || a.widePosition.x - b.widePosition.x || a.name.localeCompare(b.name);
   });
-  const result = { ...navigation, format: 'silksong-room-atlas-navigation', formatVersion: 4,
-    roomPositionSource: 'Game_Map_Hornet GameMapScene sprites; sprite-less room positions use the authored GameMapScene transform',
+  const result = { ...navigation, format: 'silksong-room-atlas-navigation', formatVersion: 5,
+    roomPositionSource: 'Game_Map_Hornet GameMapScene sprites; explicit scene variants share a base tile anchor, all remaining renderable scenes are listed as unplaced',
     unmappedMapArtworkSource: 'All additional and duplicate real GameMapScene sprites grouped by authored region; event-state variants remain separately toggleable',
-    areas };
+    areas, unplacedRooms, transitionPairs };
   const sourceBytes = Buffer.from(JSON.stringify(result));
   await fs.promises.writeFile(navigationPath, sourceBytes);
   const hostedJson = JSON.stringify(result).replace(/("file"\s*:\s*"maps\/[^"/]+)\.png("?)/g, '$1.webp$2');
@@ -323,7 +431,8 @@ async function main() {
     architectRoomCount: [...selectedRooms.values()].filter(room => room.architect?.markerCount).length, areaCount: areas.length,
     worldRegionCount: areas.filter(area => area.widePosition).length,
     supplementalSectionCount: supplemental.length, expectedExtraArtworkCount,
-    assignedExtraArtworkCount, matchedRoomCountByRegion: summary }, null, 2) + '\n');
+    assignedExtraArtworkCount, transitionPairCount: transitionPairs.length, unplacedRenderedRoomCount: unplacedRooms.length,
+    aliasedRoomCount, matchedRoomCountByRegion: summary }, null, 2) + '\n');
 }
 
 main().catch(error => { console.error(error.stack || error); process.exitCode = 1; });

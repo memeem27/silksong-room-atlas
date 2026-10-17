@@ -16,6 +16,7 @@ Thumbs.db
 .appdata/
 .packages/
 HostedAtlas/r2-data/
+HostedAtlas/delta-assets.json
 HostedAtlas/asset-worker-*.log
 HostedAtlas/asset-worker-*.out.log
 HostedAtlas/asset-worker-*.err.log

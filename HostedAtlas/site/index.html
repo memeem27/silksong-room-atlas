@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#161a18" />
   <title>Silksong Room Atlas</title>
-  <link rel="stylesheet" href="./reader.css?v=atlas-6" />
+  <link rel="stylesheet" href="./reader.css?v=atlas-8" />
   <script src="./host-config.js"></script>
-  <script src="./reader.js?v=atlas-8" defer></script>
+  <script src="./reader.js?v=atlas-12" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -45,10 +45,11 @@
 
     <section class="stage" aria-label="Map and room image">
       <div class="stage-head">
-        <div class="stage-title"><span class="eyebrow" id="stageKind">WORLD MAP</span><h2 id="stageTitle">World regions</h2></div>
+        <div class="stage-title"><span class="eyebrow" id="stageKind">WORLD MAP OVERVIEW</span><h2 id="stageTitle">World regions</h2></div>
         <div class="stage-tools">
           <button id="fitButton" type="button">Fit view</button>
-          <button id="toggleMapBackdrop" type="button" aria-pressed="false" title="Show every region using real game map sprites" hidden>Show all regions</button>
+          <button id="toggleWorldMapStyle" type="button" title="Switch between the room map overview and the in-game wide map">Use game wide map</button>
+          <button id="toggleMapBackdrop" type="button" aria-pressed="false" title="Show connected neighboring regions for local map context" hidden>Show nearby regions</button>
           <button id="exportPngButton" type="button" hidden>Export clean PNG</button>
           <button id="refreshButton" type="button" title="Reload the map index">Refresh</button>
         </div>
@@ -58,7 +59,7 @@
         <div id="canvasNotice" class="canvas-notice" hidden></div>
         <div id="canvasLoading" class="canvas-loading" hidden>Loading selected room…</div>
       </div>
-      <div class="stage-foot"><span id="viewFoot">REAL GAME MAP ART · SCROLL TO ZOOM · DRAG TO PAN</span><span id="imageDimensions"></span></div>
+      <div class="stage-foot"><span id="viewFoot">REAL GAME ROOM-MAP ART · SCROLL TO ZOOM · DRAG TO PAN</span><span id="imageDimensions"></span></div>
     </section>
 
     <aside id="inspector" class="inspector" aria-label="Room controls and details" aria-hidden="true">
@@ -67,11 +68,14 @@
 
       <section id="mapLayers" class="control-section" hidden>
         <div class="section-title">MAP ARTWORK <span>REAL GAME SPRITES</span></div>
+        <label class="toggle"><input id="toggleAreaLabels" type="checkbox" checked />Area names</label>
+        <label class="toggle"><input id="toggleAreaConnectionLines" type="checkbox" checked />Area connection paths</label>
+        <label class="toggle"><input id="toggleRoomMapLabels" type="checkbox" checked />Room names when space allows</label>
         <label class="toggle"><input id="toggleMappedMapArtwork" type="checkbox" checked />Mapped room artwork</label>
         <label class="toggle"><input id="toggleUnmappedMapArtwork" type="checkbox" checked />Additional / unmapped artwork <small id="mapPieceCount">0 sprites</small></label>
         <label class="toggle"><input id="toggleConditionalMapArtwork" type="checkbox" />Conditional map changes <small id="mapStateCount">0 sprites</small></label>
         <label class="toggle"><input id="toggleArchitectMapMarkers" type="checkbox" /><span class="swatch gauntlet">G</span>Architect / GauntletSong <small id="architectMapCount">0 rooms</small></label>
-        <p class="hint">Extra room pieces stay on to fill map gaps. Small R markers show authored room positions without tile art; optional G markers open rooms with Architect data. Named map changes stay off until selected.</p>
+        <p class="hint">This sketch-like overview draws real game map sprites at their authored positions. Select a region to inspect its room layout. Scenes without a geographic map position remain in Other prepared scenes; no placeholder positions are invented.</p>
       </section>
 
       <section id="roomSectionPanel" class="control-section" hidden>

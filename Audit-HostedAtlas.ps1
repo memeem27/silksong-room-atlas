@@ -150,6 +150,26 @@ foreach ($image in $pngFallbackFiles) {
 $boneMeta = Read-GzipJson (Join-Path (Join-Path $dataRoot 'rooms') 'bone_01.json.gz')
 $boneMarkers = @($boneMeta.architect.markers).Count
 $bonePlacements = @($boneMeta.architect.placements).Count
+$boneBottomMeta = Read-GzipJson (Join-Path (Join-Path $dataRoot 'rooms') 'bone_01b.json.gz')
+$boneBottomMarkers = @($boneBottomMeta.architect.markers).Count
+$boneBottomPlacements = @($boneBottomMeta.architect.placements).Count
+$boneBottomEnemyArtwork = @($boneBottomMeta.architect.enemyArtwork.PSObject.Properties).Count
+$renderedRooms = @($manifest.rooms | Where-Object { $_.image })
+$indexedMapRooms = @($navigation.areas | ForEach-Object { @($_.rooms) }) + @($navigation.unplacedRooms)
+$indexedRoomNames = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+foreach ($room in $indexedMapRooms) { if ($room.name) { [void]$indexedRoomNames.Add([string]$room.name) } }
+$renderedRoomsMissingFromMap = @($renderedRooms | Where-Object { -not $indexedRoomNames.Contains([string]$_.name) })
+$positionedRenderedRooms = @($renderedRooms | Where-Object {
+    $name = [string]$_.name
+    @($navigation.areas | ForEach-Object { @($_.rooms) } | Where-Object { $_.name -eq $name -and $_.center }).Count -gt 0
+})
+$transitionPairs = @($navigation.transitionPairs)
+$navigationAreaKeys = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+foreach ($area in $navigation.areas) { [void]$navigationAreaKeys.Add([string]$area.key) }
+$invalidTransitionPairs = @($transitionPairs | Where-Object {
+    -not $navigationAreaKeys.Contains([string]$_.fromArea) -or -not $navigationAreaKeys.Contains([string]$_.toArea) -or
+    -not $_.fromRoom -or -not $_.toRoom -or -not $_.fromCenter -or -not $_.toCenter
+})
 $nativeFiles = @(Get-ChildItem -LiteralPath $dataRoot -Recurse -File | Where-Object { $_.Name -match '-native' -or $_.Name -match '\.partial\.' })
 $bytes = ($packageFiles | Measure-Object Length -Sum).Sum
 $githubTooLargeFiles = @($packageFiles | Where-Object { $_.Length -ge [int64]2GB })
@@ -173,6 +193,10 @@ if ($nativeFiles.Count) { $issues.Add("Native retry or partial files entered the
 if ($nonLosslessWebpFiles.Count) { $issues.Add("WebP files without a lossless VP8L image chunk: $($nonLosslessWebpFiles.Count).") }
 if ($nonMatchingPngCopies.Count) { $issues.Add("Oversized PNG fallbacks differ from their source renders: $($nonMatchingPngCopies.Count).") }
 if ($boneMarkers -lt 1 -or $bonePlacements -lt 1) { $issues.Add('bone_01 GauntletSong marker or placement metadata is missing.') }
+if ($boneBottomMarkers -lt 1 -or $boneBottomPlacements -lt 1 -or $boneBottomEnemyArtwork -lt 1) { $issues.Add('Bone Bottom (bone_01b) Architect markers, placements, or real enemy sprites are missing.') }
+if ($renderedRoomsMissingFromMap.Count) { $issues.Add("Rendered room images missing from the map index/archive: $($renderedRoomsMissingFromMap.Count).") }
+if ($renderedRooms.Count -ne $positionedRenderedRooms.Count + @($navigation.unplacedRooms).Count) { $issues.Add('Rendered room placement/archive totals do not cover each room exactly once.') }
+if (-not $transitionPairs.Count -or $invalidTransitionPairs.Count) { $issues.Add('Cross-area transition links are missing or reference invalid map destinations.') }
 if ($manifest.cameraSectionPass -and [int]$manifest.cameraSectionSummary.viewCount -ne $cameraViewCount) { $issues.Add('Camera-view manifest totals do not match room references.') }
 if ($manifest.cameraSectionPass -and [int]$manifest.cameraSectionSummary.resolutionLimitedViewCount -ne $cappedCameraViewCount) { $issues.Add('Capped camera-view totals do not match room references.') }
 if ($manifest.cameraSectionPass -and [int]$manifest.cameraSectionSummary.processedRoomCount -ne 483) { $issues.Add('Camera-view metadata does not cover the expected 483 capped rooms.') }
@@ -212,6 +236,15 @@ $report = [pscustomobject]@{
     excludedNativeOrPartialFiles = $nativeFiles.Count
     bone01GauntletMarkers = $boneMarkers
     bone01ArchitectPlacements = $bonePlacements
+    boneBottomGauntletMarkers = $boneBottomMarkers
+    boneBottomArchitectPlacements = $boneBottomPlacements
+    boneBottomEnemyArtworkTypes = $boneBottomEnemyArtwork
+    renderedRoomImages = $renderedRooms.Count
+    renderedRoomsWithAuthoredMapPositions = $positionedRenderedRooms.Count
+    renderedRoomsInUnplacedSceneArchive = @($navigation.unplacedRooms).Count
+    renderedRoomsMissingFromMapIndex = $renderedRoomsMissingFromMap.Count
+    transitionPairCount = $transitionPairs.Count
+    invalidTransitionPairs = $invalidTransitionPairs.Count
     dataBytes = $bytes
     dataGiB = [math]::Round($bytes / 1GB, 2)
     githubReleaseCompatible = ($githubTooLargeFiles.Count -eq 0)
