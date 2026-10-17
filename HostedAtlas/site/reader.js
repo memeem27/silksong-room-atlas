@@ -4,6 +4,7 @@ const DATA_BASE = String(window.SILKSONG_ATLAS_DATA_BASE || '/atlas-data/').repl
 const ARTWORK_BASE = String(window.SILKSONG_ATLAS_ARTWORK_BASE || '/api/artwork/').replace(/\/?$/, '/');
 const ARTWORK_EXTENSION = String(window.SILKSONG_ATLAS_ARTWORK_EXTENSION || 'png').replace(/^\./, '');
 const GZIP_JSON = Boolean(window.SILKSONG_ATLAS_GZIP_JSON);
+const MAX_MAP_ZOOM = 64;
 const state = { manifest: null, navigation: null, mode: 'world', area: null, room: null, roomMeta: null,
   roomImage: null, roomViewImage: null, wideImage: null, detailImage: null, imageCache: new Map(), atlasCache: new Map(),
   selectedGauntlet: null, selectedWave: 'all', visiblePlacements: new Map(), selectedAreaName: null, hoverAreaKey: null,
@@ -599,7 +600,7 @@ function applyViewport(base){
 function mapTransform(bounds,width,height,padding=34){return applyViewport(fitTransform(bounds,width,height,padding));}
 function zoomAt(screenPoint,deltaY){
   const view=currentViewport(),oldZoom=view.zoom;
-  const nextZoom=Math.max(1,Math.min(14,oldZoom*Math.exp(-deltaY*.0012)));
+  const nextZoom=Math.max(1,Math.min(MAX_MAP_ZOOM,oldZoom*Math.exp(-deltaY*.0012)));
   if(Math.abs(nextZoom-oldZoom)<.0001)return;
   const ratio=nextZoom/oldZoom;
   view.offsetX=screenPoint.x-(screenPoint.x-view.offsetX)*ratio;
@@ -664,17 +665,20 @@ function drawSketchOverview(width,height,transform){
     }
     ctx.restore();
   }
-  const mainAreas=areas.filter(area=>area.widePosition&&visibleAreaDetailBounds(area));
-  for(const area of mainAreas){
+  // Supplemental map sections use their own authored map geometry and room
+  // bounds rather than a wide-map position. Keep them in the same hit/highlight
+  // path as the large regions so every charted section can be selected here.
+  const chartedAreas=areas.filter(area=>!area.archive&&visibleAreaDetailBounds(area));
+  for(const area of chartedAreas){
     const focused=state.selectedAreaName===area.key||state.hoverAreaKey===area.key;
     if(!focused)continue;
     drawAreaShapeHighlight(area,transform,state.selectedAreaName===area.key);
   }
-  if(state.showAreaLabels)drawSketchAreaLabels(mainAreas,transform,width,height);
+  if(state.showAreaLabels)drawSketchAreaLabels(chartedAreas,transform,width,height);
 }
 function drawAreaShapeHighlight(area,transform,selected=true){
   const sprites=areaMapArtwork(area).filter(sprite=>sprite.meshVertices?.length>=3&&sprite.meshIndices?.length>=3&&sprite.worldPosition);
-  if(!sprites.length)return;
+  if(!sprites.length){drawAreaAnchorHighlight(area,transform,selected);return;}
   const fill=selected?'rgba(211,242,173,.16)':'rgba(211,242,173,.09)',stroke=selected?'rgba(233,250,205,.88)':'rgba(216,238,190,.68)';
   for(const sprite of sprites){
     const geometry=mapSpriteGeometry(sprite),position=screenPoint(sprite.worldPosition,transform),m00=Number.isFinite(sprite.worldM00)?sprite.worldM00:1,m01=Number.isFinite(sprite.worldM01)?sprite.worldM01:0,m10=Number.isFinite(sprite.worldM10)?sprite.worldM10:0,m11=Number.isFinite(sprite.worldM11)?sprite.worldM11:1;
@@ -691,6 +695,28 @@ function drawAreaShapeHighlight(area,transform,selected=true){
     ctx.fillStyle=fill;ctx.fill();ctx.beginPath();
     for(const edge of edges.values()){if(edge.count!==1)continue;const a=local(vertices[edge.from]),b=local(vertices[edge.to]);ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);}
     ctx.strokeStyle=stroke;ctx.lineWidth=(selected?1.5:1)/Math.max(.001,transform.scale);ctx.stroke();ctx.restore();
+  }
+}
+function drawAreaAnchorHighlight(area,transform,selected=true){
+  // A few charted sections (notably The Cradle) have surveyed room positions
+  // but no map tile sprites. Highlight those real positions instead of
+  // inventing a polygon or leaving the selected section invisible.
+  const anchors=areaMapRooms(area,state.showConditionalMapArtwork).filter(room=>room.mapAnchor&&room.center);
+  if(!anchors.length)return;
+  const {width,height}=canvasSize(),clusters=[];
+  for(const room of anchors){
+    const point=screenPoint(room.center,transform),near=clusters.find(item=>Math.hypot(item.point.x-point.x,item.point.y-point.y)<13);
+    if(near)near.rooms.push(room);else clusters.push({point,rooms:[room]});
+  }
+  for(const cluster of clusters){
+    const {x,y}=cluster.point;if(x<-22||y<-22||x>width+22||y>height+22)continue;
+    ctx.save();
+    ctx.fillStyle=selected?'rgba(211,242,173,.22)':'rgba(211,242,173,.12)';
+    ctx.strokeStyle=selected?'rgba(239,250,217,.98)':'rgba(216,238,190,.82)';
+    ctx.lineWidth=selected?2:1.4;
+    ctx.beginPath();ctx.arc(x,y,selected?13:10,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.beginPath();ctx.arc(x,y,selected?4:3,0,Math.PI*2);ctx.fillStyle=selected?'#f1ffdc':'#dfefc5';ctx.fill();
+    ctx.restore();
   }
 }
 function drawSketchAreaLabels(areas,transform,width,height){
@@ -1176,7 +1202,7 @@ function worldAreaAt(point){
   const {width,height}=canvasSize();
   if(state.worldMapStyle==='sketch'){
     const bounds=allDetailBounds()||state.navigation?.maps?.detail?.bounds,transform=mapTransform(bounds,width,height,34),world=worldAt(point,transform);
-    const candidates=(state.navigation?.areas||[]).filter(area=>area.widePosition&&visibleAreaDetailBounds(area)).map(area=>{
+    const candidates=(state.navigation?.areas||[]).filter(area=>!area.archive&&visibleAreaDetailBounds(area)).map(area=>{
       const b=visibleAreaDetailBounds(area),inside=world.x>=b.minX&&world.x<=b.maxX&&world.y>=b.minY&&world.y<=b.maxY;
       const center={x:(b.minX+b.maxX)/2,y:(b.minY+b.maxY)/2},distance=Math.hypot(center.x-world.x,center.y-world.y)*transform.scale;
       return{area,inside,distance,areaSize:(b.maxX-b.minX)*(b.maxY-b.minY)};
