@@ -9,9 +9,17 @@ async function main() {
   const originalFetch = globalThis.fetch;
   const originalCaches = globalThis.caches;
   const fetches = [];
+  const cacheReads = [];
   const cacheWrites = [];
   globalThis.caches = { default: {
-    async match() { return undefined; },
+    async match(request) {
+      cacheReads.push(request);
+      const url = new URL(request.url);
+      if (url.pathname === '/atlas-data/maps/navigation.json' && !url.search) {
+        return new Response('stale cached map', { status: 200 });
+      }
+      return undefined;
+    },
     async put(request, response) { cacheWrites.push({ request, response }); }
   } };
   globalThis.fetch = async (url, options = {}) => {
@@ -29,6 +37,7 @@ async function main() {
         'images/sample.webp': { tag: 'silksong-atlas-data-001', name: imageName },
         'rooms/sample.json.gz': { tag: 'silksong-atlas-data-002', name: jsonName },
         'manifest.json.gz': { tag: 'silksong-atlas-data-002', name: manifestName },
+        'maps/navigation.json.gz': { tag: 'silksong-atlas-data-004', name: 'navigation.json.gz' },
         'rooms/unsafe.json.gz': { tag: 'silksong-atlas-data-002', name: '../unsafe.json.gz' }
       }
     };
@@ -67,12 +76,23 @@ async function main() {
     assert.equal(manifestResponse.headers.get('Content-Encoding'), null);
     assert.equal(fetches[2].url, `https://github.com/atlas-owner/atlas-repo/releases/download/silksong-atlas-data-002/${manifestName}`);
 
+    const mapResponse = await pagesFunction.onRequest({
+      ...context,
+      request: new Request('https://atlas.example/atlas-data/maps/navigation.json')
+    });
+    assert.equal(mapResponse.status, 200);
+    assert.equal(fetches[3].url, 'https://github.com/atlas-owner/atlas-repo/releases/download/silksong-atlas-data-004/navigation.json.gz');
+    const mapCacheKey = cacheWrites[3].request.url;
+    assert.equal(new URL(mapCacheKey).searchParams.get('__atlas_release'), 'silksong-atlas-data-004');
+    assert.equal(new URL(cacheReads[3].url).search, '?__atlas_release=silksong-atlas-data-004');
+    assert.notEqual(await mapResponse.text(), 'stale cached map');
+
     const unsafeFilenameResponse = await pagesFunction.onRequest({
       ...context,
       request: new Request('https://atlas.example/atlas-data/rooms/unsafe.json')
     });
     assert.equal(unsafeFilenameResponse.status, 404);
-    assert.equal(fetches.length, 3);
+    assert.equal(fetches.length, 4);
 
     const invalidResponse = await pagesFunction.onRequest({
       ...context,

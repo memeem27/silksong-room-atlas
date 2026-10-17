@@ -34,12 +34,6 @@ export async function onRequest(context) {
     }
   }
 
-  const cacheKey = new Request(request.url, { method: 'GET' });
-  if (request.method === 'GET' && !request.headers.has('Range')) {
-    const cached = await caches.default.match(cacheKey);
-    if (cached) return cached;
-  }
-
   const index = await getReleaseIndex(env, request.url);
   const record = index.assets?.[objectKey];
   const safeFilename = typeof record?.name === 'string'
@@ -50,6 +44,17 @@ export async function onRequest(context) {
   }
   if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(index.repository || '')) {
     return new Response('Release storage is not configured.', { status: 503 });
+  }
+
+  // Metadata paths like navigation.json.gz are replaced in later releases.
+  // Include the mapped release tag in the edge key so a previous release's
+  // cached response cannot shadow an updated asset at the same public URL.
+  const cacheUrl = new URL(request.url);
+  cacheUrl.searchParams.set('__atlas_release', record.tag);
+  const cacheKey = new Request(cacheUrl, { method: 'GET' });
+  if (request.method === 'GET' && !request.headers.has('Range')) {
+    const cached = await caches.default.match(cacheKey);
+    if (cached) return cached;
   }
 
   const assetUrl = `https://github.com/${index.repository}/releases/download/${record.tag}/${record.name}`;
