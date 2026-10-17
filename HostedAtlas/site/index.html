@@ -48,17 +48,17 @@
         <div class="stage-title"><span class="eyebrow" id="stageKind">WORLD MAP</span><h2 id="stageTitle">World regions</h2></div>
         <div class="stage-tools">
           <button id="fitButton" type="button">Fit view</button>
-          <button id="toggleMapBackdrop" type="button" aria-pressed="false" hidden>Show full map</button>
+          <button id="toggleMapBackdrop" type="button" aria-pressed="false" title="Show every region using real game map sprites" hidden>Show all regions</button>
           <button id="exportPngButton" type="button" hidden>Export clean PNG</button>
           <button id="refreshButton" type="button" title="Reload the map index">Refresh</button>
         </div>
       </div>
       <div class="canvas-wrap">
-        <canvas id="mapCanvas" aria-label="Silksong world map, area map, or selected room"></canvas>
+        <canvas id="mapCanvas" aria-label="Silksong map or room. Scroll to zoom; map markers stay the same size." title="Scroll to zoom · markers keep the same size"></canvas>
         <div id="canvasNotice" class="canvas-notice" hidden></div>
         <div id="canvasLoading" class="canvas-loading" hidden>Loading selected room…</div>
       </div>
-      <div class="stage-foot"><span id="viewFoot">REAL GAME MAP ART</span><span id="imageDimensions"></span></div>
+      <div class="stage-foot"><span id="viewFoot">REAL GAME MAP ART · SCROLL TO ZOOM</span><span id="imageDimensions"></span></div>
     </section>
 
     <aside id="inspector" class="inspector" aria-label="Room controls and details" aria-hidden="true">
