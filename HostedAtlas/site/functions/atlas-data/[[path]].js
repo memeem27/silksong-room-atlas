@@ -28,7 +28,6 @@ export async function onRequest(context) {
       headers.set('Cache-Control', 'public, max-age=86400');
       headers.set('X-Content-Type-Options', 'nosniff');
       headers.set('ETag', object.httpEtag);
-      if (compressedJson) headers.set('Content-Encoding', 'gzip');
       const ifNoneMatch = request.headers.get('If-None-Match');
       if (ifNoneMatch === object.httpEtag) return new Response(null, { status: 304, headers });
       return new Response(request.method === 'HEAD' ? null : object.body, { headers });
@@ -76,7 +75,6 @@ export async function onRequest(context) {
     const value = upstream.headers.get(name);
     if (value) headers.set(name, value);
   }
-  if (compressedJson) headers.set('Content-Encoding', 'gzip');
   const body = request.method === 'HEAD' || upstream.status === 304 ? null : upstream.body;
   const response = new Response(body, { status: upstream.status, headers });
   if (request.method === 'GET' && !request.headers.has('Range') && response.status === 200) {

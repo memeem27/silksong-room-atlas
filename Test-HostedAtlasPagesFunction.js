@@ -56,7 +56,7 @@ async function main() {
     });
     assert.equal(jsonResponse.status, 200);
     assert.equal(jsonResponse.headers.get('Content-Type'), 'application/json; charset=utf-8');
-    assert.equal(jsonResponse.headers.get('Content-Encoding'), 'gzip');
+    assert.equal(jsonResponse.headers.get('Content-Encoding'), null);
     assert.equal(fetches[1].url, `https://github.com/atlas-owner/atlas-repo/releases/download/silksong-atlas-data-002/${jsonName}`);
 
     const manifestResponse = await pagesFunction.onRequest({
@@ -64,7 +64,7 @@ async function main() {
       request: new Request('https://atlas.example/atlas-data/manifest.json')
     });
     assert.equal(manifestResponse.status, 200);
-    assert.equal(manifestResponse.headers.get('Content-Encoding'), 'gzip');
+    assert.equal(manifestResponse.headers.get('Content-Encoding'), null);
     assert.equal(fetches[2].url, `https://github.com/atlas-owner/atlas-repo/releases/download/silksong-atlas-data-002/${manifestName}`);
 
     const unsafeFilenameResponse = await pagesFunction.onRequest({
@@ -80,7 +80,7 @@ async function main() {
     });
     assert.equal(invalidResponse.status, 400);
     await Promise.all(waits);
-    console.log('Hosted Pages function tests passed: GitHub release images, gzip JSON, caching, and path validation.');
+    console.log('Hosted Pages function tests passed: GitHub release images, raw gzip JSON for browser decompression, caching, and path validation.');
   } finally {
     globalThis.fetch = originalFetch;
     if (originalCaches === undefined) delete globalThis.caches;
