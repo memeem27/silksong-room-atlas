@@ -29,6 +29,69 @@ const positionedRenderedCount = rendered.filter(room => positionedNames.has(room
 assert.equal(positionedRenderedCount + archivedNames.size, renderedNames.size,
   'each rendered room must have one authored/shared map location or be listed as unplaced');
 
+const containsBounds = (outer, inner, label) => {
+  assert.ok(outer && inner, `${label} must have both room geometry and fit bounds`);
+  const epsilon = 0.03;
+  assert.ok(inner.minX >= outer.minX - epsilon && inner.maxX <= outer.maxX + epsilon &&
+    inner.minY >= outer.minY - epsilon && inner.maxY <= outer.maxY + epsilon,
+  `${label} must stay inside its section fit bounds`);
+};
+const meshBounds = sprites => {
+  const points = (sprites || []).flatMap(sprite => (sprite.meshVertices || []).map(vertex => ({
+    x: sprite.worldPosition.x + (sprite.worldM00 ?? 1) * vertex.x + (sprite.worldM01 ?? 0) * vertex.y,
+    y: sprite.worldPosition.y + (sprite.worldM10 ?? 0) * vertex.x + (sprite.worldM11 ?? 1) * vertex.y
+  })));
+  if (!points.length) return null;
+  return { minX: Math.min(...points.map(point => point.x)), maxX: Math.max(...points.map(point => point.x)),
+    minY: Math.min(...points.map(point => point.y)), maxY: Math.max(...points.map(point => point.y)) };
+};
+let fittedSectionCount = 0;
+const areasWithoutDetailBounds = mainAreas.filter(area => !area.detailBounds);
+for (const area of areasWithoutDetailBounds) {
+  assert.ok(area.wideBounds || area.widePosition, `${area.key} without room-map bounds should retain its world-map location`);
+  assert.equal((area.rooms || []).filter(room => room.mapSprites?.length || room.mapAnchor).length, 0,
+    `${area.key} should not claim room geometry without section fit bounds`);
+  assert.equal((area.unmappedMapArtwork || []).length, 0, `${area.key} should not contain loose map art without section fit bounds`);
+  assert.equal((area.conditionalMapArtwork || []).length, 0, `${area.key} should not contain conditional map art without section fit bounds`);
+}
+for (const area of mainAreas) {
+  if (!area.detailBounds) continue;
+  fittedSectionCount++;
+  for (const room of area.rooms || []) {
+    if (room.conditionalMapState) continue;
+    if (room.bounds && (room.mapSprites?.length || room.mapAnchor)) containsBounds(area.detailBounds, room.bounds, `${area.key}/${room.name}`);
+    const geometry = meshBounds(room.mapSprites);
+    if (geometry) containsBounds(area.detailBounds, geometry, `${area.key}/${room.name} sprite mesh`);
+  }
+  for (const row of area.unmappedMapArtwork || []) {
+    if (row.bounds) containsBounds(area.detailBounds, row.bounds, `${area.key}/${row.mapObjectName || row.name} extra map art`);
+    const geometry = meshBounds(row.mapSprites);
+    if (geometry) containsBounds(area.detailBounds, geometry, `${area.key}/${row.mapObjectName || row.name} sprite mesh`);
+  }
+  const conditionalBounds = area.detailBoundsWithConditional || area.detailBounds;
+  for (const row of area.conditionalMapArtwork || []) {
+    if (row.bounds) containsBounds(conditionalBounds, row.bounds, `${area.key}/${row.mapObjectName || row.name} conditional map art`);
+    const geometry = meshBounds(row.mapSprites);
+    if (geometry) containsBounds(conditionalBounds, geometry, `${area.key}/${row.mapObjectName || row.name} conditional sprite mesh`);
+  }
+  for (const room of area.rooms || []) if (room.conditionalMapState) {
+    if (room.bounds) containsBounds(conditionalBounds, room.bounds, `${area.key}/${room.name} conditional map room`);
+    const geometry = meshBounds(room.mapSprites);
+    if (geometry) containsBounds(conditionalBounds, geometry, `${area.key}/${room.name} conditional sprite mesh`);
+  }
+}
+assert.ok(fittedSectionCount >= 24, 'every authored section with room geometry must have a fitted map extent');
+
+const peakArea = areas.find(area => area.key === 'PEAK');
+const peakRows = peakArea?.unmappedMapArtwork || [];
+const peakRoomKeys = new Set((peakArea?.rooms || []).filter(room => renderedNames.has(room.name.toLowerCase()))
+  .flatMap(room => [room.name, room.mapObjectName].filter(Boolean).map(name => name.toLowerCase().replace(/[^a-z0-9]/g, ''))));
+const peakUnlinked = peakRows.filter(row => {
+  const parts = String(row.mapObjectName || row.name).split(/[_\s-]+/).filter(Boolean);
+  return !parts.some((_, index) => peakRoomKeys.has(parts.slice(0, index + 1).join('').toLowerCase()));
+});
+assert.equal(peakUnlinked.length, 0, `every Mount Fay extra map piece should link to an exported room: ${peakUnlinked.map(row => row.mapObjectName || row.name).join(', ')}`);
+
 const boneBottomArea = areas.find(area => area.key === 'BONETOWN');
 const boneBottom = boneBottomArea?.rooms.find(room => room.name.toLowerCase() === 'bone_01b');
 assert.ok(boneBottom?.architect?.markerCount > 0, 'Bone Bottom needs its Architect marker on the map index');
@@ -90,6 +153,8 @@ for (const room of manifest.rooms || []) {
 
 console.log(JSON.stringify({ status: 'passed', renderedRooms: rendered.length,
   roomsWithAuthoredOrSharedPosition: positionedRenderedCount, roomsWithoutMapPosition: archivedNames.size,
+  sectionsWithFitBounds: fittedSectionCount, mountFayClickableExtraMapPieces: peakRows.length - peakUnlinked.length,
+  locationsWithoutRoomMap: areasWithoutDetailBounds.map(area => area.key),
   boneBottomArchitectMarkers: boneBottom.architect.markerCount,
   boneBottomEnemyArtworkTypes: boneBottomArtwork.length,
   architectRoomSidecars: architectRooms.length,

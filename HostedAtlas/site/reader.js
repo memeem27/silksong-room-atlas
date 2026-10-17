@@ -9,7 +9,7 @@ const state = { manifest: null, navigation: null, mode: 'world', area: null, roo
   roomImage: null, roomViewImage: null, wideImage: null, detailImage: null, imageCache: new Map(), atlasCache: new Map(),
   selectedGauntlet: null, selectedWave: 'all', visiblePlacements: new Map(), selectedAreaName: null, hoverAreaKey: null,
   cameraSections: [], roomViewKey: 'whole', mapBackdropVisible: false, mapBackdropAuto: false,
-  viewport: { key: '', zoom: 1, offsetX: 0, offsetY: 0 }, hoverRoomName: null, mapSpriteTintCache: new Map(), mapRoomCache: new Map(),
+  viewport: { key: '', zoom: 1, offsetX: 0, offsetY: 0 }, hoverRoomName: null, mapSpriteTintCache: new Map(), mapRoomCache: new Map(), mapArtworkLinkCache: new Map(),
   drag: null, suppressClickUntil: 0,
   showMappedMapArtwork: true, showUnmappedMapArtwork: true, showConditionalMapArtwork: false,
   worldMapStyle: 'sketch', showAreaLabels: true, showAreaConnectionLines: true,
@@ -676,9 +676,9 @@ function drawSketchOverview(width,height,transform){
   }
   if(state.showAreaLabels)drawSketchAreaLabels(chartedAreas,transform,width,height);
 }
-function drawAreaShapeHighlight(area,transform,selected=true){
-  const sprites=areaMapArtwork(area).filter(sprite=>sprite.meshVertices?.length>=3&&sprite.meshIndices?.length>=3&&sprite.worldPosition);
-  if(!sprites.length){drawAreaAnchorHighlight(area,transform,selected);return;}
+function drawAreaShapeHighlight(area,transform,selected=true,spriteOverride=null){
+  const sprites=(spriteOverride||areaMapArtwork(area)).filter(sprite=>sprite.meshVertices?.length>=3&&sprite.meshIndices?.length>=3&&sprite.worldPosition);
+  if(!sprites.length){if(!spriteOverride)drawAreaAnchorHighlight(area,transform,selected);return;}
   const fill=selected?'rgba(211,242,173,.16)':'rgba(211,242,173,.09)',stroke=selected?'rgba(233,250,205,.88)':'rgba(216,238,190,.68)';
   for(const sprite of sprites){
     const geometry=mapSpriteGeometry(sprite),position=screenPoint(sprite.worldPosition,transform),m00=Number.isFinite(sprite.worldM00)?sprite.worldM00:1,m01=Number.isFinite(sprite.worldM01)?sprite.worldM01:0,m10=Number.isFinite(sprite.worldM10)?sprite.worldM10:0,m11=Number.isFinite(sprite.worldM11)?sprite.worldM11:1;
@@ -719,8 +719,9 @@ function drawAreaAnchorHighlight(area,transform,selected=true){
     ctx.restore();
   }
 }
-function drawSketchAreaLabels(areas,transform,width,height){
+function sketchAreaLabelBoxes(areas,transform,width,height){
   const placed=[];
+  const boxes=[];
   const choices=[[0,-14],[0,17],[22,0],[-22,0],[18,-16],[-18,-16],[18,17],[-18,17],[0,-30],[0,31]];
   const ordered=areas.slice().sort((a,b)=>Number(state.selectedAreaName===b.key||state.hoverAreaKey===b.key)-Number(state.selectedAreaName===a.key||state.hoverAreaKey===a.key));
   for(const area of ordered){
@@ -728,8 +729,14 @@ function drawSketchAreaLabels(areas,transform,width,height){
     const focused=state.selectedAreaName===area.key||state.hoverAreaKey===area.key,label=String(area.name||area.key),font=focused?'600 10px Segoe UI,Arial,sans-serif':'600 8px Segoe UI,Arial,sans-serif';
     ctx.save();ctx.font=font;const w=ctx.measureText(label).width+12,h=focused?21:18;let chosen=null;
     for(const [dx,dy] of choices){const x=Math.max(6,Math.min(width-w-6,point.x+dx-w/2)),y=Math.max(6,Math.min(height-h-6,point.y+dy-h/2)),box={x,y,w,h};if(focused||!placed.some(old=>box.x<old.x+old.w+3&&box.x+box.w+3>old.x&&box.y<old.y+old.h+3&&box.y+box.h+3>old.y)){chosen=box;break;}}
-    if(chosen){placed.push(chosen);ctx.fillStyle=focused?'rgba(15,21,16,.96)':'rgba(12,16,14,.82)';ctx.strokeStyle=focused?'#d8edbd':'rgba(225,235,219,.58)';ctx.lineWidth=focused?1.3:.8;ctx.beginPath();ctx.roundRect(chosen.x,chosen.y,chosen.w,chosen.h,4);ctx.fill();ctx.stroke();ctx.fillStyle=focused?'#eff9e2':'#e5ecdf';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,chosen.x+chosen.w/2,chosen.y+chosen.h/2);}
+    if(chosen){placed.push(chosen);boxes.push({area,label,focused,...chosen});}
     ctx.restore();
+  }
+  return boxes;
+}
+function drawSketchAreaLabels(areas,transform,width,height){
+  for(const box of sketchAreaLabelBoxes(areas,transform,width,height)){
+    ctx.save();ctx.fillStyle=box.focused?'rgba(15,21,16,.96)':'rgba(12,16,14,.82)';ctx.strokeStyle=box.focused?'#d8edbd':'rgba(225,235,219,.58)';ctx.lineWidth=box.focused?1.3:.8;ctx.beginPath();ctx.roundRect(box.x,box.y,box.w,box.h,4);ctx.fill();ctx.stroke();ctx.fillStyle=box.focused?'#eff9e2':'#e5ecdf';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(box.label,box.x+box.w/2,box.y+box.h/2);ctx.restore();
   }
 }
 function drawWorld(width,height,transform,image,imageRecord) {
@@ -760,11 +767,14 @@ function drawArea(width,height,transform,image,imageRecord) {
     drawAreaTransitionLines(area,transform,width,height);
   }else{
     drawGameMapSection(area,transform,1,'brightness(1.24) contrast(1.14) saturate(1.15)');
-    const hovered=(area.rooms||[]).find(room=>room.name===state.hoverRoomName);
-    if(hovered)drawHoveredRoom(hovered,transform,width,height);
-    if(!areaMapArtwork(area).length&&!areaMapRooms(area,state.showConditionalMapArtwork).some(room=>room.mapAnchor))drawFallbackNotice(width,height,'No room map artwork is recorded here. Choose a room from the list.');
+    const hovered=areaMapRooms(area,state.showConditionalMapArtwork).find(room=>room.name===state.hoverRoomName)||findRoom(state.hoverRoomName);
+    const accessorySprites=visibleAreaArtworkLinks(area).filter(link=>link.room.name===state.hoverRoomName).flatMap(link=>link.object.mapSprites||[]);
+    if(hovered||accessorySprites.length)drawHoveredRoom(hovered,transform,width,height,accessorySprites);
   }
-  drawAreaShapeHighlight(area,transform,true);
+  if(!areaMapArtwork(area).length&&!areaMapRooms(area,state.showConditionalMapArtwork).some(room=>room.mapAnchor)){
+    const hasRooms=Boolean(area.rooms?.length);
+    drawFallbackNotice(width,height,hasRooms?'No room map artwork is recorded here. Choose a room from the list.':'No room-map artwork or indexed rooms are recorded for this location.');
+  }
   drawMapRoomAnchors(area,transform);
   drawAreaRoomLabels(area,transform,width,height);
   if(state.showArchitectMapMarkers)drawArchitectMapMarkers(area,transform);
@@ -810,15 +820,64 @@ function areaMapArtwork(area){
   ]:[];
   return [...mapped,...unassigned,...conditional];
 }
+function mapNameKey(name){return fileBase(name).toLowerCase().replace(/[^a-z0-9]/g,'');}
+function mapObjectPrefixes(name){
+  const parts=String(name||'').replace(/\.bundle$/i,'').split(/[_\s-]+/).filter(Boolean),prefixes=[];
+  for(let length=parts.length;length>0;length--)prefixes.push(parts.slice(0,length).join('_'));
+  return prefixes;
+}
+function mapArtworkRoom(area,object){
+  const prefixes=mapObjectPrefixes(object?.mapObjectName||object?.name);
+  const local=(area?.rooms||[]).filter(room=>findRoom(room.name));
+  for(const prefix of prefixes){
+    const key=mapNameKey(prefix);
+    const localMatch=local.find(room=>mapNameKey(room.name)===key||mapNameKey(room.mapObjectName)===key);
+    if(localMatch)return localMatch;
+    const scene=findRoom(prefix);
+    if(scene)return scene;
+  }
+  return null;
+}
+function areaMapArtworkRoomLinks(area){
+  const key=area?.key||'';
+  if(state.mapArtworkLinkCache.has(key))return state.mapArtworkLinkCache.get(key);
+  const links=[];
+  for(const [layer,objects] of [['unmapped',area?.unmappedMapArtwork||[]],['conditional',area?.conditionalMapArtwork||[]]]){
+    for(const object of objects){const room=mapArtworkRoom(area,object);if(room)links.push({object,room,layer});}
+  }
+  state.mapArtworkLinkCache.set(key,links);return links;
+}
+function visibleAreaArtworkLinks(area){
+  return areaMapArtworkRoomLinks(area).filter(link=>link.layer==='unmapped'?state.showUnmappedMapArtwork:state.showConditionalMapArtwork);
+}
+function pointInTriangle2d(point,a,b,c){
+  const area=(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
+  if(Math.abs(area)<1e-10)return false;
+  const cross=(p,q)=> (point.x-q.x)*(p.y-q.y)-(p.x-q.x)*(point.y-q.y);
+  const d1=cross(a,b),d2=cross(b,c),d3=cross(c,a),negative=d1< -1e-8||d2< -1e-8||d3< -1e-8,positive=d1>1e-8||d2>1e-8||d3>1e-8;
+  return !(negative&&positive);
+}
+function mapSpriteContainsWorldPoint(sprite,point){
+  const vertices=sprite?.meshVertices||[],indices=sprite?.meshIndices||[],position=sprite?.worldPosition;
+  if(vertices.length<3||indices.length<3||!position)return false;
+  const m00=Number.isFinite(sprite.worldM00)?sprite.worldM00:1,m01=Number.isFinite(sprite.worldM01)?sprite.worldM01:0,m10=Number.isFinite(sprite.worldM10)?sprite.worldM10:0,m11=Number.isFinite(sprite.worldM11)?sprite.worldM11:1,det=m00*m11-m01*m10;
+  if(Math.abs(det)<1e-10)return false;
+  const dx=point.x-Number(position.x),dy=point.y-Number(position.y),local={x:(m11*dx-m01*dy)/det,y:(-m10*dx+m00*dy)/det};
+  for(let index=0;index+2<indices.length;index+=3){const a=vertices[indices[index]],b=vertices[indices[index+1]],c=vertices[indices[index+2]];if(a&&b&&c&&pointInTriangle2d(local,a,b,c))return true;}
+  return false;
+}
 function drawAreaBounds(area,transform,color,dashed=false,detailOnly=false){
   const b=detailOnly?visibleAreaDetailBounds(area):(visibleAreaDetailBounds(area)||area.wideBounds);if(!b)return;const topLeft=screenPoint({x:b.minX,y:b.maxY},transform),bottomRight=screenPoint({x:b.maxX,y:b.minY},transform);
   ctx.save();ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.setLineDash(dashed?[6,4]:[]);ctx.strokeRect(topLeft.x,topLeft.y,bottomRight.x-topLeft.x,bottomRight.y-topLeft.y);ctx.restore();
 }
-function drawHoveredRoom(room,transform,width,height){
-  const b=room.bounds;if(!b)return;const topLeft=screenPoint({x:b.minX,y:b.maxY},transform),bottomRight=screenPoint({x:b.maxX,y:b.minY},transform),w=bottomRight.x-topLeft.x,h=bottomRight.y-topLeft.y;
-  ctx.save();ctx.fillStyle='rgba(213,245,164,.08)';ctx.strokeStyle='rgba(228,255,188,.95)';ctx.lineWidth=1.5;ctx.fillRect(topLeft.x,topLeft.y,w,h);ctx.strokeRect(topLeft.x,topLeft.y,w,h);
-  const label=fileBase(room.name);ctx.font='600 11px Segoe UI,Arial,sans-serif';const labelWidth=ctx.measureText(label).width+14,labelHeight=22,left=Math.max(7,Math.min(width-labelWidth-7,topLeft.x)),top=topLeft.y-labelHeight-5<7?Math.min(height-labelHeight-7,bottomRight.y+5):topLeft.y-labelHeight-5;
-  ctx.fillStyle='rgba(8,12,9,.95)';ctx.strokeStyle='rgba(228,255,188,.85)';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(left,top,labelWidth,labelHeight,4);ctx.fill();ctx.stroke();ctx.fillStyle='#eff8df';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,left+labelWidth/2,top+labelHeight/2);ctx.restore();
+function drawHoveredRoom(room,transform,width,height,accessorySprites=[]){
+  const b=room?.bounds;let topLeft=null,bottomRight=null;
+  if(b){topLeft=screenPoint({x:b.minX,y:b.maxY},transform);bottomRight=screenPoint({x:b.maxX,y:b.minY},transform);const w=bottomRight.x-topLeft.x,h=bottomRight.y-topLeft.y;
+    ctx.save();ctx.fillStyle='rgba(213,245,164,.08)';ctx.strokeStyle='rgba(228,255,188,.95)';ctx.lineWidth=1.5;ctx.fillRect(topLeft.x,topLeft.y,w,h);ctx.strokeRect(topLeft.x,topLeft.y,w,h);ctx.restore();}
+  if(accessorySprites.length)drawAreaShapeHighlight(null,transform,true,accessorySprites);
+  const anchor=room?.center||accessorySprites.find(sprite=>sprite.worldPosition)?.worldPosition;if(!anchor)return;
+  const point=screenPoint(anchor,transform),label=fileBase(room?.name||'Room');ctx.save();ctx.font='600 11px Segoe UI,Arial,sans-serif';const labelWidth=ctx.measureText(label).width+14,labelHeight=22,left=Math.max(7,Math.min(width-labelWidth-7,(topLeft?.x??point.x)-labelWidth/2)),labelTop=(topLeft?.y??point.y)-labelHeight-5<7?Math.min(height-labelHeight-7,(bottomRight?.y??point.y)+5):(topLeft?.y??point.y)-labelHeight-5;
+  ctx.fillStyle='rgba(8,12,9,.95)';ctx.strokeStyle='rgba(228,255,188,.85)';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(left,labelTop,labelWidth,labelHeight,4);ctx.fill();ctx.stroke();ctx.fillStyle='#eff8df';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,left+labelWidth/2,labelTop+labelHeight/2);ctx.restore();
 }
 function drawMapRoomAnchors(area,transform){
   const anchors=areaMapRooms(area,state.showConditionalMapArtwork).filter(room=>room.mapAnchor);
@@ -1202,12 +1261,18 @@ function worldAreaAt(point){
   const {width,height}=canvasSize();
   if(state.worldMapStyle==='sketch'){
     const bounds=allDetailBounds()||state.navigation?.maps?.detail?.bounds,transform=mapTransform(bounds,width,height,34),world=worldAt(point,transform);
-    const candidates=(state.navigation?.areas||[]).filter(area=>!area.archive&&visibleAreaDetailBounds(area)).map(area=>{
-      const b=visibleAreaDetailBounds(area),inside=world.x>=b.minX&&world.x<=b.maxX&&world.y>=b.minY&&world.y<=b.maxY;
-      const center={x:(b.minX+b.maxX)/2,y:(b.minY+b.maxY)/2},distance=Math.hypot(center.x-world.x,center.y-world.y)*transform.scale;
-      return{area,inside,distance,areaSize:(b.maxX-b.minX)*(b.maxY-b.minY)};
-    }).filter(item=>item.inside||item.distance<15).sort((a,b)=>a.inside===b.inside?(a.inside?a.areaSize-b.areaSize:a.distance-b.distance):a.inside?-1:1);
-    return candidates[0]?.area||null;
+    const areas=(state.navigation?.areas||[]).filter(area=>!area.archive&&visibleAreaDetailBounds(area));
+    if(state.showAreaLabels){const label=sketchAreaLabelBoxes(areas,transform,width,height).find(box=>point.x>=box.x&&point.x<=box.x+box.w&&point.y>=box.y&&point.y<=box.y+box.h);if(label)return label.area;}
+    // The old rectangular test made empty space inside a region's fit bounds
+    // behave like part of the map. Use the same clipped game-map meshes that
+    // are actually drawn, then test in reverse draw order for overlaps.
+    for(let index=areas.length-1;index>=0;index--){
+      const area=areas[index],sprites=areaMapArtwork(area);
+      if(sprites.some(sprite=>mapSpriteContainsWorldPoint(sprite,world)))return area;
+      const anchors=areaMapRooms(area,state.showConditionalMapArtwork).filter(room=>room.mapAnchor&&room.center);
+      if(anchors.some(room=>Math.hypot(screenPoint(room.center,transform).x-point.x,screenPoint(room.center,transform).y-point.y)<=14))return area;
+    }
+    return null;
   }
   let best=null;const transform=mapTransform(state.navigation?.maps?.wide?.bounds,width,height,34);
   for(const area of state.navigation?.areas||[]){if(!area.widePosition)continue;const screen=screenPoint(area.widePosition,transform),distance=Math.hypot(screen.x-point.x,screen.y-point.y);if(distance<=17&&(!best||distance<best.distance))best={area,distance};}
@@ -1216,6 +1281,8 @@ function worldAreaAt(point){
 function selectWorldAt(point){const area=worldAreaAt(point);if(area)showArea(area.key);}
 function areaRoomAt(point){
   const bounds=state.mapBackdropVisible?allDetailBounds():(visibleAreaDetailBounds(state.area)||state.area?.wideBounds),t=mapTransform(bounds,...Object.values(canvasSize()),34),world=worldAt(point,t);
+  const accessoryMatches=visibleAreaArtworkLinks(state.area).filter(link=>(link.object.mapSprites||[]).some(sprite=>mapSpriteContainsWorldPoint(sprite,world)));
+  if(accessoryMatches.length)return accessoryMatches[accessoryMatches.length-1].room;
   const matches=areaMapRooms(state.area,state.showConditionalMapArtwork).map(room=>{const b=room.bounds,inside=world.x>=b.minX&&world.x<=b.maxX&&world.y>=b.minY&&world.y<=b.maxY;return{room,inside,area:(b.maxX-b.minX)*(b.maxY-b.minY),distance:Math.hypot(room.center.x-world.x,room.center.y-world.y)*t.scale};})
     .filter(item=>item.inside||item.distance<17).sort((a,b)=>a.inside===b.inside?(a.inside?a.area-b.area:a.distance-b.distance):a.inside?-1:1);
   return matches[0]?.room||null;
