@@ -221,7 +221,7 @@ body { min-width: 320px; height: 100vh; overflow: hidden; background: #070909; c
   .map-rail { left: 7px; padding: 4px; }
   .rail-button { width: 47px; min-height: 43px; font-size: 7px; }
   .rail-glyph { font-size: 19px; }
-  .navigator, .inspector { top: 8px; bottom: 8px; width: auto; max-width: none; }
+  .navigator, .inspector { top: 8px; bottom: 8px; width: auto; max-width: none; max-height: none; }
   .navigator { left: 61px; right: 8px; }
   .inspector { left: 61px; right: 8px; }
   .stage-foot { right: 9px; bottom: 5px; left: 64px; font-size: 7px; }
