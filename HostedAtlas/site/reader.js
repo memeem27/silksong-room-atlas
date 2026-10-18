@@ -10,12 +10,12 @@ const state = { manifest: null, navigation: null, mode: 'world', area: null, roo
   selectedGauntlet: null, selectedWave: 'all', visiblePlacements: new Map(), selectedAreaName: null, hoverAreaKey: null,
   cameraSections: [], roomViewKey: 'whole', mapBackdropVisible: false, mapBackdropAuto: false,
   viewport: { key: '', zoom: 1, offsetX: 0, offsetY: 0 }, hoverRoomName: null, mapSpriteTintCache: new Map(), mapRoomCache: new Map(), mapArtworkLinkCache: new Map(),
-  drag: null, suppressClickUntil: 0,
+  drag: null, touchPointers: new Map(), touchPinch: null, suppressClickUntil: 0,
   showMappedMapArtwork: true, showUnmappedMapArtwork: true, showConditionalMapArtwork: false,
   worldMapStyle: 'sketch', showAreaLabels: true, showAreaConnectionLines: true,
   showRoomMapLabels: true,
   showArchitectMapMarkers: false,
-  roomStateOverrides: new Map(), roomStateGroups: [], roomStateCandidates: [], showAllInactiveArtwork: false,
+  roomStateOverrides: new Map(), roomStateOverrideSnapshot: null, roomStateGroups: [], roomStateCandidates: [], roomStateChanged: false, showAllInactiveArtwork: false,
   includeDisabledStateArtwork: false, conditionalCache: null, conditionalBuildVersion: 0 };
 const canvas = $('mapCanvas'), ctx = canvas.getContext('2d');
 
@@ -152,7 +152,7 @@ function showWorld() {
   clearConditionalCache();
   closePanel('inspector');
   state.mode='world'; state.area=null; state.room=null; state.roomMeta=null; state.roomImage=null; state.selectedGauntlet=null; state.hoverAreaKey=null;
-  $('stageKind').textContent='WORLD MAP OVERVIEW'; $('stageTitle').textContent='World regions'; $('viewFoot').textContent='REAL GAME ROOM-MAP ART · SCROLL TO ZOOM · DRAG TO PAN'; $('imageDimensions').textContent='';
+  $('stageKind').textContent='WORLD MAP OVERVIEW'; $('stageTitle').textContent='World regions'; $('viewFoot').textContent='REAL GAME ROOM-MAP ART · SCROLL OR PINCH TO ZOOM · DRAG TO PAN'; $('imageDimensions').textContent='';
   $('inspectorEyebrow').textContent='LAYERS'; $('inspectorTitle').textContent='Map layers';
   $('exportPngButton').hidden=true; $('toggleWorldMapStyle').hidden=false; updateWorldMapStyleButton();
   $('toggleMapBackdrop').hidden=true;
@@ -165,7 +165,7 @@ function showAllRooms() {
   clearConditionalCache();
   closePanel('inspector');
   state.mode='all-rooms'; state.area=null; state.room=null; state.roomMeta=null; state.roomImage=null; state.selectedGauntlet=null;
-  $('stageKind').textContent='ALL PREPARED ROOMS'; $('stageTitle').textContent='Browse every scene'; $('viewFoot').textContent='ALL SCENES · SCROLL TO ZOOM · DRAG TO PAN'; $('imageDimensions').textContent='';
+  $('stageKind').textContent='ALL PREPARED ROOMS'; $('stageTitle').textContent='Browse every scene'; $('viewFoot').textContent='ALL SCENES · SCROLL OR PINCH TO ZOOM · DRAG TO PAN'; $('imageDimensions').textContent='';
   $('exportPngButton').hidden=true; $('toggleWorldMapStyle').hidden=false; updateWorldMapStyleButton(); $('roomSummary').innerHTML='<div class="empty">Choose any prepared scene, including scenes without an authored map position.</div>';
   $('toggleMapBackdrop').hidden=true;
   $('mapLayers').hidden=true; $('roomSectionPanel').hidden=true; $('objectLayers').hidden=true; $('roomStatePanel').hidden=true; $('architectPanel').hidden=true; $('metadataPanel').hidden=true; $('closeRoomButton').hidden=true;
@@ -180,7 +180,7 @@ function showArea(key, options = {}) {
   if(!hasDefaultMapArtwork){state.mapBackdropVisible=true;state.mapBackdropAuto=true;}
   state.selectedAreaName=area.key; state.hoverAreaKey=null; state.hoverRoomName=options.focusRoom||null;
   state.mode='area'; state.area=area; state.room=null; state.roomMeta=null; state.roomImage=null; state.selectedGauntlet=null;
-  $('stageKind').textContent=area.archive?'SCENE ARCHIVE':'REGION DETAIL'; $('stageTitle').textContent=area.name; $('viewFoot').textContent=area.archive?'RENDERED SCENES WITHOUT AUTHORED MAP POSITIONS · SELECT FROM THE INDEX':`${area.key} · ${area.detailBounds?'ROOM SECTIONS':'WIDE MAP REGION'} · SCROLL TO ZOOM · DRAG TO PAN`; $('imageDimensions').textContent='';
+  $('stageKind').textContent=area.archive?'SCENE ARCHIVE':'REGION DETAIL'; $('stageTitle').textContent=area.name; $('viewFoot').textContent=area.archive?'RENDERED SCENES WITHOUT AUTHORED MAP POSITIONS · SELECT FROM THE INDEX':`${area.key} · ${area.detailBounds?'ROOM SECTIONS':'WIDE MAP REGION'} · SCROLL OR PINCH TO ZOOM · DRAG TO PAN`; $('imageDimensions').textContent='';
   $('inspectorEyebrow').textContent='MAP LAYERS'; $('inspectorTitle').textContent=area.name;
   $('exportPngButton').hidden=true; $('toggleWorldMapStyle').hidden=true;
   $('toggleMapBackdrop').hidden=false; $('toggleMapBackdrop').textContent=state.mapBackdropVisible?'Hide nearby regions':'Show nearby regions'; $('toggleMapBackdrop').setAttribute('aria-pressed',String(state.mapBackdropVisible));
@@ -227,10 +227,10 @@ async function openRoom(name, options = {}) {
   state.area=areaForRoom;
   $('inspectorEyebrow').textContent='ROOM LAYERS'; $('inspectorTitle').textContent=fileBase(room.name);
   state.mode='room'; state.room=room; state.roomMeta=null; state.roomImage=null; state.selectedGauntlet=null; state.selectedWave='all'; state.visiblePlacements.clear();
-  state.roomStateOverrides=new Map(); state.roomStateGroups=[]; state.roomStateCandidates=[]; state.showAllInactiveArtwork=false; state.includeDisabledStateArtwork=false;
+  state.roomStateOverrides=new Map(); state.roomStateOverrideSnapshot=null; state.roomStateGroups=[]; state.roomStateCandidates=[]; state.roomStateChanged=false; state.showAllInactiveArtwork=false; state.includeDisabledStateArtwork=false;
   clearConditionalCache();
   state.cameraSections=[]; state.roomViewKey='whole';
-  $('stageKind').textContent=room.kind?.toUpperCase() || 'ROOM'; $('stageTitle').textContent=fileBase(room.name); $('viewFoot').textContent='CLEAN SILKSONG ROOM IMAGE · SCROLL TO ZOOM · DRAG TO PAN';
+  $('stageKind').textContent=room.kind?.toUpperCase() || 'ROOM'; $('stageTitle').textContent=fileBase(room.name); $('viewFoot').textContent='CLEAN SILKSONG ROOM IMAGE · SCROLL OR PINCH TO ZOOM · DRAG TO PAN';
   $('canvasLoading').hidden=false; $('canvasNotice').hidden=true; $('closeRoomButton').hidden=false;
   $('exportPngButton').hidden=true;
   $('toggleMapBackdrop').hidden=true; $('mapLayers').hidden=true; $('toggleWorldMapStyle').hidden=true;
@@ -281,6 +281,8 @@ async function openRoom(name, options = {}) {
 }
 
 function renderRoomStateControls(meta) {
+  state.roomStateOverrides=new Map(Object.entries(meta?.render?.defaultStateOverrides||{}).filter(([,value])=>value==='show'||value==='hide'));
+  state.roomStateChanged=false;
   const objects=meta?.objects||[];
   const renderableCount=objects.reduce((sum,object)=>sum+
     (object.sprites||[]).filter(sprite=>sprite.textureSha256&&sprite.rectWidth&&sprite.rectHeight).length+
@@ -299,8 +301,13 @@ function renderRoomStateControls(meta) {
   state.roomStateCandidates=index.candidates;
   renderRoomStateGroupFilters();
   renderRoomStateObjectFilters();
-  $('toggleAllInactiveArtwork').onchange=()=>{state.showAllInactiveArtwork=$('toggleAllInactiveArtwork').checked;updateRoomViewDisplay();draw();};
-  $('toggleDisabledStateArtwork').onchange=()=>{state.includeDisabledStateArtwork=$('toggleDisabledStateArtwork').checked;updateRoomViewDisplay();draw();};
+  $('toggleAllInactiveArtwork').onchange=()=>{
+    state.showAllInactiveArtwork=$('toggleAllInactiveArtwork').checked;
+    if(state.showAllInactiveArtwork){state.roomStateOverrideSnapshot=new Map(state.roomStateOverrides);state.roomStateOverrides.clear();}
+    else if(state.roomStateOverrideSnapshot){state.roomStateOverrides=new Map(state.roomStateOverrideSnapshot);state.roomStateOverrideSnapshot=null;}
+    state.roomStateChanged=true;renderRoomStateGroupFilters();renderRoomStateObjectFilters();updateRoomViewDisplay();draw();
+  };
+  $('toggleDisabledStateArtwork').onchange=()=>{state.includeDisabledStateArtwork=$('toggleDisabledStateArtwork').checked;state.roomStateChanged=true;updateRoomViewDisplay();draw();};
   $('roomStateSearch').oninput=renderRoomStateObjectFilters;
 }
 
@@ -334,16 +341,19 @@ function buildRoomStateIndex(objects) {
     .sort((a,b)=>Number(b.likelyState)-Number(a.likelyState)||Number(a.object.activeInRoom)-Number(b.object.activeInRoom)||
       b.spriteCount-a.spriteCount||a.path.localeCompare(b.path,undefined,{numeric:true}));
   const grouped=new Map();
-  for(const item of searchable.filter(entry=>(entry.object.activeInRoom===false||entry.object.active===false)&&entry.spriteCount>=20)){
-    const key=item.object.parentId||'__root__',parentName=byId.get(item.object.parentId)?.name||'Other scene states';
-    const group=grouped.get(key)||{key,parentName,options:[]};
+  for(const item of searchable.filter(entry=>entry.spriteCount>=20)){
+    const key=item.object.parentId||'__root__',parent=byId.get(item.object.parentId),parentName=parent?.name||'Other scene states';
+    const group=grouped.get(key)||{key,parent,parentName,options:[]};
     group.options.push({id:item.object.id,name:item.object.name||'(unnamed)',spriteCount:item.spriteCount,activeInRoom:item.object.activeInRoom===true});
     grouped.set(key,group);
   }
-  const groups=[...grouped.values()].filter(group=>group.options.length>1&&(
-    /states?|variants?|phases?|conditions?|alternatives?|versions?/i.test(group.parentName)||
-    (group.options.every(option=>/\bworld\b/i.test(option.name))&&group.options.some(option=>/normal|black|thread|dream|memory|light|dark/i.test(option.name)))
-  ));
+  const groups=[...grouped.values()].filter(group=>{
+    if(group.options.length<2||!group.options.some(option=>option.activeInRoom===false))return false;
+    const names=`${group.parentName} ${group.options.map(option=>option.name).join(' ')}`;
+    const parentHasController=(group.parent?.components||[]).some(component=>/mono.?behaviour|playmaker|fsm/i.test(`${component.type||''} ${component.scriptName||''}`));
+    return /states?|variants?|phases?|conditions?|alternatives?|versions?|control|controller|event|quest|door|bridge|boss|battle/i.test(names)||
+      parentHasController&&/before|after|broken|fixed|open|closed|remains|repair|destroy|bridge/i.test(names);
+  });
   return{groups,candidates,searchable};
 }
 
@@ -359,6 +369,7 @@ function renderRoomStateGroupFilters() {
   root.querySelectorAll('[data-room-state-group]').forEach(input=>input.addEventListener('change',()=>{
     if(!input.checked)return;
     const group=state.roomStateGroups[Number(input.dataset.roomStateGroup)],selectedId=input.value||null;
+    state.roomStateChanged=true;
     for(const option of group.options){
       if(!selectedId)state.roomStateOverrides.delete(option.id);
       else state.roomStateOverrides.set(option.id,option.id===selectedId?'show':'hide');
@@ -376,12 +387,13 @@ function renderRoomStateObjectFilters() {
   const visible=matches.slice(0,query?80:24);
   if(!visible.length){root.innerHTML=`<span class="hint">${query?'No room objects match that search.':'No separately named state objects were found.'}</span>`;return;}
   root.innerHTML=visible.map(item=>{
-    const object=item.object,override=state.roomStateOverrides.get(object.id),savedVisible=object.active===true&&object.activeInRoom===true,checked=override?override==='show':savedVisible;
-    const status=savedVisible?'visible in saved state':'hidden in saved state';
+    const object=item.object,override=state.roomStateOverrides.get(object.id),savedVisible=override?override==='show':object.active===true&&object.activeInRoom===true,checked=savedVisible;
+    const status=savedVisible?'shown in default room view':'hidden in default room view';
     return`<label class="room-state-object"><input type="checkbox" data-room-state-object="${esc(object.id)}" ${checked?'checked':''}><span>${esc(object.name||'(unnamed)')}<small>${status} · ${item.spriteCount.toLocaleString()} sprites or meshes below</small></span></label>`;
   }).join('')+(matches.length>visible.length?`<span class="hint">Showing ${visible.length} of ${matches.length.toLocaleString()} matches; search to narrow the list.</span>`:'');
   root.querySelectorAll('[data-room-state-object]').forEach(input=>input.addEventListener('change',()=>{
     const id=input.dataset.roomStateObject,item=state.roomStateCandidates.find(candidate=>candidate.object.id===id),baseline=item?.object.active===true&&item?.object.activeInRoom===true;
+    state.roomStateChanged=true;
     const group=state.roomStateGroups.find(candidate=>candidate.options.some(option=>option.id===id));
     if(group&&input.checked){for(const option of group.options)state.roomStateOverrides.set(option.id,option.id===id?'show':'hide');}
     else if(input.checked===baseline)state.roomStateOverrides.delete(id);
@@ -439,7 +451,7 @@ function currentRoomViewBounds(meta=state.roomMeta){
 }
 function roomViewDimensions(meta=state.roomMeta){
   const image=meta?.image;if(!image)return '';
-  const dynamic=state.showAllInactiveArtwork||state.includeDisabledStateArtwork||state.roomStateOverrides.size>0;
+  const dynamic=state.showAllInactiveArtwork||state.includeDisabledStateArtwork||state.roomStateChanged;
   if(dynamic&&state.roomViewKey==='whole'){
     const cache=conditionalCacheFor(meta),bounds=cache?.scene.renderables.length?cache.bounds:null;
     if(bounds)return `Auto-fit · ${(bounds.maxX-bounds.minX).toFixed(1)} × ${(bounds.maxY-bounds.minY).toFixed(1)} world units`;
@@ -457,10 +469,10 @@ function roomViewDimensions(meta=state.roomMeta){
 }
 function updateRoomViewDisplay(){
   const section=state.cameraSections.find(item=>item.key===state.roomViewKey);
-  const conditional=state.showAllInactiveArtwork||state.includeDisabledStateArtwork||state.roomStateOverrides.size>0;
+  const conditional=state.showAllInactiveArtwork||state.includeDisabledStateArtwork||state.roomStateChanged;
   const cache=conditional?conditionalCacheFor():null;
   $('imageDimensions').textContent=roomViewDimensions();
-  $('viewFoot').textContent=conditional?'ROOM STATE COMPOSED ONCE, THEN CACHED · SCROLL TO ZOOM · DRAG TO PAN':section?`${section.name.toUpperCase()} · CAMERA-LOCK ROOM SECTION · SCROLL TO ZOOM · DRAG TO PAN`:'WHOLE ROOM SCENE · SCROLL TO ZOOM · DRAG TO PAN';
+  $('viewFoot').textContent=conditional?'ROOM STATE COMPOSED ONCE, THEN CACHED · SCROLL OR PINCH TO ZOOM · DRAG TO PAN':section?`${section.name.toUpperCase()} · CAMERA-LOCK ROOM SECTION · SCROLL OR PINCH TO ZOOM · DRAG TO PAN`:'WHOLE ROOM SCENE · SCROLL OR PINCH TO ZOOM · DRAG TO PAN';
   $('roomViewHint').textContent=conditional?cache&&!cache.scene.renderables.length?`This scene has no supported serialized renderer art to rebuild. The saved room image remains available.`:cache?.raster?`Composed from the selected real game sprites and meshes, then cached for smooth zoom and pan. The state image is kept in browser memory only.`:`Preparing this state from serialized game sprites and meshes. Atlas textures load only for the selected room; the result is cached in browser memory.`:section?section.file?`${section.resolutionLimited?'High-density camera render, capped for browser-safe dimensions':'Native-density camera render'} · ${section.width.toFixed(1)} × ${section.height.toFixed(1)} world units. Other room sections remain available in the menu.`:`Showing the ${section.width.toFixed(1)} × ${section.height.toFixed(1)} world-unit camera area from the whole-room composite.`:`Showing the complete prepared scene across all camera areas.`;
 }
 function currentRoomImage(){const section=state.cameraSections.find(item=>item.key===state.roomViewKey);return section?.file&&state.roomViewImage?.naturalWidth?state.roomViewImage:state.roomImage;}
@@ -973,7 +985,7 @@ function getTintedMapSprite(sprite,image,sourceY){
 function drawFallbackNotice(width,height,text){ctx.fillStyle='#aab09f';ctx.font='11px Consolas,monospace';ctx.textAlign='center';ctx.fillText(text,width/2,height/2);}
 function drawRoom(width,height){
   const image=currentRoomImage(),meta=state.roomMeta;if(!meta?.image)return;
-  const dynamic=state.showAllInactiveArtwork||state.includeDisabledStateArtwork||state.roomStateOverrides.size>0;
+  const dynamic=state.showAllInactiveArtwork||state.includeDisabledStateArtwork||state.roomStateChanged;
   const cache=dynamic?conditionalCacheFor(meta):null;
   const rebuild=Boolean(dynamic&&cache?.scene.renderables.length);
   const baseFrame=rebuild?(cache?.raster?conditionalRasterFrame(width,height,meta,cache):conditionalRoomFrame(width,height,meta,cache?.scene)):roomFrame(width,height,image,meta);
@@ -1052,9 +1064,15 @@ function conditionalObjectVisibility(object,byId,cache){
 function roomShaderEffect(object,artwork){
   const name=`${object.name||''} ${artwork.name||''} ${artwork.materialName||''}`.toLowerCase();
   return['black_solid','white_fader','black_fader','vignette','darkness','mask_beam','soft_masker','remasker',
-    'light_effect','white_light','light_beam','water_fog'].some(term=>name.includes(term))||/\b(light|fog|haze|glow)\b/.test(name);
+    'sprites-darkness-cutout','uiblendscreen','black_thread','light_effect','white_light','light_beam','water_fog'].some(term=>name.includes(term))||
+    /(?:^|[^a-z0-9])(?:msk|mask)(?:_|\b)/.test(name)||/\b(light|fog|haze|glow)\b/.test(name);
 }
 function roomCanvasBlend(mode){return mode==='additive'?'lighter':mode==='multiply'?'multiply':'source-over';}
+function isGeneratedCollisionTileMesh(object,mesh){
+  return /^chunk\s+\d+\s+\d+$/i.test(object?.name||'')&&
+    (object.components||[]).some(component=>component.type==='EdgeCollider2D')&&
+    String(mesh?.materialName||'').trim().toLowerCase()==='atlas0 material';
+}
 
 function collectConditionalRoomArtwork(meta){
   const objects=meta.objects||[],byId=new Map(objects.map(object=>[object.id,object])),visibleCache=new Map(),renderables=[];
@@ -1072,6 +1090,7 @@ function collectConditionalRoomArtwork(meta){
     for(let rendererIndex=0;rendererIndex<(object.meshes||[]).length;rendererIndex++){
       const mesh=object.meshes[rendererIndex];
       if(!/^[a-f0-9]{64}$/i.test(mesh.textureSha256||'')||mesh.sortingLayerKnown===false||mesh.blendMode==='destination'||
+        isGeneratedCollisionTileMesh(object,mesh)||
         roomShaderEffect(object,mesh)||(mesh.rendererEnabled===false&&!state.includeDisabledStateArtwork))continue;
       renderables.push({object,artwork:mesh,type:'mesh',objectIndex,rendererIndex});
     }
@@ -1300,11 +1319,41 @@ function mapAnchorAt(point){
 function selectRoomAt(point){const room=areaRoomAt(point);if(room)openRoom(room.name);}
 canvas.addEventListener('wheel',event=>{event.preventDefault();const rect=canvas.getBoundingClientRect();zoomAt({x:event.clientX-rect.left,y:event.clientY-rect.top},event.deltaY);},{passive:false});
 canvas.addEventListener('pointerdown',event=>{
-  if(event.button!==0||event.isPrimary===false)return;
+  if(event.button!==0)return;
+  if(event.pointerType==='touch'){
+    state.touchPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+    canvas.setPointerCapture(event.pointerId);
+    if(state.touchPointers.size>=2){
+      const pointers=[...state.touchPointers.entries()].slice(0,2),a=pointers[0][1],b=pointers[1][1],rect=canvas.getBoundingClientRect();
+      const midpoint={x:(a.x+b.x)/2-rect.left,y:(a.y+b.y)/2-rect.top},view=currentViewport();
+      state.drag=null;state.touchPinch={pointerIds:pointers.map(([id])=>id),distance:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y)),zoom:view.zoom,startMidpoint:midpoint,anchorX:(midpoint.x-view.offsetX)/view.zoom,anchorY:(midpoint.y-view.offsetY)/view.zoom,moved:false};
+      state.suppressClickUntil=Number.POSITIVE_INFINITY;canvas.classList.add('is-panning');canvas.style.cursor='grabbing';
+    }else{
+      state.drag={pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,lastX:event.clientX,lastY:event.clientY,moved:false};
+      canvas.classList.add('is-panning');canvas.style.cursor='grabbing';
+    }
+    event.preventDefault();return;
+  }
+  if(event.isPrimary===false)return;
   state.drag={pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,lastX:event.clientX,lastY:event.clientY,moved:false};
   canvas.setPointerCapture(event.pointerId);canvas.classList.add('is-panning');canvas.style.cursor='grabbing';event.preventDefault();
 });
 canvas.addEventListener('pointermove',event=>{
+  if(event.pointerType==='touch'&&state.touchPointers.has(event.pointerId)){
+    state.touchPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+    const pinch=state.touchPinch;
+    if(pinch){
+      const a=state.touchPointers.get(pinch.pointerIds[0]),b=state.touchPointers.get(pinch.pointerIds[1]);
+      if(a&&b){
+        const rect=canvas.getBoundingClientRect(),midpoint={x:(a.x+b.x)/2-rect.left,y:(a.y+b.y)/2-rect.top},distance=Math.max(1,Math.hypot(a.x-b.x,a.y-b.y));
+        const nextZoom=Math.max(1,Math.min(MAX_MAP_ZOOM,pinch.zoom*distance/pinch.distance));
+        const view=currentViewport(),nextOffsetX=nextZoom===1?0:midpoint.x-pinch.anchorX*nextZoom,nextOffsetY=nextZoom===1?0:midpoint.y-pinch.anchorY*nextZoom;
+        if(Math.abs(nextZoom-view.zoom)>.0001||Math.abs(nextOffsetX-view.offsetX)>.01||Math.abs(nextOffsetY-view.offsetY)>.01){view.zoom=nextZoom;view.offsetX=nextOffsetX;view.offsetY=nextOffsetY;draw();}
+        if(Math.abs(distance-pinch.distance)>2||Math.hypot(midpoint.x-pinch.startMidpoint.x,midpoint.y-pinch.startMidpoint.y)>3){pinch.moved=true;state.suppressClickUntil=Number.POSITIVE_INFINITY;}
+      }
+      event.preventDefault();return;
+    }
+  }
   const drag=state.drag;
   if(drag&&drag.pointerId===event.pointerId){
     const distance=Math.hypot(event.clientX-drag.startX,event.clientY-drag.startY),dx=event.clientX-drag.lastX,dy=event.clientY-drag.lastY;
@@ -1317,10 +1366,28 @@ canvas.addEventListener('pointermove',event=>{
   if(state.mode==='area'){const room=areaRoomAt(point),name=room?.name||null;if(name!==state.hoverRoomName){state.hoverRoomName=name;canvas.style.cursor=name?'pointer':'grab';draw();}return;}
   canvas.style.cursor='grab';
 });
-function endCanvasPan(event){const drag=state.drag;if(!drag||drag.pointerId!==event.pointerId)return;state.drag=null;canvas.classList.remove('is-panning');if(canvas.hasPointerCapture(event.pointerId))canvas.releasePointerCapture(event.pointerId);if(drag.moved){state.suppressClickUntil=performance.now()+250;state.hoverAreaKey=null;state.hoverRoomName=null;draw();}canvas.style.cursor='grab';}
-canvas.addEventListener('pointerup',endCanvasPan);canvas.addEventListener('pointercancel',endCanvasPan);
+function endCanvasPan(event){
+  if(event.pointerType==='touch'&&state.touchPointers.has(event.pointerId)){
+    const wasPinching=Boolean(state.touchPinch),pinchMoved=Boolean(state.touchPinch?.moved),drag=state.drag;
+    state.touchPointers.delete(event.pointerId);
+    if(state.touchPinch&&state.touchPinch.pointerIds.includes(event.pointerId))state.touchPinch=null;
+    if(canvas.hasPointerCapture(event.pointerId))canvas.releasePointerCapture(event.pointerId);
+    if(state.touchPointers.size===1&&(wasPinching||pinchMoved)){
+      const [pointerId,point]=state.touchPointers.entries().next().value;
+      state.drag={pointerId,startX:point.x,startY:point.y,lastX:point.x,lastY:point.y,moved:true};
+      state.suppressClickUntil=performance.now()+500;canvas.classList.add('is-panning');canvas.style.cursor='grabbing';
+    }else if(state.touchPointers.size===0){
+      state.drag=null;canvas.classList.remove('is-panning');
+      if(wasPinching||pinchMoved||drag?.moved){state.suppressClickUntil=performance.now()+500;state.hoverAreaKey=null;state.hoverRoomName=null;draw();}
+      canvas.style.cursor='grab';
+    }
+    return;
+  }
+  const drag=state.drag;if(!drag||drag.pointerId!==event.pointerId)return;state.drag=null;canvas.classList.remove('is-panning');if(canvas.hasPointerCapture(event.pointerId))canvas.releasePointerCapture(event.pointerId);if(drag.moved){state.suppressClickUntil=performance.now()+250;state.hoverAreaKey=null;state.hoverRoomName=null;draw();}canvas.style.cursor='grab';
+}
+canvas.addEventListener('pointerup',endCanvasPan);canvas.addEventListener('pointercancel',endCanvasPan);canvas.addEventListener('lostpointercapture',endCanvasPan);
 canvas.addEventListener('pointerleave',()=>{if(state.drag)return;let changed=false;if(state.hoverAreaKey){state.hoverAreaKey=null;changed=true;}if(state.hoverRoomName){state.hoverRoomName=null;changed=true;}canvas.style.cursor='grab';if(changed)draw();});
-canvas.addEventListener('click',event=>{if(performance.now()<state.suppressClickUntil){state.suppressClickUntil=0;event.preventDefault();return;}const rect=canvas.getBoundingClientRect(),point={x:event.clientX-rect.left,y:event.clientY-rect.top};if(state.mode==='world'||state.mode==='all-rooms')selectWorldAt(point);else if(state.mode==='area'){const architectRoom=architectRoomAt(point),anchorRoom=architectRoom?null:mapAnchorAt(point);if(architectRoom)openRoom(architectRoom.name,{architectMarkerIndex:0});else if(anchorRoom)openRoom(anchorRoom.name);else selectRoomAt(point);}else if($('toggleGauntlets').checked){const image=currentRoomImage(),meta=state.roomMeta;if(!meta)return;const{width,height}=canvasSize(),dynamic=state.showAllInactiveArtwork||state.includeDisabledStateArtwork||state.roomStateOverrides.size>0,cache=dynamic?conditionalCacheFor(meta):null,rebuild=Boolean(dynamic&&cache?.scene.renderables.length),frame=zoomRoomFrame(rebuild?(cache?.raster?conditionalRasterFrame(width,height,meta,cache):conditionalRoomFrame(width,height,meta,cache.scene)):roomFrame(width,height,image,meta));if(!frame)return;let best=null;for(const [i,marker] of (meta.architect?.markers||[]).entries()){if(!marker.worldPosition)continue;const screen=frame.worldPoint(marker.worldPosition.x,marker.worldPosition.y),d=Math.hypot(point.x-screen.x,point.y-screen.y);if(screen.x<frame.x||screen.x>frame.x+frame.drawWidth||screen.y<frame.y||screen.y>frame.y+frame.drawHeight)continue;if(d<15&&(!best||d<best.d))best={i,d};}if(best)selectGauntlet(best.i);}});
+canvas.addEventListener('click',event=>{if(performance.now()<state.suppressClickUntil){state.suppressClickUntil=0;event.preventDefault();return;}const rect=canvas.getBoundingClientRect(),point={x:event.clientX-rect.left,y:event.clientY-rect.top};if(state.mode==='world'||state.mode==='all-rooms')selectWorldAt(point);else if(state.mode==='area'){const architectRoom=architectRoomAt(point),anchorRoom=architectRoom?null:mapAnchorAt(point);if(architectRoom)openRoom(architectRoom.name,{architectMarkerIndex:0});else if(anchorRoom)openRoom(anchorRoom.name);else selectRoomAt(point);}else if($('toggleGauntlets').checked){const image=currentRoomImage(),meta=state.roomMeta;if(!meta)return;const{width,height}=canvasSize(),dynamic=state.showAllInactiveArtwork||state.includeDisabledStateArtwork||state.roomStateChanged,cache=dynamic?conditionalCacheFor(meta):null,rebuild=Boolean(dynamic&&cache?.scene.renderables.length),frame=zoomRoomFrame(rebuild?(cache?.raster?conditionalRasterFrame(width,height,meta,cache):conditionalRoomFrame(width,height,meta,cache.scene)):roomFrame(width,height,image,meta));if(!frame)return;let best=null;for(const [i,marker] of (meta.architect?.markers||[]).entries()){if(!marker.worldPosition)continue;const screen=frame.worldPoint(marker.worldPosition.x,marker.worldPosition.y),d=Math.hypot(point.x-screen.x,point.y-screen.y);if(screen.x<frame.x||screen.x>frame.x+frame.drawWidth||screen.y<frame.y||screen.y>frame.y+frame.drawHeight)continue;if(d<15&&(!best||d<best.d))best={i,d};}if(best)selectGauntlet(best.i);}});
 
 function exportJson(value,name){const blob=new Blob([JSON.stringify(value,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 async function exportCleanPng() {
