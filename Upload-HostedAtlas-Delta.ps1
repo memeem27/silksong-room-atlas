@@ -9,7 +9,7 @@ $releaseIndex = Get-Content -LiteralPath $ReleaseIndexPath -Raw | ConvertFrom-Js
 $repository = [string]$delta.repository
 $tag = [string]$delta.releaseTag
 $dataRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot 'HostedAtlas\r2-data'))
-if (-not $repository -or -not $tag -or $tag -notmatch '^silksong-atlas-data-[0-9]{3}$') { throw 'Delta package repository or release tag is invalid.' }
+if (-not $repository -or -not $tag -or $tag -notmatch '^silksong-atlas-data-v2-[0-9]{3}$') { throw 'Delta package repository or release tag is invalid.' }
 if ($releaseIndex.repository -ne $repository) { throw 'The release index repository does not match the delta package.' }
 $changed = @($delta.changedFiles | Where-Object { $_ } | Sort-Object -Unique)
 if (-not $changed.Count) { throw 'The delta package does not contain any files.' }
@@ -28,7 +28,7 @@ gh auth status | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'GitHub CLI authentication is unavailable.' }
 gh release view $tag --repo $repository 2>$null | Out-Null
 if ($LASTEXITCODE -ne 0) {
-    gh release create $tag --repo $repository --title 'Silksong atlas data 007' --notes 'Incremental map navigation and enriched room metadata for the hosted Silksong room atlas.'
+    gh release create $tag --repo $repository --title $tag --notes 'Incremental clean room renders and metadata for the hosted Silksong room atlas.'
     if ($LASTEXITCODE -ne 0) { throw "Could not create GitHub release $tag." }
 }
 
@@ -44,6 +44,10 @@ foreach ($relative in $changed) {
     $key = ([string]$relative).Replace('\', '/')
     $name = [IO.Path]::GetFileName($key)
     $releaseIndex.assets | Add-Member -NotePropertyName $key -NotePropertyValue ([pscustomobject]@{ tag = $tag; name = $name }) -Force
+}
+foreach ($relative in @($delta.removedFiles)) {
+    $key = ([string]$relative).Replace('\', '/')
+    if ($key) { $releaseIndex.assets.PSObject.Properties.Remove($key) }
 }
 $assetProperties = @($releaseIndex.assets.PSObject.Properties)
 $releaseIndex.assetCount = $assetProperties.Count

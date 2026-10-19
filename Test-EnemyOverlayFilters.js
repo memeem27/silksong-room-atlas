@@ -1,0 +1,122 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+
+const root = __dirname;
+
+function extractFunction(source, name) {
+  const match = new RegExp(`function\\s+${name}\\s*\\([^)]*\\)\\s*\\{`).exec(source);
+  assert.ok(match, `could not find ${name}`);
+  const start = match.index;
+  let cursor = source.indexOf('{', match.index), depth = 0, quote = '', lineComment = false, blockComment = false, escaped = false;
+  for (; cursor < source.length; cursor++) {
+    const ch = source[cursor], next = source[cursor + 1];
+    if (lineComment) { if (ch === '\n') lineComment = false; continue; }
+    if (blockComment) { if (ch === '*' && next === '/') { blockComment = false; cursor++; } continue; }
+    if (quote) {
+      if (escaped) { escaped = false; continue; }
+      if (ch === '\\') { escaped = true; continue; }
+      if (ch === quote) quote = '';
+      continue;
+    }
+    if (ch === '/' && next === '/') { lineComment = true; cursor++; continue; }
+    if (ch === '/' && next === '*') { blockComment = true; cursor++; continue; }
+    if (ch === '"' || ch === "'" || ch === '`') { quote = ch; continue; }
+    if (ch === '{') depth++;
+    else if (ch === '}' && --depth === 0) return source.slice(start, cursor + 1);
+  }
+  throw new Error(`unterminated function: ${name}`);
+}
+
+const rendererPath = path.join(root, 'src', 'SilksongSceneViewer', 'wwwroot', 'app.js');
+const rendererSource = fs.readFileSync(rendererPath, 'utf8');
+const rendererFunctions = [
+  'isEnemyArtworkObject', 'spritePassesFilters', 'meshPassesFilters'
+].map(name => extractFunction(rendererSource, name)).join('\n');
+const state = { batchRendering: true, objectById: new Map(), objectVisibilityOverrides: new Map() };
+const context = vm.createContext({
+  state,
+  manualVisibilityFor: () => 'auto',
+  batchRenderInactiveEnabled: () => false,
+  batchIncludeDisabledRenderersEnabled: () => false,
+  objectIsActive: () => true,
+  isSceneBorderArtwork: () => false,
+  isScreenEffect: () => false,
+  isLightingArtwork: () => false,
+  isGameBundleTexture: () => true,
+  isGeneratedCollisionTileMesh: () => false
+});
+vm.runInContext(`${rendererFunctions}\nglobalThis.filters = { isEnemyArtworkObject, spritePassesFilters, meshPassesFilters };`, context);
+
+const enemyRoot = { id: 'enemy', parentId: null, classification: { enemy: true } };
+const enemyChild = { id: 'enemy-renderer', parentId: enemyRoot.id, classification: { enemy: false } };
+const roomProp = { id: 'prop', parentId: null, classification: { enemy: false } };
+state.objectById = new Map([[enemyRoot.id, enemyRoot], [enemyChild.id, enemyChild], [roomProp.id, roomProp]]);
+const sprite = { blendMode: 'normal', sortingLayerKnown: true, rendererEnabled: true, imageUrl: 'game-atlas', rectWidth: 8, rectHeight: 8 };
+const mesh = { imageUrl: 'game-atlas', blendMode: 'normal', sortingLayerKnown: true, rendererEnabled: true };
+assert.equal(context.filters.spritePassesFilters(enemyChild, sprite, false, true), false,
+  'enemy child sprites must be omitted from clean batch room images');
+assert.equal(context.filters.meshPassesFilters(enemyChild, mesh, false, true), false,
+  'enemy child meshes must be omitted from clean batch room images');
+assert.equal(context.filters.spritePassesFilters(roomProp, sprite, false, true), true,
+  'ordinary room artwork must remain in clean batch room images');
+state.batchRendering = false;
+assert.equal(context.filters.spritePassesFilters(enemyChild, sprite, false, true), true,
+  'the filter must not alter the interactive scene renderer');
+
+const bone01 = JSON.parse(fs.readFileSync(path.join(root, 'workspace', 'preprocessed', 'rooms', 'bone_01.json'), 'utf8'));
+const boneObjects = bone01.objects || [], boneById = new Map(boneObjects.map(object => [object.id, object]));
+const hasEnemyAncestor = object => {
+  const seen = new Set(); let current = object;
+  while (current && !seen.has(current.id)) {
+    seen.add(current.id);
+    if (current.classification?.enemy === true) return true;
+    current = boneById.get(current.parentId);
+  }
+  return false;
+};
+const bakedEnemyRenderers = boneObjects.filter(object => hasEnemyAncestor(object) &&
+  ((object.sprites || []).length || (object.meshes || []).length));
+assert.ok(bakedEnemyRenderers.length > 0,
+  'Bone 01 fixture must include enemy descendant renderers to guard against baked enemy sprites');
+assert.ok(bakedEnemyRenderers.every(hasEnemyAncestor), 'all selected Bone 01 enemy renderers must be within enemy object trees');
+assert.equal(bone01.render?.enemyArtworkInBaseImage, false,
+  'refreshed Bone 01 metadata must identify its clean base image as enemy-free');
+assert.ok((bone01.render?.excluded || []).includes('enemy object subtrees'),
+  'refreshed Bone 01 metadata must document the excluded enemy subtree renderers');
+
+const readerPath = path.join(root, 'HostedAtlas', 'site', 'reader.js');
+const readerSource = fs.readFileSync(readerPath, 'utf8');
+const placementFunction = extractFunction(readerSource, 'canonicalArchitectPlacements');
+const placements = [
+  { key: 'group', enemyCandidate: true },
+  { key: 'group/body', enemyCandidate: true },
+  { key: 'group/wing', enemyCandidate: true },
+  { key: 'single', enemyCandidate: true },
+  { key: 'arena-wall', enemyCandidate: false }
+];
+const placementContext = vm.createContext({ state: { roomMeta: { architect: { placements } } }, Set });
+vm.runInContext(`${placementFunction}\nglobalThis.select = canonicalArchitectPlacements;`, placementContext);
+assert.deepEqual(Array.from(placementContext.select(placements), record => record.key),
+  ['group/body', 'group/wing', 'single', 'arena-wall'],
+  'Gauntlet markers should collapse wrapper/root duplicates while preserving sibling enemies');
+
+const spriteFunction = extractFunction(readerSource, 'enemySpriteForRecord');
+const realEnemyHash = 'a'.repeat(64);
+const spriteContext = vm.createContext({ state: { roomMeta: { architect: { enemyArtwork: {
+  gbeastfly: { sprite: { textureSha256: realEnemyHash } }
+} } } } });
+vm.runInContext(`${spriteFunction}\nglobalThis.matchSprite = enemySpriteForRecord;`, spriteContext);
+assert.equal(spriteContext.matchSprite({ placement: { id: 'prefab_gBeastfly' }, label: 'g Beastfly' }).textureSha256,
+  realEnemyHash, 'matched gauntlet enemy placements must use their Silksong atlas sprite');
+assert.equal(spriteContext.matchSprite({ placement: { id: 'unknown_enemy' }, label: 'unknown enemy' }), null,
+  'unmatched enemy types must not be assigned invented or unrelated textures');
+
+console.log(JSON.stringify({
+  status: 'passed',
+  bone01EnemyRendererObjects: bakedEnemyRenderers.length,
+  verified: ['batch enemy sprites omitted', 'batch enemy meshes omitted', 'room props retained',
+    'interactive renderer unchanged', 'gauntlet wrapper candidates deduplicated',
+    'authentic enemy atlas match required', 'unmatched enemy art receives no substitute texture']
+}, null, 2));

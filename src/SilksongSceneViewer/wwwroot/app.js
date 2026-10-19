@@ -675,6 +675,18 @@ function manualVisibilityFor(object) {
   return 'auto';
 }
 
+function isEnemyArtworkObject(object) {
+  if (!state.batchRendering || !object) return false;
+  let current = object;
+  const seen = new Set();
+  while (current && !seen.has(current.id)) {
+    seen.add(current.id);
+    if (current.classification?.enemy === true) return true;
+    current = state.objectById.get(current.parentId);
+  }
+  return false;
+}
+
 function buildObjectStateIndex(objects) {
   const byId = new Map(objects.map(object => [object.id, object]));
   const children = new Map();
@@ -796,6 +808,10 @@ function renderStateOverrideRows() {
 function spritePassesFilters(object, sprite, includeScreenEffects = false, gameArtworkOnly = false) {
   if (sprite.blendMode === 'destination' || manualVisibilityFor(object) === 'hide') return false;
   if (gameArtworkOnly) {
+    // Keep enemy sprites out of the clean saved room image. Their locations
+    // are available as an optional overlay, and gauntlet variants are drawn
+    // separately from the Architect placement data.
+    if (isEnemyArtworkObject(object)) return false;
     const includeInactive = batchRenderInactiveEnabled();
     if (object.sortingGroup?.enabled && object.sortingGroup.sortingLayerKnown === false) return false;
     if (sprite.sortingLayerKnown === false || (!includeInactive && !objectIsActive(object)) ||
@@ -866,6 +882,7 @@ function meshPassesFilters(object, mesh, includeScreenEffects = false, gameArtwo
   if (!mesh.imageUrl || mesh.blendMode === 'destination' || manualVisibilityFor(object) === 'hide' ||
       isGeneratedCollisionTileMesh(object, mesh)) return false;
   if (gameArtworkOnly) {
+    if (isEnemyArtworkObject(object)) return false;
     const includeInactive = batchRenderInactiveEnabled();
     if (object.sortingGroup?.enabled && object.sortingGroup.sortingLayerKnown === false) return false;
     if (mesh.sortingLayerKnown === false || (!includeInactive && !objectIsActive(object)) ||

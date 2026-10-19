@@ -100,7 +100,7 @@ function findFunction(source, name) {
 
 function makeRendererContext(source, { inactive, colors, disabledRenderers }) {
   const names = [
-    'isGameBundleTexture', 'objectIsActive', 'manualVisibilityFor', 'buildObjectStateIndex', 'setGroupOverride',
+    'isGameBundleTexture', 'objectIsActive', 'manualVisibilityFor', 'isEnemyArtworkObject', 'buildObjectStateIndex', 'setGroupOverride',
     'spritePassesFilters', 'meshPassesFilters', 'isGeneratedCollisionTileMesh', 'visibleSpriteBounds',
     'nativeArtworkPixelsPerUnit', 'spriteLocalGeometry', 'spriteWorldMatrix', 'drawArtworkLayer',
     'getTintedSpriteCrop', 'drawTexturedMesh', 'canvasBlendMode', 'isScreenEffect', 'isSceneBorderArtwork',
@@ -249,6 +249,7 @@ function refreshedMetadata(previous, scene, render, outputName, status, renderer
     rendererColorsApplied: render.rendererColorsApplied,
     shaderDrivenLightingIncluded: false, shaderDrivenMaskArtworkIncluded: false,
     viewerAnnotations: false, architectModAssets: false, runtimeLightingSimulation: false,
+    enemyArtworkInBaseImage: false, enemyArtworkAvailableAsOverlay: true,
     eligibleRendererCount: render.rendererCount || 0, textureCount: render.textureCount || 0,
     missingTextureSha256: render.missingTextures || [],
     filteredEffectRenderers: renderer.helpers.batchFilteredEffectSummary(scene.objects || []),
@@ -256,7 +257,7 @@ function refreshedMetadata(previous, scene, render, outputName, status, renderer
     excluded: [
       ...(!renderer.helpers.batchRenderInactiveEnabled() ? ['inactive objects outside selected Normal World branches'] : []),
       ...(!renderer.helpers.batchIncludeDisabledRenderersEnabled() ? ['disabled renderers'] : []),
-      'generated collision-only tile chunk meshes', 'destination blend renderers',
+      'enemy object subtrees', 'generated collision-only tile chunk meshes', 'destination blend renderers',
       ...(!render.screenEffectsIncluded ? ['shader-driven mask/light/fog effects'] : []),
       ...(renderer.helpers.batchRenderInactiveEnabled() ? ['inactive artwork outside active room bounds'] : []), 'non-bundle textures'
     ]

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "repository": "memeem27/silksong-room-atlas",
-  "assetCount": 2098,
-  "releaseCount": 3,
+  "assetCount": 2096,
+  "releaseCount": 4,
   "assets": {
     "artwork/00d10de1fa0d1dbcd96a755ad4bad91f57189cd9347fb2b1cef076dfad276ae2.webp": {
       "tag": "silksong-atlas-data-v2-001",
@@ -3708,10 +3708,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "ff5afad7d33daad024f1861b8a74e0e35906785b4d2ff35ce68f11dd53a7ba2b.webp"
     },
-    "asset-index.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "asset-index.json.gz"
-    },
     "images/abandoned_town.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "abandoned_town.webp"
@@ -3748,10 +3744,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "abyss_07.webp"
     },
-    "images/abyss_08.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "abyss_08.webp"
-    },
     "images/abyss_09.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "abyss_09.webp"
@@ -3768,10 +3760,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "abyss_13.webp"
     },
-    "images/abyss_cocoon.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "abyss_cocoon.webp"
-    },
     "images/ant_02.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "ant_02.webp"
@@ -3780,10 +3768,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "ant_03.webp"
     },
-    "images/ant_04_left.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "ant_04_left.webp"
-    },
     "images/ant_04_mid.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "ant_04_mid.webp"
@@ -3791,10 +3775,6 @@
     "images/ant_04.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "ant_04.webp"
-    },
-    "images/ant_05b.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "ant_05b.webp"
     },
     "images/ant_05c.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -3836,22 +3816,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "ant_queen.webp"
     },
-    "images/aqueduct_01.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "aqueduct_01.webp"
-    },
-    "images/aqueduct_02.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "aqueduct_02.webp"
-    },
-    "images/aqueduct_03.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "aqueduct_03.webp"
-    },
-    "images/aqueduct_04.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "aqueduct_04.webp"
-    },
     "images/aqueduct_05_caravan.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "aqueduct_05_caravan.webp"
@@ -3868,18 +3832,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "aqueduct_05.webp"
     },
-    "images/aqueduct_06.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "aqueduct_06.webp"
-    },
-    "images/aqueduct_07.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "aqueduct_07.webp"
-    },
-    "images/aqueduct_08.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "aqueduct_08.webp"
-    },
     "images/arborium_01.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "arborium_01.webp"
@@ -3892,10 +3844,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "arborium_03.webp"
     },
-    "images/arborium_04.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "arborium_04.webp"
-    },
     "images/arborium_05.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "arborium_05.webp"
@@ -3904,10 +3852,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "arborium_06.webp"
     },
-    "images/arborium_07.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "arborium_07.webp"
-    },
     "images/arborium_08.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "arborium_08.webp"
@@ -3915,10 +3859,6 @@
     "images/arborium_09.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "arborium_09.webp"
-    },
-    "images/arborium_10.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "arborium_10.webp"
     },
     "images/arborium_11.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -4008,10 +3948,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "belltown_room_spare.webp"
     },
-    "images/belltown_shrine.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "belltown_shrine.webp"
-    },
     "images/belltown.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "belltown.webp"
@@ -4064,29 +4000,13 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "bellway_shadow.webp"
     },
-    "images/bone_01.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_01.webp"
-    },
-    "images/bone_01b.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_01b.webp"
-    },
     "images/bone_01c.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_01c.webp"
     },
-    "images/bone_02.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_02.webp"
-    },
     "images/bone_03.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_03.webp"
-    },
-    "images/bone_04.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_04.webp"
     },
     "images/bone_05_boss.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -4096,25 +4016,9 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_05.webp"
     },
-    "images/bone_05b.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_05b.webp"
-    },
-    "images/bone_06.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_06.webp"
-    },
-    "images/bone_07.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_07.webp"
-    },
     "images/bone_08.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_08.webp"
-    },
-    "images/bone_09.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_09.webp"
     },
     "images/bone_10.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -4131,14 +4035,6 @@
     "images/bone_12.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_12.webp"
-    },
-    "images/bone_14.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_14.webp"
-    },
-    "images/bone_15.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_15.webp"
     },
     "images/bone_16.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -4164,14 +4060,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_east_02.webp"
     },
-    "images/bone_east_02b.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_east_02b.webp"
-    },
-    "images/bone_east_03.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_east_03.webp"
-    },
     "images/bone_east_04.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_east_04.webp"
@@ -4179,14 +4067,6 @@
     "images/bone_east_04b.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_east_04b.webp"
-    },
-    "images/bone_east_04c.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_east_04c.webp"
-    },
-    "images/bone_east_05.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_east_05.webp"
     },
     "images/bone_east_07.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -4220,29 +4100,13 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_east_10_church.webp"
     },
-    "images/bone_east_10_room.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_east_10_room.webp"
-    },
-    "images/bone_east_10.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_east_10.webp"
-    },
     "images/bone_east_11.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_east_11.webp"
     },
-    "images/bone_east_12.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_east_12.webp"
-    },
     "images/bone_east_13.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_east_13.webp"
-    },
-    "images/bone_east_14.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_east_14.webp"
     },
     "images/bone_east_14b.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -4255,10 +4119,6 @@
     "images/bone_east_16.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_east_16.webp"
-    },
-    "images/bone_east_17.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_east_17.webp"
     },
     "images/bone_east_17b.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -4296,10 +4156,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_east_25.webp"
     },
-    "images/bone_east_26.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_east_26.webp"
-    },
     "images/bone_east_27.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_east_27.webp"
@@ -4311,26 +4167,6 @@
     "images/bone_east_umbrella.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_east_umbrella.webp"
-    },
-    "images/bone_east_weavehome.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_east_weavehome.webp"
-    },
-    "images/bone_steel_servant.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_steel_servant.webp"
-    },
-    "images/bonegrave.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bonegrave.webp"
-    },
-    "images/bonetown_boss.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bonetown_boss.webp"
-    },
-    "images/bonetown.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bonetown.webp"
     },
     "images/chapel_wanderer.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -4348,17 +4184,9 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "clover_01b.webp"
     },
-    "images/clover_02c.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "clover_02c.webp"
-    },
     "images/clover_03.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "clover_03.webp"
-    },
-    "images/clover_04b.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "clover_04b.webp"
     },
     "images/clover_05c.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -4372,10 +4200,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "clover_10_web.webp"
     },
-    "images/clover_10.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "clover_10.webp"
-    },
     "images/clover_11.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "clover_11.webp"
@@ -4388,33 +4212,9 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "clover_18.webp"
     },
-    "images/clover_19.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "clover_19.webp"
-    },
     "images/clover_20.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "clover_20.webp"
-    },
-    "images/clover_21.png": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "clover_21.png"
-    },
-    "images/cog_04.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "cog_04.webp"
-    },
-    "images/cog_05.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "cog_05.webp"
-    },
-    "images/cog_06.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "cog_06.webp"
-    },
-    "images/cog_07.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "cog_07.webp"
     },
     "images/cog_08.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -4428,10 +4228,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "cog_09.webp"
     },
-    "images/cog_10_destroyed.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "cog_10_destroyed.webp"
-    },
     "images/cog_10.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "cog_10.webp"
@@ -4439,10 +4235,6 @@
     "images/cog_bench.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "cog_bench.webp"
-    },
-    "images/cog_dancers_boss.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "cog_dancers_boss.webp"
     },
     "images/cog_dancers.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -4452,10 +4244,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "cog_pass.webp"
     },
-    "images/coral_02.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "coral_02.webp"
-    },
     "images/coral_03.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "coral_03.webp"
@@ -4464,17 +4252,9 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "coral_10.webp"
     },
-    "images/coral_11.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "coral_11.webp"
-    },
     "images/coral_11b.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "coral_11b.webp"
-    },
-    "images/coral_12.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "coral_12.webp"
     },
     "images/coral_19.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -4508,14 +4288,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "coral_28.webp"
     },
-    "images/coral_29.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "coral_29.webp"
-    },
-    "images/coral_32.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "coral_32.webp"
-    },
     "images/coral_33.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "coral_33.webp"
@@ -4540,25 +4312,9 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "coral_37.webp"
     },
-    "images/coral_38.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "coral_38.webp"
-    },
-    "images/coral_39.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "coral_39.webp"
-    },
     "images/coral_40.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "coral_40.webp"
-    },
-    "images/coral_41.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "coral_41.webp"
-    },
-    "images/coral_42.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "coral_42.webp"
     },
     "images/coral_43.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -4567,10 +4323,6 @@
     "images/coral_44.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "coral_44.webp"
-    },
-    "images/coral_judge_arena.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "coral_judge_arena.webp"
     },
     "images/coral_tower_01.png": {
       "tag": "silksong-atlas-data-v2-002",
@@ -4596,10 +4348,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "cradle_03_destroyed.webp"
     },
-    "images/cradle_03.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "cradle_03.webp"
-    },
     "images/cradle_destroyed_challenge_01.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "cradle_destroyed_challenge_01.webp"
@@ -4612,49 +4360,17 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "cradle_destroyed_challenge_bench.webp"
     },
-    "images/crawl_01.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "crawl_01.webp"
-    },
     "images/crawl_02.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "crawl_02.webp"
-    },
-    "images/crawl_03.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "crawl_03.webp"
-    },
-    "images/crawl_03b.png": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "crawl_03b.png"
     },
     "images/crawl_04.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "crawl_04.webp"
     },
-    "images/crawl_05.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "crawl_05.webp"
-    },
-    "images/crawl_06.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "crawl_06.webp"
-    },
-    "images/crawl_07.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "crawl_07.webp"
-    },
     "images/crawl_08.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "crawl_08.webp"
-    },
-    "images/crawl_09.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "crawl_09.webp"
-    },
-    "images/crawl_10.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "crawl_10.webp"
     },
     "images/demoend.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -4692,10 +4408,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "dock_03d.webp"
     },
-    "images/dock_04.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "dock_04.webp"
-    },
     "images/dock_05.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "dock_05.webp"
@@ -4707,10 +4419,6 @@
     "images/dock_08.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "dock_08.webp"
-    },
-    "images/dock_09.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "dock_09.webp"
     },
     "images/dock_10.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -4740,29 +4448,13 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "dock_16.webp"
     },
-    "images/dust_01.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "dust_01.webp"
-    },
     "images/dust_02.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "dust_02.webp"
     },
-    "images/dust_03.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "dust_03.webp"
-    },
     "images/dust_04.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "dust_04.webp"
-    },
-    "images/dust_05.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "dust_05.webp"
-    },
-    "images/dust_06.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "dust_06.webp"
     },
     "images/dust_09.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -4772,14 +4464,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "dust_10.webp"
     },
-    "images/dust_11.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "dust_11.webp"
-    },
-    "images/dust_12.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "dust_12.webp"
-    },
     "images/dust_barb.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "dust_barb.webp"
@@ -4787,10 +4471,6 @@
     "images/dust_chef.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "dust_chef.webp"
-    },
-    "images/dust_maze_01.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "dust_maze_01.webp"
     },
     "images/dust_maze_02.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -4856,10 +4536,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "greymoor_01.webp"
     },
-    "images/greymoor_02.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "greymoor_02.webp"
-    },
     "images/greymoor_03.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "greymoor_03.webp"
@@ -4868,33 +4544,13 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "greymoor_04.webp"
     },
-    "images/greymoor_05_boss.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "greymoor_05_boss.webp"
-    },
-    "images/greymoor_05.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "greymoor_05.webp"
-    },
     "images/greymoor_06.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "greymoor_06.webp"
     },
-    "images/greymoor_07.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "greymoor_07.webp"
-    },
-    "images/greymoor_08_boss.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "greymoor_08_boss.webp"
-    },
     "images/greymoor_08_caravan.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "greymoor_08_caravan.webp"
-    },
-    "images/greymoor_08_mapper.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "greymoor_08_mapper.webp"
     },
     "images/greymoor_08.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -4904,14 +4560,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "greymoor_10.webp"
     },
-    "images/greymoor_11.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "greymoor_11.webp"
-    },
-    "images/greymoor_12.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "greymoor_12.webp"
-    },
     "images/greymoor_13.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "greymoor_13.webp"
@@ -4919,18 +4567,6 @@
     "images/greymoor_15.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "greymoor_15.webp"
-    },
-    "images/greymoor_15b.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "greymoor_15b.webp"
-    },
-    "images/greymoor_16.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "greymoor_16.webp"
-    },
-    "images/greymoor_17.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "greymoor_17.webp"
     },
     "images/greymoor_20b.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -4964,26 +4600,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "hang_02.webp"
     },
-    "images/hang_03_top.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "hang_03_top.webp"
-    },
-    "images/hang_03.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "hang_03.webp"
-    },
-    "images/hang_04_boss.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "hang_04_boss.webp"
-    },
-    "images/hang_04.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "hang_04.webp"
-    },
-    "images/hang_06_bank.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "hang_06_bank.webp"
-    },
     "images/hang_06.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "hang_06.webp"
@@ -4991,14 +4607,6 @@
     "images/hang_06b.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "hang_06b.webp"
-    },
-    "images/hang_07.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "hang_07.webp"
-    },
-    "images/hang_08.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "hang_08.webp"
     },
     "images/hang_09.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -5012,14 +4620,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "hang_12.webp"
     },
-    "images/hang_13.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "hang_13.webp"
-    },
-    "images/hang_14.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "hang_14.webp"
-    },
     "images/hang_15.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "hang_15.webp"
@@ -5027,10 +4627,6 @@
     "images/hang_16.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "hang_16.webp"
-    },
-    "images/hang_17b.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "hang_17b.webp"
     },
     "images/last_dive_return.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -5040,10 +4636,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "last_dive.webp"
     },
-    "images/library_01.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "library_01.webp"
-    },
     "images/library_02.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "library_02.webp"
@@ -5052,17 +4644,9 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "library_03.webp"
     },
-    "images/library_04.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "library_04.webp"
-    },
     "images/library_05.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "library_05.webp"
-    },
-    "images/library_06.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "library_06.webp"
     },
     "images/library_07.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -5072,10 +4656,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "library_08.webp"
     },
-    "images/library_09.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "library_09.webp"
-    },
     "images/library_10.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "library_10.webp"
@@ -5084,10 +4664,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "library_11.webp"
     },
-    "images/library_11b.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "library_11b.webp"
-    },
     "images/library_12.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "library_12.webp"
@@ -5095,10 +4671,6 @@
     "images/library_12b.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "library_12b.webp"
-    },
-    "images/library_13.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "library_13.webp"
     },
     "images/library_13b.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -5112,18 +4684,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "library_15.webp"
     },
-    "images/library_16.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "library_16.webp"
-    },
-    "images/memory_ant_queen.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "memory_ant_queen.webp"
-    },
-    "images/memory_coral_tower.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "memory_coral_tower.webp"
-    },
     "images/memory_first_sinner.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "memory_first_sinner.webp"
@@ -5131,10 +4691,6 @@
     "images/memory_needolin.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "memory_needolin.webp"
-    },
-    "images/memory_red.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "memory_red.webp"
     },
     "images/memory_silk_heart_bellbeast.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -5160,10 +4716,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "mosstown_01.webp"
     },
-    "images/mosstown_02.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "mosstown_02.webp"
-    },
     "images/mosstown_02c.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "mosstown_02c.webp"
@@ -5180,17 +4732,9 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "opening_sequence.webp"
     },
-    "images/organ_01.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "organ_01.webp"
-    },
     "images/peak_01.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "peak_01.webp"
-    },
-    "images/peak_02.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "peak_02.webp"
     },
     "images/peak_04.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -5199,10 +4743,6 @@
     "images/peak_04c.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "peak_04c.webp"
-    },
-    "images/peak_04d.png": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "peak_04d.png"
     },
     "images/peak_05.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -5228,21 +4768,9 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "peak_06b.webp"
     },
-    "images/peak_07.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "peak_07.webp"
-    },
     "images/peak_08.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "peak_08.webp"
-    },
-    "images/peak_08b.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "peak_08b.webp"
-    },
-    "images/peak_10.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "peak_10.webp"
     },
     "images/peak_12.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -5271,14 +4799,6 @@
     "images/room_caravan_spa.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "room_caravan_spa.webp"
-    },
-    "images/room_crowcourt_02.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "room_crowcourt_02.webp"
-    },
-    "images/room_crowcourt.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "room_crowcourt.webp"
     },
     "images/room_diving_bell_abyss_fixed.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -5312,49 +4832,17 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "shadow_01.webp"
     },
-    "images/shadow_02.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "shadow_02.webp"
-    },
     "images/shadow_03.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "shadow_03.webp"
-    },
-    "images/shadow_04.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "shadow_04.webp"
-    },
-    "images/shadow_04b.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "shadow_04b.webp"
-    },
-    "images/shadow_05.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "shadow_05.webp"
     },
     "images/shadow_08.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "shadow_08.webp"
     },
-    "images/shadow_09.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "shadow_09.webp"
-    },
     "images/shadow_10.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "shadow_10.webp"
-    },
-    "images/shadow_11.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "shadow_11.webp"
-    },
-    "images/shadow_12.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "shadow_12.webp"
-    },
-    "images/shadow_13.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "shadow_13.webp"
     },
     "images/shadow_14.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -5364,33 +4852,9 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "shadow_15.webp"
     },
-    "images/shadow_16.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "shadow_16.webp"
-    },
-    "images/shadow_18.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "shadow_18.webp"
-    },
-    "images/shadow_19.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "shadow_19.webp"
-    },
-    "images/shadow_20.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "shadow_20.webp"
-    },
-    "images/shadow_21.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "shadow_21.webp"
-    },
     "images/shadow_22.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "shadow_22.webp"
-    },
-    "images/shadow_23.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "shadow_23.webp"
     },
     "images/shadow_24.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -5400,49 +4864,21 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "shadow_25.webp"
     },
-    "images/shadow_26.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "shadow_26.webp"
-    },
     "images/shadow_27.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "shadow_27.webp"
-    },
-    "images/shadow_28.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "shadow_28.webp"
     },
     "images/shadow_bilehaven_room.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "shadow_bilehaven_room.webp"
     },
-    "images/shadow_weavehome.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "shadow_weavehome.webp"
-    },
-    "images/shellgrave.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "shellgrave.webp"
-    },
     "images/shellwood_01.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "shellwood_01.webp"
     },
-    "images/shellwood_01b.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "shellwood_01b.webp"
-    },
-    "images/shellwood_02.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "shellwood_02.webp"
-    },
     "images/shellwood_03.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "shellwood_03.webp"
-    },
-    "images/shellwood_04b.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "shellwood_04b.webp"
     },
     "images/shellwood_04c.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -5480,10 +4916,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "shellwood_14.webp"
     },
-    "images/shellwood_15.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "shellwood_15.webp"
-    },
     "images/shellwood_16.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "shellwood_16.webp"
@@ -5500,10 +4932,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "shellwood_20.webp"
     },
-    "images/shellwood_22.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "shellwood_22.webp"
-    },
     "images/shellwood_25.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "shellwood_25.webp"
@@ -5511,10 +4939,6 @@
     "images/shellwood_25b.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "shellwood_25b.webp"
-    },
-    "images/shellwood_26.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "shellwood_26.webp"
     },
     "images/shellwood_witch.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -5536,25 +4960,13 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "slab_04.webp"
     },
-    "images/slab_05.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "slab_05.webp"
-    },
     "images/slab_06.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "slab_06.webp"
     },
-    "images/slab_07.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "slab_07.webp"
-    },
     "images/slab_08.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "slab_08.webp"
-    },
-    "images/slab_10b.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "slab_10b.webp"
     },
     "images/slab_10c.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -5567,22 +4979,6 @@
     "images/slab_13.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "slab_13.webp"
-    },
-    "images/slab_14.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "slab_14.webp"
-    },
-    "images/slab_15.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "slab_15.webp"
-    },
-    "images/slab_16.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "slab_16.webp"
-    },
-    "images/slab_16b.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "slab_16b.webp"
     },
     "images/slab_17.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -5608,10 +5004,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "slab_22.webp"
     },
-    "images/slab_23.png": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "slab_23.png"
-    },
     "images/slab_cell_creature.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "slab_cell_creature.webp"
@@ -5624,10 +5016,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "slab_cell.webp"
     },
-    "images/song_01.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "song_01.webp"
-    },
     "images/song_01b.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "song_01b.webp"
@@ -5636,21 +5024,9 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "song_01c.webp"
     },
-    "images/song_02.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "song_02.webp"
-    },
     "images/song_03.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "song_03.webp"
-    },
-    "images/song_04.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "song_04.webp"
-    },
-    "images/song_05.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "song_05.webp"
     },
     "images/song_07.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -5688,14 +5064,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "song_14.webp"
     },
-    "images/song_15.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "song_15.webp"
-    },
-    "images/song_17.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "song_17.webp"
-    },
     "images/song_18.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "song_18.webp"
@@ -5712,29 +5080,9 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "song_20b.webp"
     },
-    "images/song_24.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "song_24.webp"
-    },
-    "images/song_25.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "song_25.webp"
-    },
-    "images/song_26.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "song_26.webp"
-    },
-    "images/song_27.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "song_27.webp"
-    },
     "images/song_28.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "song_28.webp"
-    },
-    "images/song_29.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "song_29.webp"
     },
     "images/song_enclave_tube.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -5744,17 +5092,9 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "song_enclave.webp"
     },
-    "images/song_tower_01.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "song_tower_01.webp"
-    },
     "images/song_tower_destroyed.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "song_tower_destroyed.webp"
-    },
-    "images/sprintmaster_cave.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "sprintmaster_cave.webp"
     },
     "images/tube_hub.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -5767,14 +5107,6 @@
     "images/tut_01b.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "tut_01b.webp"
-    },
-    "images/tut_02.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "tut_02.webp"
-    },
-    "images/tut_03.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "tut_03.webp"
     },
     "images/tut_04.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -5792,10 +5124,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "under_01b.webp"
     },
-    "images/under_02.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "under_02.webp"
-    },
     "images/under_03.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "under_03.webp"
@@ -5812,21 +5140,9 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "under_03d.webp"
     },
-    "images/under_04.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "under_04.webp"
-    },
-    "images/under_05.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "under_05.webp"
-    },
     "images/under_06.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "under_06.webp"
-    },
-    "images/under_07.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "under_07.webp"
     },
     "images/under_07b.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -5840,10 +5156,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "under_08.webp"
     },
-    "images/under_10.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "under_10.webp"
-    },
     "images/under_11.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "under_11.webp"
@@ -5851,10 +5163,6 @@
     "images/under_12.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "under_12.webp"
-    },
-    "images/under_13.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "under_13.webp"
     },
     "images/under_14.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -5868,18 +5176,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "under_17.webp"
     },
-    "images/under_18.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "under_18.webp"
-    },
-    "images/under_19.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "under_19.webp"
-    },
-    "images/under_19b.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "under_19b.webp"
-    },
     "images/under_19c.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "under_19c.webp"
@@ -5888,10 +5184,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "under_20.webp"
     },
-    "images/under_21.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "under_21.webp"
-    },
     "images/under_22.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "under_22.webp"
@@ -5899,10 +5191,6 @@
     "images/under_23.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "under_23.webp"
-    },
-    "images/under_27.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "under_27.webp"
     },
     "images/ward_01.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -5915,10 +5203,6 @@
     "images/ward_02.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "ward_02.webp"
-    },
-    "images/ward_02b.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "ward_02b.webp"
     },
     "images/ward_03.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -5944,18 +5228,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "ward_09.webp"
     },
-    "images/weave_02.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "weave_02.webp"
-    },
-    "images/weave_03.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "weave_03.webp"
-    },
-    "images/weave_04.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "weave_04.webp"
-    },
     "images/weave_05b.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "weave_05b.webp"
@@ -5963,10 +5235,6 @@
     "images/weave_07.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "weave_07.webp"
-    },
-    "images/weave_08.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "weave_08.webp"
     },
     "images/weave_10.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -5980,17 +5248,9 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "weave_12.webp"
     },
-    "images/weave_13.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "weave_13.webp"
-    },
     "images/weave_14.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "weave_14.webp"
-    },
-    "images/wisp_02.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "wisp_02.webp"
     },
     "images/wisp_03.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -6008,10 +5268,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "wisp_06.webp"
     },
-    "images/wisp_07.webp": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "wisp_07.webp"
-    },
     "images/wisp_08.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "wisp_08.webp"
@@ -6020,17 +5276,9 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "wisp_09.webp"
     },
-    "manifest.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "manifest.json.gz"
-    },
     "maps/detail.webp": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "detail.webp"
-    },
-    "maps/navigation.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "navigation.json.gz"
     },
     "maps/wide.webp": {
       "tag": "silksong-atlas-data-v2-002",
@@ -6072,10 +5320,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "abyss_07.json.gz"
     },
-    "rooms/abyss_08.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "abyss_08.json.gz"
-    },
     "rooms/abyss_09.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "abyss_09.json.gz"
@@ -6092,10 +5336,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "abyss_13.json.gz"
     },
-    "rooms/abyss_cocoon.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "abyss_cocoon.json.gz"
-    },
     "rooms/ant_02.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "ant_02.json.gz"
@@ -6104,10 +5344,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "ant_03.json.gz"
     },
-    "rooms/ant_04_left.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "ant_04_left.json.gz"
-    },
     "rooms/ant_04_mid.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "ant_04_mid.json.gz"
@@ -6115,10 +5351,6 @@
     "rooms/ant_04.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "ant_04.json.gz"
-    },
-    "rooms/ant_05b.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "ant_05b.json.gz"
     },
     "rooms/ant_05c.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
@@ -6160,22 +5392,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "ant_queen.json.gz"
     },
-    "rooms/aqueduct_01.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "aqueduct_01.json.gz"
-    },
-    "rooms/aqueduct_02.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "aqueduct_02.json.gz"
-    },
-    "rooms/aqueduct_03.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "aqueduct_03.json.gz"
-    },
-    "rooms/aqueduct_04.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "aqueduct_04.json.gz"
-    },
     "rooms/aqueduct_05_caravan.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "aqueduct_05_caravan.json.gz"
@@ -6192,18 +5408,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "aqueduct_05.json.gz"
     },
-    "rooms/aqueduct_06.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "aqueduct_06.json.gz"
-    },
-    "rooms/aqueduct_07.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "aqueduct_07.json.gz"
-    },
-    "rooms/aqueduct_08.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "aqueduct_08.json.gz"
-    },
     "rooms/arborium_01.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "arborium_01.json.gz"
@@ -6216,10 +5420,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "arborium_03.json.gz"
     },
-    "rooms/arborium_04.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "arborium_04.json.gz"
-    },
     "rooms/arborium_05.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "arborium_05.json.gz"
@@ -6228,10 +5428,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "arborium_06.json.gz"
     },
-    "rooms/arborium_07.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "arborium_07.json.gz"
-    },
     "rooms/arborium_08.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "arborium_08.json.gz"
@@ -6239,10 +5435,6 @@
     "rooms/arborium_09.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "arborium_09.json.gz"
-    },
-    "rooms/arborium_10.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "arborium_10.json.gz"
     },
     "rooms/arborium_11.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
@@ -6332,10 +5524,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "belltown_room_spare.json.gz"
     },
-    "rooms/belltown_shrine.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "belltown_shrine.json.gz"
-    },
     "rooms/belltown.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "belltown.json.gz"
@@ -6404,29 +5592,13 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "bellway_shadow.json.gz"
     },
-    "rooms/bone_01.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_01.json.gz"
-    },
-    "rooms/bone_01b.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_01b.json.gz"
-    },
     "rooms/bone_01c.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_01c.json.gz"
     },
-    "rooms/bone_02.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_02.json.gz"
-    },
     "rooms/bone_03.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_03.json.gz"
-    },
-    "rooms/bone_04.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_04.json.gz"
     },
     "rooms/bone_05_bellway.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
@@ -6440,25 +5612,9 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_05.json.gz"
     },
-    "rooms/bone_05b.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_05b.json.gz"
-    },
-    "rooms/bone_06.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_06.json.gz"
-    },
-    "rooms/bone_07.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_07.json.gz"
-    },
     "rooms/bone_08.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_08.json.gz"
-    },
-    "rooms/bone_09.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_09.json.gz"
     },
     "rooms/bone_10.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
@@ -6475,14 +5631,6 @@
     "rooms/bone_12.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_12.json.gz"
-    },
-    "rooms/bone_14.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_14.json.gz"
-    },
-    "rooms/bone_15.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_15.json.gz"
     },
     "rooms/bone_16.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
@@ -6508,14 +5656,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_east_02.json.gz"
     },
-    "rooms/bone_east_02b.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_east_02b.json.gz"
-    },
-    "rooms/bone_east_03.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_east_03.json.gz"
-    },
     "rooms/bone_east_04.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_east_04.json.gz"
@@ -6523,14 +5663,6 @@
     "rooms/bone_east_04b.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_east_04b.json.gz"
-    },
-    "rooms/bone_east_04c.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_east_04c.json.gz"
-    },
-    "rooms/bone_east_05.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_east_05.json.gz"
     },
     "rooms/bone_east_07.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
@@ -6564,29 +5696,13 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_east_10_church.json.gz"
     },
-    "rooms/bone_east_10_room.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_east_10_room.json.gz"
-    },
-    "rooms/bone_east_10.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_east_10.json.gz"
-    },
     "rooms/bone_east_11.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_east_11.json.gz"
     },
-    "rooms/bone_east_12.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_east_12.json.gz"
-    },
     "rooms/bone_east_13.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_east_13.json.gz"
-    },
-    "rooms/bone_east_14.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_east_14.json.gz"
     },
     "rooms/bone_east_14b.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
@@ -6599,10 +5715,6 @@
     "rooms/bone_east_16.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_east_16.json.gz"
-    },
-    "rooms/bone_east_17.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_east_17.json.gz"
     },
     "rooms/bone_east_17b.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
@@ -6640,10 +5752,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_east_25.json.gz"
     },
-    "rooms/bone_east_26.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_east_26.json.gz"
-    },
     "rooms/bone_east_27.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_east_27.json.gz"
@@ -6655,26 +5763,6 @@
     "rooms/bone_east_umbrella.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "bone_east_umbrella.json.gz"
-    },
-    "rooms/bone_east_weavehome.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_east_weavehome.json.gz"
-    },
-    "rooms/bone_steel_servant.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bone_steel_servant.json.gz"
-    },
-    "rooms/bonegrave.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bonegrave.json.gz"
-    },
-    "rooms/bonetown_boss.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bonetown_boss.json.gz"
-    },
-    "rooms/bonetown.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "bonetown.json.gz"
     },
     "rooms/chapel_wanderer.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
@@ -6720,17 +5808,9 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "clover_01b.json.gz"
     },
-    "rooms/clover_02c.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "clover_02c.json.gz"
-    },
     "rooms/clover_03.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "clover_03.json.gz"
-    },
-    "rooms/clover_04b.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "clover_04b.json.gz"
     },
     "rooms/clover_05c.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
@@ -6744,10 +5824,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "clover_10_web.json.gz"
     },
-    "rooms/clover_10.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "clover_10.json.gz"
-    },
     "rooms/clover_11.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "clover_11.json.gz"
@@ -6760,33 +5836,9 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "clover_18.json.gz"
     },
-    "rooms/clover_19.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "clover_19.json.gz"
-    },
     "rooms/clover_20.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "clover_20.json.gz"
-    },
-    "rooms/clover_21.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "clover_21.json.gz"
-    },
-    "rooms/cog_04.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "cog_04.json.gz"
-    },
-    "rooms/cog_05.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "cog_05.json.gz"
-    },
-    "rooms/cog_06.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "cog_06.json.gz"
-    },
-    "rooms/cog_07.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "cog_07.json.gz"
     },
     "rooms/cog_08.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
@@ -6800,10 +5852,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "cog_09.json.gz"
     },
-    "rooms/cog_10_destroyed.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "cog_10_destroyed.json.gz"
-    },
     "rooms/cog_10.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "cog_10.json.gz"
@@ -6811,10 +5859,6 @@
     "rooms/cog_bench.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "cog_bench.json.gz"
-    },
-    "rooms/cog_dancers_boss.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "cog_dancers_boss.json.gz"
     },
     "rooms/cog_dancers.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
@@ -6824,10 +5868,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "cog_pass.json.gz"
     },
-    "rooms/coral_02.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "coral_02.json.gz"
-    },
     "rooms/coral_03.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "coral_03.json.gz"
@@ -6836,17 +5876,9 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "coral_10.json.gz"
     },
-    "rooms/coral_11.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "coral_11.json.gz"
-    },
     "rooms/coral_11b.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "coral_11b.json.gz"
-    },
-    "rooms/coral_12.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "coral_12.json.gz"
     },
     "rooms/coral_19.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
@@ -6880,14 +5912,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "coral_28.json.gz"
     },
-    "rooms/coral_29.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "coral_29.json.gz"
-    },
-    "rooms/coral_32.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "coral_32.json.gz"
-    },
     "rooms/coral_33.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "coral_33.json.gz"
@@ -6912,25 +5936,9 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "coral_37.json.gz"
     },
-    "rooms/coral_38.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "coral_38.json.gz"
-    },
-    "rooms/coral_39.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "coral_39.json.gz"
-    },
     "rooms/coral_40.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "coral_40.json.gz"
-    },
-    "rooms/coral_41.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "coral_41.json.gz"
-    },
-    "rooms/coral_42.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "coral_42.json.gz"
     },
     "rooms/coral_43.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
@@ -6939,10 +5947,6 @@
     "rooms/coral_44.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "coral_44.json.gz"
-    },
-    "rooms/coral_judge_arena.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "coral_judge_arena.json.gz"
     },
     "rooms/coral_tower_01.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
@@ -6968,10 +5972,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "cradle_03_destroyed.json.gz"
     },
-    "rooms/cradle_03.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "cradle_03.json.gz"
-    },
     "rooms/cradle_destroyed_challenge_01.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "cradle_destroyed_challenge_01.json.gz"
@@ -6984,49 +5984,17 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "cradle_destroyed_challenge_bench.json.gz"
     },
-    "rooms/crawl_01.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "crawl_01.json.gz"
-    },
     "rooms/crawl_02.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "crawl_02.json.gz"
-    },
-    "rooms/crawl_03.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "crawl_03.json.gz"
-    },
-    "rooms/crawl_03b.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "crawl_03b.json.gz"
     },
     "rooms/crawl_04.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "crawl_04.json.gz"
     },
-    "rooms/crawl_05.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "crawl_05.json.gz"
-    },
-    "rooms/crawl_06.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "crawl_06.json.gz"
-    },
-    "rooms/crawl_07.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "crawl_07.json.gz"
-    },
     "rooms/crawl_08.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "crawl_08.json.gz"
-    },
-    "rooms/crawl_09.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "crawl_09.json.gz"
-    },
-    "rooms/crawl_10.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "crawl_10.json.gz"
     },
     "rooms/demoend.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
@@ -7064,10 +6032,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "dock_03d.json.gz"
     },
-    "rooms/dock_04.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "dock_04.json.gz"
-    },
     "rooms/dock_05.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "dock_05.json.gz"
@@ -7079,10 +6043,6 @@
     "rooms/dock_08.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "dock_08.json.gz"
-    },
-    "rooms/dock_09.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "dock_09.json.gz"
     },
     "rooms/dock_10.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
@@ -7112,29 +6072,13 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "dock_16.json.gz"
     },
-    "rooms/dust_01.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "dust_01.json.gz"
-    },
     "rooms/dust_02.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "dust_02.json.gz"
     },
-    "rooms/dust_03.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "dust_03.json.gz"
-    },
     "rooms/dust_04.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "dust_04.json.gz"
-    },
-    "rooms/dust_05.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "dust_05.json.gz"
-    },
-    "rooms/dust_06.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "dust_06.json.gz"
     },
     "rooms/dust_09.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
@@ -7144,14 +6088,6 @@
       "tag": "silksong-atlas-data-v2-002",
       "name": "dust_10.json.gz"
     },
-    "rooms/dust_11.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "dust_11.json.gz"
-    },
-    "rooms/dust_12.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "dust_12.json.gz"
-    },
     "rooms/dust_barb.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "dust_barb.json.gz"
@@ -7159,10 +6095,6 @@
     "rooms/dust_chef.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
       "name": "dust_chef.json.gz"
-    },
-    "rooms/dust_maze_01.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
-      "name": "dust_maze_01.json.gz"
     },
     "rooms/dust_maze_02.json.gz": {
       "tag": "silksong-atlas-data-v2-002",
@@ -7228,10 +6160,6 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "greymoor_01.json.gz"
     },
-    "rooms/greymoor_02.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "greymoor_02.json.gz"
-    },
     "rooms/greymoor_03.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "greymoor_03.json.gz"
@@ -7240,33 +6168,13 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "greymoor_04.json.gz"
     },
-    "rooms/greymoor_05_boss.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "greymoor_05_boss.json.gz"
-    },
-    "rooms/greymoor_05.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "greymoor_05.json.gz"
-    },
     "rooms/greymoor_06.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "greymoor_06.json.gz"
     },
-    "rooms/greymoor_07.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "greymoor_07.json.gz"
-    },
-    "rooms/greymoor_08_boss.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "greymoor_08_boss.json.gz"
-    },
     "rooms/greymoor_08_caravan.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "greymoor_08_caravan.json.gz"
-    },
-    "rooms/greymoor_08_mapper.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "greymoor_08_mapper.json.gz"
     },
     "rooms/greymoor_08.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -7276,14 +6184,6 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "greymoor_10.json.gz"
     },
-    "rooms/greymoor_11.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "greymoor_11.json.gz"
-    },
-    "rooms/greymoor_12.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "greymoor_12.json.gz"
-    },
     "rooms/greymoor_13.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "greymoor_13.json.gz"
@@ -7291,18 +6191,6 @@
     "rooms/greymoor_15.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "greymoor_15.json.gz"
-    },
-    "rooms/greymoor_15b.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "greymoor_15b.json.gz"
-    },
-    "rooms/greymoor_16.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "greymoor_16.json.gz"
-    },
-    "rooms/greymoor_17.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "greymoor_17.json.gz"
     },
     "rooms/greymoor_20b.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -7336,26 +6224,6 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "hang_02.json.gz"
     },
-    "rooms/hang_03_top.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "hang_03_top.json.gz"
-    },
-    "rooms/hang_03.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "hang_03.json.gz"
-    },
-    "rooms/hang_04_boss.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "hang_04_boss.json.gz"
-    },
-    "rooms/hang_04.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "hang_04.json.gz"
-    },
-    "rooms/hang_06_bank.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "hang_06_bank.json.gz"
-    },
     "rooms/hang_06.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "hang_06.json.gz"
@@ -7363,14 +6231,6 @@
     "rooms/hang_06b.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "hang_06b.json.gz"
-    },
-    "rooms/hang_07.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "hang_07.json.gz"
-    },
-    "rooms/hang_08.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "hang_08.json.gz"
     },
     "rooms/hang_09.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -7384,14 +6244,6 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "hang_12.json.gz"
     },
-    "rooms/hang_13.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "hang_13.json.gz"
-    },
-    "rooms/hang_14.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "hang_14.json.gz"
-    },
     "rooms/hang_15.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "hang_15.json.gz"
@@ -7399,10 +6251,6 @@
     "rooms/hang_16.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "hang_16.json.gz"
-    },
-    "rooms/hang_17b.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "hang_17b.json.gz"
     },
     "rooms/last_dive_return.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -7412,10 +6260,6 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "last_dive.json.gz"
     },
-    "rooms/library_01.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "library_01.json.gz"
-    },
     "rooms/library_02.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "library_02.json.gz"
@@ -7424,17 +6268,9 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "library_03.json.gz"
     },
-    "rooms/library_04.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "library_04.json.gz"
-    },
     "rooms/library_05.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "library_05.json.gz"
-    },
-    "rooms/library_06.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "library_06.json.gz"
     },
     "rooms/library_07.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -7444,10 +6280,6 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "library_08.json.gz"
     },
-    "rooms/library_09.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "library_09.json.gz"
-    },
     "rooms/library_10.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "library_10.json.gz"
@@ -7456,10 +6288,6 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "library_11.json.gz"
     },
-    "rooms/library_11b.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "library_11b.json.gz"
-    },
     "rooms/library_12.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "library_12.json.gz"
@@ -7467,10 +6295,6 @@
     "rooms/library_12b.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "library_12b.json.gz"
-    },
-    "rooms/library_13.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "library_13.json.gz"
     },
     "rooms/library_13b.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -7484,18 +6308,6 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "library_15.json.gz"
     },
-    "rooms/library_16.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "library_16.json.gz"
-    },
-    "rooms/memory_ant_queen.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "memory_ant_queen.json.gz"
-    },
-    "rooms/memory_coral_tower.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "memory_coral_tower.json.gz"
-    },
     "rooms/memory_first_sinner.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "memory_first_sinner.json.gz"
@@ -7503,10 +6315,6 @@
     "rooms/memory_needolin.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "memory_needolin.json.gz"
-    },
-    "rooms/memory_red.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "memory_red.json.gz"
     },
     "rooms/memory_silk_heart_bellbeast.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -7532,10 +6340,6 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "mosstown_01.json.gz"
     },
-    "rooms/mosstown_02.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "mosstown_02.json.gz"
-    },
     "rooms/mosstown_02c.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "mosstown_02c.json.gz"
@@ -7552,17 +6356,9 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "opening_sequence.json.gz"
     },
-    "rooms/organ_01.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "organ_01.json.gz"
-    },
     "rooms/peak_01.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "peak_01.json.gz"
-    },
-    "rooms/peak_02.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "peak_02.json.gz"
     },
     "rooms/peak_04.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -7571,10 +6367,6 @@
     "rooms/peak_04c.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "peak_04c.json.gz"
-    },
-    "rooms/peak_04d.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "peak_04d.json.gz"
     },
     "rooms/peak_05.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -7600,21 +6392,9 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "peak_06b.json.gz"
     },
-    "rooms/peak_07.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "peak_07.json.gz"
-    },
     "rooms/peak_08.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "peak_08.json.gz"
-    },
-    "rooms/peak_08b.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "peak_08b.json.gz"
-    },
-    "rooms/peak_10.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "peak_10.json.gz"
     },
     "rooms/peak_12.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -7648,14 +6428,6 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "room_caravan_spa.json.gz"
     },
-    "rooms/room_crowcourt_02.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "room_crowcourt_02.json.gz"
-    },
-    "rooms/room_crowcourt.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "room_crowcourt.json.gz"
-    },
     "rooms/room_diving_bell_abyss_fixed.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "room_diving_bell_abyss_fixed.json.gz"
@@ -7688,49 +6460,17 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "shadow_01.json.gz"
     },
-    "rooms/shadow_02.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "shadow_02.json.gz"
-    },
     "rooms/shadow_03.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "shadow_03.json.gz"
-    },
-    "rooms/shadow_04.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "shadow_04.json.gz"
-    },
-    "rooms/shadow_04b.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "shadow_04b.json.gz"
-    },
-    "rooms/shadow_05.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "shadow_05.json.gz"
     },
     "rooms/shadow_08.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "shadow_08.json.gz"
     },
-    "rooms/shadow_09.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "shadow_09.json.gz"
-    },
     "rooms/shadow_10.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "shadow_10.json.gz"
-    },
-    "rooms/shadow_11.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "shadow_11.json.gz"
-    },
-    "rooms/shadow_12.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "shadow_12.json.gz"
-    },
-    "rooms/shadow_13.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "shadow_13.json.gz"
     },
     "rooms/shadow_14.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -7740,33 +6480,9 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "shadow_15.json.gz"
     },
-    "rooms/shadow_16.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "shadow_16.json.gz"
-    },
-    "rooms/shadow_18.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "shadow_18.json.gz"
-    },
-    "rooms/shadow_19.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "shadow_19.json.gz"
-    },
-    "rooms/shadow_20.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "shadow_20.json.gz"
-    },
-    "rooms/shadow_21.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "shadow_21.json.gz"
-    },
     "rooms/shadow_22.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "shadow_22.json.gz"
-    },
-    "rooms/shadow_23.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "shadow_23.json.gz"
     },
     "rooms/shadow_24.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -7776,49 +6492,21 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "shadow_25.json.gz"
     },
-    "rooms/shadow_26.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "shadow_26.json.gz"
-    },
     "rooms/shadow_27.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "shadow_27.json.gz"
-    },
-    "rooms/shadow_28.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "shadow_28.json.gz"
     },
     "rooms/shadow_bilehaven_room.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "shadow_bilehaven_room.json.gz"
     },
-    "rooms/shadow_weavehome.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "shadow_weavehome.json.gz"
-    },
-    "rooms/shellgrave.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "shellgrave.json.gz"
-    },
     "rooms/shellwood_01.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "shellwood_01.json.gz"
     },
-    "rooms/shellwood_01b.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "shellwood_01b.json.gz"
-    },
-    "rooms/shellwood_02.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "shellwood_02.json.gz"
-    },
     "rooms/shellwood_03.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "shellwood_03.json.gz"
-    },
-    "rooms/shellwood_04b.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "shellwood_04b.json.gz"
     },
     "rooms/shellwood_04c.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -7856,10 +6544,6 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "shellwood_14.json.gz"
     },
-    "rooms/shellwood_15.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "shellwood_15.json.gz"
-    },
     "rooms/shellwood_16.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "shellwood_16.json.gz"
@@ -7876,10 +6560,6 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "shellwood_20.json.gz"
     },
-    "rooms/shellwood_22.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "shellwood_22.json.gz"
-    },
     "rooms/shellwood_25.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "shellwood_25.json.gz"
@@ -7887,10 +6567,6 @@
     "rooms/shellwood_25b.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "shellwood_25b.json.gz"
-    },
-    "rooms/shellwood_26.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "shellwood_26.json.gz"
     },
     "rooms/shellwood_witch.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -7912,25 +6588,13 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "slab_04.json.gz"
     },
-    "rooms/slab_05.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "slab_05.json.gz"
-    },
     "rooms/slab_06.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "slab_06.json.gz"
     },
-    "rooms/slab_07.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "slab_07.json.gz"
-    },
     "rooms/slab_08.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "slab_08.json.gz"
-    },
-    "rooms/slab_10b.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "slab_10b.json.gz"
     },
     "rooms/slab_10c.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -7943,22 +6607,6 @@
     "rooms/slab_13.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "slab_13.json.gz"
-    },
-    "rooms/slab_14.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "slab_14.json.gz"
-    },
-    "rooms/slab_15.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "slab_15.json.gz"
-    },
-    "rooms/slab_16.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "slab_16.json.gz"
-    },
-    "rooms/slab_16b.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "slab_16b.json.gz"
     },
     "rooms/slab_17.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -7984,10 +6632,6 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "slab_22.json.gz"
     },
-    "rooms/slab_23.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "slab_23.json.gz"
-    },
     "rooms/slab_cell_creature.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "slab_cell_creature.json.gz"
@@ -8000,10 +6644,6 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "slab_cell.json.gz"
     },
-    "rooms/song_01.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "song_01.json.gz"
-    },
     "rooms/song_01b.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "song_01b.json.gz"
@@ -8012,21 +6652,9 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "song_01c.json.gz"
     },
-    "rooms/song_02.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "song_02.json.gz"
-    },
     "rooms/song_03.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "song_03.json.gz"
-    },
-    "rooms/song_04.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "song_04.json.gz"
-    },
-    "rooms/song_05.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "song_05.json.gz"
     },
     "rooms/song_07.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -8064,14 +6692,6 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "song_14.json.gz"
     },
-    "rooms/song_15.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "song_15.json.gz"
-    },
-    "rooms/song_17.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "song_17.json.gz"
-    },
     "rooms/song_18.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "song_18.json.gz"
@@ -8088,29 +6708,9 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "song_20b.json.gz"
     },
-    "rooms/song_24.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "song_24.json.gz"
-    },
-    "rooms/song_25.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "song_25.json.gz"
-    },
-    "rooms/song_26.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "song_26.json.gz"
-    },
-    "rooms/song_27.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "song_27.json.gz"
-    },
     "rooms/song_28.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "song_28.json.gz"
-    },
-    "rooms/song_29.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "song_29.json.gz"
     },
     "rooms/song_enclave_tube.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -8120,17 +6720,9 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "song_enclave.json.gz"
     },
-    "rooms/song_tower_01.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "song_tower_01.json.gz"
-    },
     "rooms/song_tower_destroyed.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "song_tower_destroyed.json.gz"
-    },
-    "rooms/sprintmaster_cave.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "sprintmaster_cave.json.gz"
     },
     "rooms/tube_hub.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -8143,14 +6735,6 @@
     "rooms/tut_01b.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "tut_01b.json.gz"
-    },
-    "rooms/tut_02.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "tut_02.json.gz"
-    },
-    "rooms/tut_03.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "tut_03.json.gz"
     },
     "rooms/tut_04.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -8168,10 +6752,6 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "under_01b.json.gz"
     },
-    "rooms/under_02.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "under_02.json.gz"
-    },
     "rooms/under_03.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "under_03.json.gz"
@@ -8188,21 +6768,9 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "under_03d.json.gz"
     },
-    "rooms/under_04.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "under_04.json.gz"
-    },
-    "rooms/under_05.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "under_05.json.gz"
-    },
     "rooms/under_06.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "under_06.json.gz"
-    },
-    "rooms/under_07.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "under_07.json.gz"
     },
     "rooms/under_07b.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -8216,10 +6784,6 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "under_08.json.gz"
     },
-    "rooms/under_10.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "under_10.json.gz"
-    },
     "rooms/under_11.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "under_11.json.gz"
@@ -8227,10 +6791,6 @@
     "rooms/under_12.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "under_12.json.gz"
-    },
-    "rooms/under_13.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "under_13.json.gz"
     },
     "rooms/under_14.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -8244,18 +6804,6 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "under_17.json.gz"
     },
-    "rooms/under_18.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "under_18.json.gz"
-    },
-    "rooms/under_19.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "under_19.json.gz"
-    },
-    "rooms/under_19b.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "under_19b.json.gz"
-    },
     "rooms/under_19c.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "under_19c.json.gz"
@@ -8264,10 +6812,6 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "under_20.json.gz"
     },
-    "rooms/under_21.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "under_21.json.gz"
-    },
     "rooms/under_22.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "under_22.json.gz"
@@ -8275,10 +6819,6 @@
     "rooms/under_23.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "under_23.json.gz"
-    },
-    "rooms/under_27.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "under_27.json.gz"
     },
     "rooms/ward_01.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -8291,10 +6831,6 @@
     "rooms/ward_02.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "ward_02.json.gz"
-    },
-    "rooms/ward_02b.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "ward_02b.json.gz"
     },
     "rooms/ward_03.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -8320,18 +6856,6 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "ward_09.json.gz"
     },
-    "rooms/weave_02.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "weave_02.json.gz"
-    },
-    "rooms/weave_03.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "weave_03.json.gz"
-    },
-    "rooms/weave_04.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "weave_04.json.gz"
-    },
     "rooms/weave_05b.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "weave_05b.json.gz"
@@ -8339,10 +6863,6 @@
     "rooms/weave_07.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "weave_07.json.gz"
-    },
-    "rooms/weave_08.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "weave_08.json.gz"
     },
     "rooms/weave_10.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -8356,17 +6876,9 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "weave_12.json.gz"
     },
-    "rooms/weave_13.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "weave_13.json.gz"
-    },
     "rooms/weave_14.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "weave_14.json.gz"
-    },
-    "rooms/wisp_02.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "wisp_02.json.gz"
     },
     "rooms/wisp_03.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
@@ -8384,10 +6896,6 @@
       "tag": "silksong-atlas-data-v2-003",
       "name": "wisp_06.json.gz"
     },
-    "rooms/wisp_07.json.gz": {
-      "tag": "silksong-atlas-data-v2-003",
-      "name": "wisp_07.json.gz"
-    },
     "rooms/wisp_08.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "wisp_08.json.gz"
@@ -8395,6 +6903,1490 @@
     "rooms/wisp_09.json.gz": {
       "tag": "silksong-atlas-data-v2-003",
       "name": "wisp_09.json.gz"
+    },
+    "asset-index.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "asset-index.json.gz"
+    },
+    "images/abyss_08.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "abyss_08.webp"
+    },
+    "images/abyss_cocoon.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "abyss_cocoon.webp"
+    },
+    "images/ant_04_left.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "ant_04_left.webp"
+    },
+    "images/ant_05b.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "ant_05b.webp"
+    },
+    "images/aqueduct_01.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "aqueduct_01.webp"
+    },
+    "images/aqueduct_02.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "aqueduct_02.webp"
+    },
+    "images/aqueduct_03.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "aqueduct_03.webp"
+    },
+    "images/aqueduct_04.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "aqueduct_04.webp"
+    },
+    "images/aqueduct_06.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "aqueduct_06.webp"
+    },
+    "images/aqueduct_07.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "aqueduct_07.webp"
+    },
+    "images/aqueduct_08.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "aqueduct_08.webp"
+    },
+    "images/arborium_04.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "arborium_04.webp"
+    },
+    "images/arborium_07.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "arborium_07.webp"
+    },
+    "images/arborium_10.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "arborium_10.webp"
+    },
+    "images/belltown_shrine.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "belltown_shrine.webp"
+    },
+    "images/bone_01.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_01.webp"
+    },
+    "images/bone_01b.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_01b.webp"
+    },
+    "images/bone_02.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_02.webp"
+    },
+    "images/bone_04.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_04.webp"
+    },
+    "images/bone_05b.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_05b.webp"
+    },
+    "images/bone_06.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_06.webp"
+    },
+    "images/bone_07.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_07.webp"
+    },
+    "images/bone_09.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_09.webp"
+    },
+    "images/bone_14.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_14.webp"
+    },
+    "images/bone_15.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_15.webp"
+    },
+    "images/bone_east_02b.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_east_02b.webp"
+    },
+    "images/bone_east_03.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_east_03.webp"
+    },
+    "images/bone_east_04c.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_east_04c.webp"
+    },
+    "images/bone_east_05.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_east_05.webp"
+    },
+    "images/bone_east_10_room.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_east_10_room.webp"
+    },
+    "images/bone_east_10.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_east_10.webp"
+    },
+    "images/bone_east_12.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_east_12.webp"
+    },
+    "images/bone_east_14.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_east_14.webp"
+    },
+    "images/bone_east_17.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_east_17.webp"
+    },
+    "images/bone_east_26.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_east_26.webp"
+    },
+    "images/bone_east_weavehome.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_east_weavehome.webp"
+    },
+    "images/bone_steel_servant.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_steel_servant.webp"
+    },
+    "images/bonegrave.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bonegrave.webp"
+    },
+    "images/bonetown_boss.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bonetown_boss.webp"
+    },
+    "images/bonetown.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bonetown.webp"
+    },
+    "images/clover_02c.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "clover_02c.webp"
+    },
+    "images/clover_04b.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "clover_04b.webp"
+    },
+    "images/clover_10.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "clover_10.webp"
+    },
+    "images/clover_19.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "clover_19.webp"
+    },
+    "images/clover_21.png": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "clover_21.png"
+    },
+    "images/cog_04.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "cog_04.webp"
+    },
+    "images/cog_05.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "cog_05.webp"
+    },
+    "images/cog_06.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "cog_06.webp"
+    },
+    "images/cog_07.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "cog_07.webp"
+    },
+    "images/cog_10_destroyed.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "cog_10_destroyed.webp"
+    },
+    "images/cog_dancers_boss.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "cog_dancers_boss.webp"
+    },
+    "images/coral_02.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "coral_02.webp"
+    },
+    "images/coral_11.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "coral_11.webp"
+    },
+    "images/coral_12.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "coral_12.webp"
+    },
+    "images/coral_29.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "coral_29.webp"
+    },
+    "images/coral_32.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "coral_32.webp"
+    },
+    "images/coral_38.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "coral_38.webp"
+    },
+    "images/coral_39.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "coral_39.webp"
+    },
+    "images/coral_41.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "coral_41.webp"
+    },
+    "images/coral_42.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "coral_42.webp"
+    },
+    "images/coral_judge_arena.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "coral_judge_arena.webp"
+    },
+    "images/cradle_03.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "cradle_03.webp"
+    },
+    "images/crawl_01.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "crawl_01.webp"
+    },
+    "images/crawl_03.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "crawl_03.webp"
+    },
+    "images/crawl_03b.png": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "crawl_03b.png"
+    },
+    "images/crawl_05.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "crawl_05.webp"
+    },
+    "images/crawl_06.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "crawl_06.webp"
+    },
+    "images/crawl_07.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "crawl_07.webp"
+    },
+    "images/crawl_09.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "crawl_09.webp"
+    },
+    "images/crawl_10.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "crawl_10.webp"
+    },
+    "images/dock_04.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "dock_04.webp"
+    },
+    "images/dock_09.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "dock_09.webp"
+    },
+    "images/dust_01.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "dust_01.webp"
+    },
+    "images/dust_03.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "dust_03.webp"
+    },
+    "images/dust_05.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "dust_05.webp"
+    },
+    "images/dust_06.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "dust_06.webp"
+    },
+    "images/dust_11.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "dust_11.webp"
+    },
+    "images/dust_12.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "dust_12.webp"
+    },
+    "images/dust_maze_01.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "dust_maze_01.webp"
+    },
+    "images/greymoor_02.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "greymoor_02.webp"
+    },
+    "images/greymoor_05.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "greymoor_05.webp"
+    },
+    "images/greymoor_07.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "greymoor_07.webp"
+    },
+    "images/greymoor_08_boss.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "greymoor_08_boss.webp"
+    },
+    "images/greymoor_11.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "greymoor_11.webp"
+    },
+    "images/greymoor_12.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "greymoor_12.webp"
+    },
+    "images/greymoor_15b.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "greymoor_15b.webp"
+    },
+    "images/greymoor_16.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "greymoor_16.webp"
+    },
+    "images/greymoor_17.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "greymoor_17.webp"
+    },
+    "images/hang_03_top.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "hang_03_top.webp"
+    },
+    "images/hang_03.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "hang_03.webp"
+    },
+    "images/hang_04_boss.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "hang_04_boss.webp"
+    },
+    "images/hang_04.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "hang_04.webp"
+    },
+    "images/hang_06_bank.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "hang_06_bank.webp"
+    },
+    "images/hang_07.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "hang_07.webp"
+    },
+    "images/hang_08.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "hang_08.webp"
+    },
+    "images/hang_13.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "hang_13.webp"
+    },
+    "images/hang_14.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "hang_14.webp"
+    },
+    "images/hang_17b.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "hang_17b.webp"
+    },
+    "images/library_01.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "library_01.webp"
+    },
+    "images/library_04.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "library_04.webp"
+    },
+    "images/library_06.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "library_06.webp"
+    },
+    "images/library_09.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "library_09.webp"
+    },
+    "images/library_11b.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "library_11b.webp"
+    },
+    "images/library_13.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "library_13.webp"
+    },
+    "images/library_16.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "library_16.webp"
+    },
+    "images/memory_ant_queen.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "memory_ant_queen.webp"
+    },
+    "images/memory_coral_tower.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "memory_coral_tower.webp"
+    },
+    "images/memory_red.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "memory_red.webp"
+    },
+    "images/mosstown_02.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "mosstown_02.webp"
+    },
+    "images/organ_01.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "organ_01.webp"
+    },
+    "images/peak_02.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "peak_02.webp"
+    },
+    "images/peak_04d.png": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "peak_04d.png"
+    },
+    "images/peak_07.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "peak_07.webp"
+    },
+    "images/peak_08b.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "peak_08b.webp"
+    },
+    "images/peak_10.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "peak_10.webp"
+    },
+    "images/room_crowcourt_02.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "room_crowcourt_02.webp"
+    },
+    "images/room_crowcourt.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "room_crowcourt.webp"
+    },
+    "images/shadow_02.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_02.webp"
+    },
+    "images/shadow_04.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_04.webp"
+    },
+    "images/shadow_04b.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_04b.webp"
+    },
+    "images/shadow_05.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_05.webp"
+    },
+    "images/shadow_09.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_09.webp"
+    },
+    "images/shadow_11.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_11.webp"
+    },
+    "images/shadow_12.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_12.webp"
+    },
+    "images/shadow_13.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_13.webp"
+    },
+    "images/shadow_16.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_16.webp"
+    },
+    "images/shadow_18.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_18.webp"
+    },
+    "images/shadow_19.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_19.webp"
+    },
+    "images/shadow_20.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_20.webp"
+    },
+    "images/shadow_21.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_21.webp"
+    },
+    "images/shadow_23.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_23.webp"
+    },
+    "images/shadow_26.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_26.webp"
+    },
+    "images/shadow_28.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_28.webp"
+    },
+    "images/shadow_weavehome.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_weavehome.webp"
+    },
+    "images/shellgrave.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shellgrave.webp"
+    },
+    "images/shellwood_01b.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shellwood_01b.webp"
+    },
+    "images/shellwood_02.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shellwood_02.webp"
+    },
+    "images/shellwood_04b.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shellwood_04b.webp"
+    },
+    "images/shellwood_15.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shellwood_15.webp"
+    },
+    "images/shellwood_22.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shellwood_22.webp"
+    },
+    "images/shellwood_26.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shellwood_26.webp"
+    },
+    "images/slab_05.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "slab_05.webp"
+    },
+    "images/slab_07.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "slab_07.webp"
+    },
+    "images/slab_10b.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "slab_10b.webp"
+    },
+    "images/slab_14.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "slab_14.webp"
+    },
+    "images/slab_15.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "slab_15.webp"
+    },
+    "images/slab_16.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "slab_16.webp"
+    },
+    "images/slab_16b.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "slab_16b.webp"
+    },
+    "images/slab_23.png": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "slab_23.png"
+    },
+    "images/song_01.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "song_01.webp"
+    },
+    "images/song_02.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "song_02.webp"
+    },
+    "images/song_04.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "song_04.webp"
+    },
+    "images/song_05.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "song_05.webp"
+    },
+    "images/song_15.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "song_15.webp"
+    },
+    "images/song_17.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "song_17.webp"
+    },
+    "images/song_24.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "song_24.webp"
+    },
+    "images/song_25.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "song_25.webp"
+    },
+    "images/song_26.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "song_26.webp"
+    },
+    "images/song_27.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "song_27.webp"
+    },
+    "images/song_29.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "song_29.webp"
+    },
+    "images/song_tower_01.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "song_tower_01.webp"
+    },
+    "images/sprintmaster_cave.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "sprintmaster_cave.webp"
+    },
+    "images/tut_02.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "tut_02.webp"
+    },
+    "images/tut_03.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "tut_03.webp"
+    },
+    "images/under_02.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "under_02.webp"
+    },
+    "images/under_04.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "under_04.webp"
+    },
+    "images/under_05.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "under_05.webp"
+    },
+    "images/under_07.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "under_07.webp"
+    },
+    "images/under_10.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "under_10.webp"
+    },
+    "images/under_13.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "under_13.webp"
+    },
+    "images/under_18.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "under_18.webp"
+    },
+    "images/under_19.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "under_19.webp"
+    },
+    "images/under_19b.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "under_19b.webp"
+    },
+    "images/under_21.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "under_21.webp"
+    },
+    "images/under_27.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "under_27.webp"
+    },
+    "images/ward_02b.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "ward_02b.webp"
+    },
+    "images/weave_02.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "weave_02.webp"
+    },
+    "images/weave_03.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "weave_03.webp"
+    },
+    "images/weave_04.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "weave_04.webp"
+    },
+    "images/weave_08.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "weave_08.webp"
+    },
+    "images/weave_13.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "weave_13.webp"
+    },
+    "images/wisp_02.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "wisp_02.webp"
+    },
+    "images/wisp_07.webp": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "wisp_07.webp"
+    },
+    "manifest.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "manifest.json.gz"
+    },
+    "maps/navigation.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "navigation.json.gz"
+    },
+    "rooms/abyss_08.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "abyss_08.json.gz"
+    },
+    "rooms/abyss_cocoon.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "abyss_cocoon.json.gz"
+    },
+    "rooms/ant_04_left.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "ant_04_left.json.gz"
+    },
+    "rooms/ant_05b.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "ant_05b.json.gz"
+    },
+    "rooms/aqueduct_01.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "aqueduct_01.json.gz"
+    },
+    "rooms/aqueduct_02.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "aqueduct_02.json.gz"
+    },
+    "rooms/aqueduct_03.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "aqueduct_03.json.gz"
+    },
+    "rooms/aqueduct_04.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "aqueduct_04.json.gz"
+    },
+    "rooms/aqueduct_06.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "aqueduct_06.json.gz"
+    },
+    "rooms/aqueduct_07.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "aqueduct_07.json.gz"
+    },
+    "rooms/aqueduct_08.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "aqueduct_08.json.gz"
+    },
+    "rooms/arborium_04.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "arborium_04.json.gz"
+    },
+    "rooms/arborium_07.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "arborium_07.json.gz"
+    },
+    "rooms/arborium_10.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "arborium_10.json.gz"
+    },
+    "rooms/belltown_shrine.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "belltown_shrine.json.gz"
+    },
+    "rooms/bone_01.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_01.json.gz"
+    },
+    "rooms/bone_01b.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_01b.json.gz"
+    },
+    "rooms/bone_02.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_02.json.gz"
+    },
+    "rooms/bone_04.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_04.json.gz"
+    },
+    "rooms/bone_05b.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_05b.json.gz"
+    },
+    "rooms/bone_06.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_06.json.gz"
+    },
+    "rooms/bone_07.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_07.json.gz"
+    },
+    "rooms/bone_09.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_09.json.gz"
+    },
+    "rooms/bone_14.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_14.json.gz"
+    },
+    "rooms/bone_15.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_15.json.gz"
+    },
+    "rooms/bone_east_02b.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_east_02b.json.gz"
+    },
+    "rooms/bone_east_03.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_east_03.json.gz"
+    },
+    "rooms/bone_east_04c.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_east_04c.json.gz"
+    },
+    "rooms/bone_east_05.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_east_05.json.gz"
+    },
+    "rooms/bone_east_10_room.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_east_10_room.json.gz"
+    },
+    "rooms/bone_east_10.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_east_10.json.gz"
+    },
+    "rooms/bone_east_12.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_east_12.json.gz"
+    },
+    "rooms/bone_east_14.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_east_14.json.gz"
+    },
+    "rooms/bone_east_17.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_east_17.json.gz"
+    },
+    "rooms/bone_east_26.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_east_26.json.gz"
+    },
+    "rooms/bone_east_weavehome.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_east_weavehome.json.gz"
+    },
+    "rooms/bone_steel_servant.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bone_steel_servant.json.gz"
+    },
+    "rooms/bonegrave.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bonegrave.json.gz"
+    },
+    "rooms/bonetown_boss.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bonetown_boss.json.gz"
+    },
+    "rooms/bonetown.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "bonetown.json.gz"
+    },
+    "rooms/clover_02c.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "clover_02c.json.gz"
+    },
+    "rooms/clover_04b.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "clover_04b.json.gz"
+    },
+    "rooms/clover_10.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "clover_10.json.gz"
+    },
+    "rooms/clover_19.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "clover_19.json.gz"
+    },
+    "rooms/clover_21.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "clover_21.json.gz"
+    },
+    "rooms/cog_04.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "cog_04.json.gz"
+    },
+    "rooms/cog_05.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "cog_05.json.gz"
+    },
+    "rooms/cog_06.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "cog_06.json.gz"
+    },
+    "rooms/cog_07.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "cog_07.json.gz"
+    },
+    "rooms/cog_10_destroyed.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "cog_10_destroyed.json.gz"
+    },
+    "rooms/cog_dancers_boss.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "cog_dancers_boss.json.gz"
+    },
+    "rooms/coral_02.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "coral_02.json.gz"
+    },
+    "rooms/coral_11.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "coral_11.json.gz"
+    },
+    "rooms/coral_12.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "coral_12.json.gz"
+    },
+    "rooms/coral_29.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "coral_29.json.gz"
+    },
+    "rooms/coral_32.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "coral_32.json.gz"
+    },
+    "rooms/coral_38.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "coral_38.json.gz"
+    },
+    "rooms/coral_39.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "coral_39.json.gz"
+    },
+    "rooms/coral_41.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "coral_41.json.gz"
+    },
+    "rooms/coral_42.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "coral_42.json.gz"
+    },
+    "rooms/coral_judge_arena.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "coral_judge_arena.json.gz"
+    },
+    "rooms/cradle_03.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "cradle_03.json.gz"
+    },
+    "rooms/crawl_01.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "crawl_01.json.gz"
+    },
+    "rooms/crawl_03.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "crawl_03.json.gz"
+    },
+    "rooms/crawl_03b.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "crawl_03b.json.gz"
+    },
+    "rooms/crawl_05.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "crawl_05.json.gz"
+    },
+    "rooms/crawl_06.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "crawl_06.json.gz"
+    },
+    "rooms/crawl_07.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "crawl_07.json.gz"
+    },
+    "rooms/crawl_09.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "crawl_09.json.gz"
+    },
+    "rooms/crawl_10.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "crawl_10.json.gz"
+    },
+    "rooms/dock_04.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "dock_04.json.gz"
+    },
+    "rooms/dock_09.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "dock_09.json.gz"
+    },
+    "rooms/dust_01.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "dust_01.json.gz"
+    },
+    "rooms/dust_03.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "dust_03.json.gz"
+    },
+    "rooms/dust_05.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "dust_05.json.gz"
+    },
+    "rooms/dust_06.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "dust_06.json.gz"
+    },
+    "rooms/dust_11.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "dust_11.json.gz"
+    },
+    "rooms/dust_12.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "dust_12.json.gz"
+    },
+    "rooms/dust_maze_01.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "dust_maze_01.json.gz"
+    },
+    "rooms/greymoor_02.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "greymoor_02.json.gz"
+    },
+    "rooms/greymoor_05_boss.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "greymoor_05_boss.json.gz"
+    },
+    "rooms/greymoor_05.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "greymoor_05.json.gz"
+    },
+    "rooms/greymoor_07.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "greymoor_07.json.gz"
+    },
+    "rooms/greymoor_08_boss.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "greymoor_08_boss.json.gz"
+    },
+    "rooms/greymoor_08_mapper.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "greymoor_08_mapper.json.gz"
+    },
+    "rooms/greymoor_11.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "greymoor_11.json.gz"
+    },
+    "rooms/greymoor_12.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "greymoor_12.json.gz"
+    },
+    "rooms/greymoor_15b.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "greymoor_15b.json.gz"
+    },
+    "rooms/greymoor_16.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "greymoor_16.json.gz"
+    },
+    "rooms/greymoor_17.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "greymoor_17.json.gz"
+    },
+    "rooms/hang_03_top.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "hang_03_top.json.gz"
+    },
+    "rooms/hang_03.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "hang_03.json.gz"
+    },
+    "rooms/hang_04_boss.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "hang_04_boss.json.gz"
+    },
+    "rooms/hang_04.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "hang_04.json.gz"
+    },
+    "rooms/hang_06_bank.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "hang_06_bank.json.gz"
+    },
+    "rooms/hang_07.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "hang_07.json.gz"
+    },
+    "rooms/hang_08.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "hang_08.json.gz"
+    },
+    "rooms/hang_13.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "hang_13.json.gz"
+    },
+    "rooms/hang_14.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "hang_14.json.gz"
+    },
+    "rooms/hang_17b.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "hang_17b.json.gz"
+    },
+    "rooms/library_01.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "library_01.json.gz"
+    },
+    "rooms/library_04.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "library_04.json.gz"
+    },
+    "rooms/library_06.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "library_06.json.gz"
+    },
+    "rooms/library_09.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "library_09.json.gz"
+    },
+    "rooms/library_11b.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "library_11b.json.gz"
+    },
+    "rooms/library_13.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "library_13.json.gz"
+    },
+    "rooms/library_16.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "library_16.json.gz"
+    },
+    "rooms/memory_ant_queen.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "memory_ant_queen.json.gz"
+    },
+    "rooms/memory_coral_tower.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "memory_coral_tower.json.gz"
+    },
+    "rooms/memory_red.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "memory_red.json.gz"
+    },
+    "rooms/mosstown_02.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "mosstown_02.json.gz"
+    },
+    "rooms/organ_01.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "organ_01.json.gz"
+    },
+    "rooms/peak_02.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "peak_02.json.gz"
+    },
+    "rooms/peak_04d.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "peak_04d.json.gz"
+    },
+    "rooms/peak_07.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "peak_07.json.gz"
+    },
+    "rooms/peak_08b.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "peak_08b.json.gz"
+    },
+    "rooms/peak_10.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "peak_10.json.gz"
+    },
+    "rooms/room_crowcourt_02.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "room_crowcourt_02.json.gz"
+    },
+    "rooms/room_crowcourt.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "room_crowcourt.json.gz"
+    },
+    "rooms/shadow_02.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_02.json.gz"
+    },
+    "rooms/shadow_04.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_04.json.gz"
+    },
+    "rooms/shadow_04b.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_04b.json.gz"
+    },
+    "rooms/shadow_05.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_05.json.gz"
+    },
+    "rooms/shadow_09.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_09.json.gz"
+    },
+    "rooms/shadow_11.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_11.json.gz"
+    },
+    "rooms/shadow_12.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_12.json.gz"
+    },
+    "rooms/shadow_13.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_13.json.gz"
+    },
+    "rooms/shadow_16.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_16.json.gz"
+    },
+    "rooms/shadow_18.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_18.json.gz"
+    },
+    "rooms/shadow_19.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_19.json.gz"
+    },
+    "rooms/shadow_20.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_20.json.gz"
+    },
+    "rooms/shadow_21.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_21.json.gz"
+    },
+    "rooms/shadow_23.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_23.json.gz"
+    },
+    "rooms/shadow_26.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_26.json.gz"
+    },
+    "rooms/shadow_28.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_28.json.gz"
+    },
+    "rooms/shadow_weavehome.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shadow_weavehome.json.gz"
+    },
+    "rooms/shellgrave.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shellgrave.json.gz"
+    },
+    "rooms/shellwood_01b.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shellwood_01b.json.gz"
+    },
+    "rooms/shellwood_02.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shellwood_02.json.gz"
+    },
+    "rooms/shellwood_04b.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shellwood_04b.json.gz"
+    },
+    "rooms/shellwood_15.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shellwood_15.json.gz"
+    },
+    "rooms/shellwood_22.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shellwood_22.json.gz"
+    },
+    "rooms/shellwood_26.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "shellwood_26.json.gz"
+    },
+    "rooms/slab_05.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "slab_05.json.gz"
+    },
+    "rooms/slab_07.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "slab_07.json.gz"
+    },
+    "rooms/slab_10b.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "slab_10b.json.gz"
+    },
+    "rooms/slab_14.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "slab_14.json.gz"
+    },
+    "rooms/slab_15.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "slab_15.json.gz"
+    },
+    "rooms/slab_16.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "slab_16.json.gz"
+    },
+    "rooms/slab_16b.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "slab_16b.json.gz"
+    },
+    "rooms/slab_23.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "slab_23.json.gz"
+    },
+    "rooms/song_01.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "song_01.json.gz"
+    },
+    "rooms/song_02.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "song_02.json.gz"
+    },
+    "rooms/song_04.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "song_04.json.gz"
+    },
+    "rooms/song_05.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "song_05.json.gz"
+    },
+    "rooms/song_15.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "song_15.json.gz"
+    },
+    "rooms/song_17.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "song_17.json.gz"
+    },
+    "rooms/song_24.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "song_24.json.gz"
+    },
+    "rooms/song_25.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "song_25.json.gz"
+    },
+    "rooms/song_26.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "song_26.json.gz"
+    },
+    "rooms/song_27.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "song_27.json.gz"
+    },
+    "rooms/song_29.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "song_29.json.gz"
+    },
+    "rooms/song_tower_01.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "song_tower_01.json.gz"
+    },
+    "rooms/sprintmaster_cave.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "sprintmaster_cave.json.gz"
+    },
+    "rooms/tut_02.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "tut_02.json.gz"
+    },
+    "rooms/tut_03.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "tut_03.json.gz"
+    },
+    "rooms/under_02.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "under_02.json.gz"
+    },
+    "rooms/under_04.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "under_04.json.gz"
+    },
+    "rooms/under_05.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "under_05.json.gz"
+    },
+    "rooms/under_07.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "under_07.json.gz"
+    },
+    "rooms/under_10.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "under_10.json.gz"
+    },
+    "rooms/under_13.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "under_13.json.gz"
+    },
+    "rooms/under_18.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "under_18.json.gz"
+    },
+    "rooms/under_19.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "under_19.json.gz"
+    },
+    "rooms/under_19b.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "under_19b.json.gz"
+    },
+    "rooms/under_21.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "under_21.json.gz"
+    },
+    "rooms/under_27.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "under_27.json.gz"
+    },
+    "rooms/ward_02b.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "ward_02b.json.gz"
+    },
+    "rooms/weave_02.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "weave_02.json.gz"
+    },
+    "rooms/weave_03.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "weave_03.json.gz"
+    },
+    "rooms/weave_04.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "weave_04.json.gz"
+    },
+    "rooms/weave_08.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "weave_08.json.gz"
+    },
+    "rooms/weave_13.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "weave_13.json.gz"
+    },
+    "rooms/wisp_02.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "wisp_02.json.gz"
+    },
+    "rooms/wisp_07.json.gz": {
+      "tag": "silksong-atlas-data-v2-004",
+      "name": "wisp_07.json.gz"
     }
   }
 }

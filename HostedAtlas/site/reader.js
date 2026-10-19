@@ -527,6 +527,11 @@ function placementsForWave() {
     (record.enemyCandidate&&!(record.listeners||[]).length)
   ));
 }
+function canonicalArchitectPlacements(records){
+  const all=state.roomMeta?.architect?.placements||[],parents=new Set();
+  for(const record of all){if(!record.enemyCandidate)continue;const key=String(record.key||'');let slash=key.lastIndexOf('/');while(slash>0){parents.add(key.slice(0,slash));slash=key.lastIndexOf('/',slash-1);}}
+  return records.filter(record=>!record.enemyCandidate||!parents.has(String(record.key||'')));
+}
 function isPlacementEnabled(record) { return state.visiblePlacements.has(record.key)?state.visiblePlacements.get(record.key):Boolean(record.activeByDefault); }
 function eventActionState(listener,fallback){
   const action=String(listener?.action||'').toLowerCase();
@@ -552,7 +557,7 @@ function applySelectedWaveState(marker=state.selectedGauntlet){
 }
 function renderPlacementList() {
   if(state.mode!=='room'||!state.roomMeta?.architect)return;
-  const records=placementsForWave(); const enemyRecords=records.filter(record=>record.enemyCandidate);
+  const records=canonicalArchitectPlacements(placementsForWave());
   const show=records.length?records:[]; $('placementCount').textContent=`${show.length}`;
   const wave=selectedWaveData(), eventLinked=show.filter(record=>(record.listeners||[]).some(listener=>listener.event===wave.startEvent||listener.event===wave.endEvent)).length,
     staticEnemies=wave.key==='all'?0:show.filter(record=>record.enemyCandidate&&!(record.listeners||[]).length).length;
@@ -562,7 +567,8 @@ function renderPlacementList() {
   const uiRecords=show.slice(0,1200);
   $('placementList').innerHTML=uiRecords.length?uiRecords.map(record=>{
     const point=record.worldPosition||{}; const events=(record.listeners||[]).map(listener=>`${listener.event} · ${listener.action}`).join(', '), phase=events|| (record.enemyCandidate?'No phase listener · saved active state applies in every wave':'No saved activation event');
-    return `<label class="placement-row"><input type="checkbox" data-placement="${esc(record.key)}" ${isPlacementEnabled(record)?'checked':''}><span class="placement-copy">${esc(record.label||record.placement?.id||'Placement')} · ${Number(point.x||0).toFixed(1)}, ${Number(point.y||0).toFixed(1)}${record.enemyCandidate?' · ENEMY':''}<span>${esc(phase)}</span></span></label>`;
+    const spriteStatus=record.enemyCandidate?(enemySpriteForRecord(record)?' · Silksong sprite':' · sprite unavailable'):'';
+    return `<label class="placement-row"><input type="checkbox" data-placement="${esc(record.key)}" ${isPlacementEnabled(record)?'checked':''}><span class="placement-copy">${esc(record.label||record.placement?.id||'Placement')} · ${Number(point.x||0).toFixed(1)}, ${Number(point.y||0).toFixed(1)}${record.enemyCandidate?' · ENEMY':''}<span>${esc(phase+spriteStatus)}</span></span></label>`;
   }).join(''):`<div class="hint">${wave.key==='all'?'No saved Architect placements in this room.':'No placements are linked to this event phase.'}</div>`;
   if(show.length>1200)$('placementList').insertAdjacentHTML('beforeend',`<div class="hint">Showing first 1,200 of ${show.length.toLocaleString()} placements.</div>`);
   document.querySelectorAll('[data-placement]').forEach(input=>input.addEventListener('change',()=>{state.visiblePlacements.set(input.dataset.placement,input.checked);draw();}));
@@ -1061,6 +1067,12 @@ function conditionalObjectVisibility(object,byId,cache){
   cache.set(object.id,visible);return visible;
 }
 
+function hasEnemyArtworkAncestor(object,byId){
+  const seen=new Set();let current=object;
+  while(current&&!seen.has(current.id)){seen.add(current.id);if(current.classification?.enemy===true)return true;current=byId.get(current.parentId);}
+  return false;
+}
+
 function roomShaderEffect(object,artwork){
   const name=`${object.name||''} ${artwork.name||''} ${artwork.materialName||''}`.toLowerCase();
   return['black_solid','white_fader','black_fader','vignette','darkness','mask_beam','soft_masker','remasker',
@@ -1078,6 +1090,7 @@ function collectConditionalRoomArtwork(meta){
   const objects=meta.objects||[],byId=new Map(objects.map(object=>[object.id,object])),visibleCache=new Map(),renderables=[];
   for(let objectIndex=0;objectIndex<objects.length;objectIndex++){
     const object=objects[objectIndex];
+    if(hasEnemyArtworkAncestor(object,byId))continue;
     if(!conditionalObjectVisibility(object,byId,visibleCache))continue;
     if(object.sortingGroup?.enabled&&object.sortingGroup.sortingLayerKnown===false)continue;
     for(let rendererIndex=0;rendererIndex<(object.sprites||[]).length;rendererIndex++){
@@ -1257,18 +1270,24 @@ function drawArchitect(width,height,frame,meta){
   if($('toggleGauntlets').checked){
     for(const marker of architect.markers||[]){const point=marker.worldPosition;if(!point)continue;const screen=frame.worldPoint(point.x,point.y),px=screen.x,py=screen.y;if(px<frame.x||px>frame.x+frame.drawWidth||py<frame.y||py>frame.y+frame.drawHeight)continue;ctx.save();ctx.translate(px,py);ctx.rotate(Math.PI/4);ctx.fillStyle=state.selectedGauntlet===marker?'#eadcff':'#c2a0ef';ctx.strokeStyle='#211829';ctx.lineWidth=2;ctx.fillRect(-7,-7,14,14);ctx.strokeRect(-7,-7,14,14);ctx.rotate(-Math.PI/4);ctx.fillStyle='#22172d';ctx.font='bold 8px Consolas,monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('G',0,0);ctx.restore();}
     if(state.selectedGauntlet&&$('toggleArenaChanges').checked){
-      const active=placementsForWave().filter(record=>isPlacementEnabled(record));
+      const active=canonicalArchitectPlacements(placementsForWave()).filter(record=>isPlacementEnabled(record));
       for(const record of active){const point=record.worldPosition;if(!point)continue;const screen=frame.worldPoint(point.x,point.y),px=screen.x,py=screen.y;if(px<frame.x||px>frame.x+frame.drawWidth||py<frame.y||py>frame.y+frame.drawHeight)continue;
         const textured=record.enemyCandidate&&$('toggleEnemyTextures').checked&&drawEnemyTexture(record,px,py,frame.scale,frame.sourcePpuX,ctx);
-        ctx.save();ctx.fillStyle=textured?'transparent':record.enemyCandidate?'#e69b35':'#8060a9';ctx.strokeStyle=record.enemyCandidate?'#f5b64c':'#c2a0ef';ctx.lineWidth=textured?1.2:1.5;ctx.beginPath();ctx.arc(px,py,textured?5:4,0,Math.PI*2);if(!textured)ctx.fill();ctx.stroke();ctx.restore();
+        ctx.save();ctx.fillStyle=textured?'transparent':record.enemyCandidate?'#e69b35':'#8060a9';ctx.strokeStyle=record.enemyCandidate?'#f5b64c':'#c2a0ef';ctx.lineWidth=textured?1.2:1.5;
+        if(record.enemyCandidate&&!textured){ctx.beginPath();ctx.moveTo(px,py-5);ctx.lineTo(px+5,py);ctx.lineTo(px,py+5);ctx.lineTo(px-5,py);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#251a0c';ctx.font='bold 6px Consolas,monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('E',px,py+.2);}
+        else{ctx.beginPath();ctx.arc(px,py,textured?5:4,0,Math.PI*2);if(!textured)ctx.fill();ctx.stroke();}ctx.restore();
       }
       for(const cell of architect.tileCells||[]){if(!Number.isFinite(cell.x)||!Number.isFinite(cell.y))continue;const point=frame.worldPoint(cell.x,cell.y),size=frame.sourcePpuX*frame.scale;if(point.x+size<frame.x||point.x>frame.x+frame.drawWidth||point.y+size<frame.y||point.y>frame.y+frame.drawHeight)continue;ctx.save();ctx.strokeStyle='#c2a0ef80';ctx.lineWidth=1;ctx.strokeRect(point.x,point.y,size,size);ctx.restore();}
     }
   }
 }
 function spriteGeometry(sprite){const ppu=Math.max(1,Number(sprite.pixelsPerUnit)||100),rotated=Number(sprite.packingRotation)===4,w=(rotated?sprite.rectHeight:sprite.rectWidth)/ppu,h=(rotated?sprite.rectWidth:sprite.rectHeight)/ppu,ow=(sprite.originalWidth||sprite.rectWidth)/ppu,oh=(sprite.originalHeight||sprite.rectHeight)/ppu;return{width:w,height:h,left:(sprite.trimOffsetX||0)/ppu-(sprite.pivotX??.5)*ow,bottom:(sprite.trimOffsetY||0)/ppu-(sprite.pivotY??.5)*oh,rotated};}
+function enemySpriteForRecord(record){
+  const id=String(record.placement?.id||'').replace(/^prefab_/i,'').toLowerCase().replace(/[^a-z0-9]/g,''),label=String(record.label||'').toLowerCase().replace(/[^a-z0-9]/g,''),artwork=state.roomMeta?.architect?.enemyArtwork||{},candidates=[id,...(id.startsWith('g')?[id.slice(1)]:[]),label,...(label.startsWith('g')?[label.slice(1)]:[])];
+  return candidates.map(key=>artwork[key]?.sprite).find(sprite=>/^[a-f0-9]{64}$/i.test(sprite?.textureSha256||''))||null;
+}
 function drawEnemyTexture(record,px,py,roomScale,roomPpu,target){
-  const id=String(record.placement?.id||'').replace(/^prefab_/i,'').toLowerCase().replace(/[^a-z0-9]/g,''),label=String(record.label||'').toLowerCase().replace(/[^a-z0-9]/g,''),artwork=state.roomMeta?.architect?.enemyArtwork||{},candidates=[id,...(id.startsWith('g')?[id.slice(1)]:[]),label,...(label.startsWith('g')?[label.slice(1)]:[])],art=candidates.map(key=>artwork[key]).find(Boolean),sprite=art?.sprite;if(!sprite?.textureSha256)return false;
+  const sprite=enemySpriteForRecord(record);if(!sprite)return false;
   let image=state.atlasCache.get(sprite.textureSha256);if(!image){image=new Image();image.onload=draw;image.onerror=()=>{};image.src=`${ARTWORK_BASE}${sprite.textureSha256}.${ARTWORK_EXTENSION}`;state.atlasCache.set(sprite.textureSha256,image);}if(!image.complete||!image.naturalWidth)return false;
   const geo=spriteGeometry(sprite),parentScale=Number(record.placement?.scale)||1,rotation=Number(record.placement?.rotation)||0,ppu=Number(roomPpu)||Number(state.roomMeta.image.pixelsPerWorldUnit)||1,scale=roomScale*ppu*parentScale,sourceY=sprite.textureHeight-sprite.rectY-sprite.rectHeight;
   target.save();target.globalAlpha=Number(sprite.tintA??1);target.translate(px,py);target.rotate(-rotation*Math.PI/180);target.scale(scale,-scale);target.translate(geo.left+geo.width/2,geo.bottom+geo.height/2);

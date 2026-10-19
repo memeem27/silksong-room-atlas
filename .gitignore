@@ -15,6 +15,7 @@ Thumbs.db
 !.env.example
 .appdata/
 .packages/
+node_modules/
 HostedAtlas/r2-data/
 HostedAtlas/delta-assets.json
 HostedAtlas/asset-worker-*.log

@@ -37,30 +37,6 @@
       "alphaDifferences": 0
     },
     {
-      "sample": "Architect enemy atlas 0fd14f4d090a",
-      "pixels": 1048576,
-      "visibleRgbDifferences": 0,
-      "alphaDifferences": 0
-    },
-    {
-      "sample": "Architect enemy atlas b72790665955",
-      "pixels": 4194304,
-      "visibleRgbDifferences": 0,
-      "alphaDifferences": 0
-    },
-    {
-      "sample": "Architect enemy atlas dcd18aaaf923",
-      "pixels": 4194304,
-      "visibleRgbDifferences": 0,
-      "alphaDifferences": 0
-    },
-    {
-      "sample": "Architect enemy atlas fb8891fb4413",
-      "pixels": 262144,
-      "visibleRgbDifferences": 0,
-      "alphaDifferences": 0
-    },
-    {
       "sample": "browser-ready room image",
       "pixels": 25064290,
       "visibleRgbDifferences": 0,
