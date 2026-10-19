@@ -108,6 +108,27 @@ const bone01 = areas.find(area => area.key === 'PATH_OF_BONE')?.rooms.find(room 
 assert.ok(bone01?.architect?.markerCount >= 2, 'Bone_01 must expose its multiple GauntletSong markers on The Marrow map');
 assert.ok(bone01,
   'Bone_01 gauntlet rooms must remain indexed under The Marrow');
+const tutorialRoom = rendered.find(room => room.name.toLowerCase() === 'tut_01');
+assert.ok(tutorialRoom?.metadata, 'The tutorial room must retain its rendered sidecar');
+const tutorialMetadata = readGzipJson(path.join(dataRoot, `${tutorialRoom.metadata}.gz`));
+const tutorialFiltered = tutorialMetadata.render?.filteredEffectRenderers;
+assert.ok(tutorialFiltered?.screenEffectRendererCount > 0,
+  'Tut_01 must exclude its serialized black/fader mask layers that cover undiscovered room art');
+assert.ok(tutorialFiltered.examples.some(row => /fader|mask|black.?solid/i.test(`${row.objectName} ${row.artworkName}`)),
+  'Tut_01 sidecar must record the mask renderer removed from its image');
+const boneEast07Room = manifest.rooms.find(room => room.name.toLowerCase() === 'bone_east_07');
+assert.ok(boneEast07Room?.metadata, 'Bone East 07 must retain its room sidecar');
+const boneEast07Metadata = readGzipJson(path.join(dataRoot, `${boneEast07Room.metadata}.gz`));
+const boneEast07Filtered = boneEast07Metadata.render?.filteredEffectRenderers;
+assert.ok(boneEast07Filtered?.screenEffectRendererCount > 0,
+  'Bone East 07 must exclude its serialized fader overlay from the room image');
+assert.ok(boneEast07Filtered?.lightingFogRendererCount > 0,
+  'Bone East 07 must exclude its serialized fog and lighting sprites from the room image');
+const boneEast07Objects = boneEast07Metadata.objects || [];
+assert.ok(boneEast07Objects.some(object => /standard_fog/i.test(object.name) && object.sprites?.length),
+  'Bone East 07 sidecar must retain its game-textured standard_fog renderers');
+assert.ok(boneEast07Objects.some(object => /hornet_fader/i.test(object.name) && object.sprites?.length),
+  'Bone East 07 sidecar must retain its game-textured hornet_fader renderer');
 
 const sprites = indexedRows.flatMap(room => room.mapSprites || [])
   .concat(areas.flatMap(area => [...(area.unmappedMapArtwork || []), ...(area.conditionalMapArtwork || [])]
@@ -132,11 +153,25 @@ for (const edge of transitions) {
 const architectRooms = [];
 const architectEnemyTextures = new Set();
 let architectEnemyArtworkTypes = 0;
+let verifiedMaskFilteredRooms = 0;
 for (const room of manifest.rooms || []) {
   if (!room.metadata) continue;
   const sidecarPath = path.join(dataRoot, `${room.metadata}.gz`);
   assert.ok(fs.existsSync(sidecarPath), `missing hosted room metadata: ${room.metadata}`);
   const metadata = readGzipJson(sidecarPath);
+  if (room.image) {
+    assert.equal(metadata.render?.gameBundleTexturesOnly, true, `${room.name} must use only Silksong bundle textures`);
+    assert.deepEqual(metadata.render?.missingTextureSha256 || [], [], `${room.name} has missing game textures`);
+    assert.equal(metadata.render?.screenEffectsIncluded, false, `${room.name} must exclude gameplay screen masks`);
+    assert.equal(metadata.render?.shaderDrivenMaskArtworkIncluded, false, `${room.name} must not bake shader mask overlays`);
+    assert.equal(metadata.render?.inactiveRenderersIncluded, true,
+      `${room.name} must include progression-hidden room art so undiscovered areas are not blacked out`);
+    assert.equal(metadata.render?.inactiveArtworkClippedToActiveBounds, true,
+      `${room.name} must keep progression-hidden art inside the authored room bounds`);
+    assert.ok(metadata.render?.excluded?.includes('shader-driven mask/light/fog effects'),
+      `${room.name} must exclude screen-bound shader masks that obscure undiscovered room art`);
+    verifiedMaskFilteredRooms++;
+  }
   if (!metadata.architect) continue;
   const artworks = Object.values(metadata.architect.enemyArtwork || {});
   architectRooms.push(room.name);
@@ -150,11 +185,14 @@ for (const room of manifest.rooms || []) {
     architectEnemyTextures.add(hash);
   }
 }
+assert.equal(Boolean(manifest.renderProfile?.architectPlacementMetadataIncluded), architectRooms.length > 0,
+  'top-level render profile must continue to advertise retained Architect placement metadata');
 
 console.log(JSON.stringify({ status: 'passed', renderedRooms: rendered.length,
   roomsWithAuthoredOrSharedPosition: positionedRenderedCount, roomsWithoutMapPosition: archivedNames.size,
   sectionsWithFitBounds: fittedSectionCount, mountFayClickableExtraMapPieces: peakRows.length - peakUnlinked.length,
   locationsWithoutRoomMap: areasWithoutDetailBounds.map(area => area.key),
+  maskFilteredRooms: verifiedMaskFilteredRooms,
   boneBottomArchitectMarkers: boneBottom.architect.markerCount,
   boneBottomEnemyArtworkTypes: boneBottomArtwork.length,
   architectRoomSidecars: architectRooms.length,

@@ -26,7 +26,8 @@ internal sealed record SceneSpriteReference(long PathId, int FileId, string Exte
     int SortingLayerId = 0, int LegacySortingLayer = 0, string SortingLayerName = "Default", bool SortingLayerKnown = true,
     float WorldM00 = 1, float WorldM01 = 0, float WorldM10 = 0, float WorldM11 = 1,
     long MaterialPathId = 0, int MaterialFileId = 0, string MaterialExternalPath = "", string BlendMode = "normal",
-    float MaterialTintR = 1, float MaterialTintG = 1, float MaterialTintB = 1, float MaterialTintA = 1);
+    float MaterialTintR = 1, float MaterialTintG = 1, float MaterialTintB = 1, float MaterialTintA = 1,
+    string MaterialName = "");
 internal sealed record SceneMeshVertex(float X, float Y, float Z, float U, float V,
     float R = 1, float G = 1, float B = 1, float A = 1);
 internal sealed record SceneMeshSubmesh(int Topology, IReadOnlyList<int> Indices);
@@ -102,7 +103,7 @@ internal sealed class UnityBundleInspector {
         try {
             using var stream = File.OpenRead(path);
             var stored = JsonSerializer.Deserialize<ScenePackage>(stream);
-            if (stored is null || stored.SchemaVersion != 26 || !Path.GetFullPath(stored.SourceBundle).Equals(Path.GetFullPath(source.FullName),
+            if (stored is null || stored.SchemaVersion != 28 || !Path.GetFullPath(stored.SourceBundle).Equals(Path.GetFullPath(source.FullName),
                     StringComparison.OrdinalIgnoreCase) || stored.SourceBytes != source.Length ||
                 stored.SourceLastWrittenUtc != source.LastWriteTimeUtc ||
                 !stored.SourceSha256.Equals(ComputeSha256(source.FullName), StringComparison.OrdinalIgnoreCase)) return false;
@@ -206,6 +207,7 @@ internal sealed class UnityBundleInspector {
                                     var materialPathId = materialPointer is null ? 0 : ReadLong(materialPointer, "m_PathID", 0);
                                     var materialExternalPath = materialFileId > 0 && materialFileId < externalPaths.Count
                                         ? externalPaths[materialFileId] : "";
+                                    var materialName = materialFileId == 0 ? ReadSpriteMaterialName(manager, assetsFile, materialPathId) : "";
                                     gameObject.Sprites.Add(new(spritePathId, spriteFileId, spriteExternalPath, "",
                                         SortingLayerId: (int)ReadLong(renderer, "m_SortingLayerID", 0),
                                         LegacySortingLayer: (int)ReadLong(renderer, "m_SortingLayer", 0),
@@ -215,7 +217,7 @@ internal sealed class UnityBundleInspector {
                                         TintR: ReadColorChannel(renderer, "r", 1), TintG: ReadColorChannel(renderer, "g", 1),
                                         TintB: ReadColorChannel(renderer, "b", 1), TintA: ReadColorChannel(renderer, "a", 1),
                                         MaterialPathId: materialPathId, MaterialFileId: materialFileId,
-                                        MaterialExternalPath: materialExternalPath));
+                                        MaterialExternalPath: materialExternalPath, MaterialName: materialName));
                                 }
                             }
                             if (componentType == "MeshFilter") {
@@ -356,7 +358,7 @@ internal sealed class UnityBundleInspector {
                 ResolveSortingGroup(raw, objectsById, sourceHash), raw.UnityLayer));
         }
 
-        return new ScenePackage(26, Path.GetFileNameWithoutExtension(source.Name), source.FullName,
+        return new ScenePackage(28, Path.GetFileNameWithoutExtension(source.Name), source.FullName,
             source.Length, sourceHash, source.LastWriteTimeUtc, DateTimeOffset.UtcNow, unityVersion, typeTreeEnabled,
             serializedFiles, externalFiles, result, diagnostics, [], null, meshAssets.Values.ToArray());
     }
@@ -632,6 +634,17 @@ internal sealed class UnityBundleInspector {
     }
     private static float ReadColorChannel(AssetTypeValueField renderer, string channel, float fallback) {
         try { return ReadFloat(renderer["m_Color"], channel, fallback); } catch { return fallback; }
+    }
+    private static string ReadSpriteMaterialName(AssetsManager manager, AssetsFileInstance sourceFile, long materialPathId) {
+        if (materialPathId == 0) return "";
+        try {
+            var materialInfo = sourceFile.file.GetAssetInfo(materialPathId);
+            if (materialInfo is null) return "";
+            var material = manager.GetBaseField(sourceFile, materialInfo);
+            return ReadString(material, "m_Name", "");
+        } catch {
+            return "";
+        }
     }
     private static AssetTypeValueField? TryFirstMaterial(AssetTypeValueField renderer) {
         try { return renderer["m_Materials.Array"].Children.FirstOrDefault(); } catch { return null; }

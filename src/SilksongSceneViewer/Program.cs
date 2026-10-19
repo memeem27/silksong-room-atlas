@@ -13,7 +13,8 @@ var builder = WebApplication.CreateBuilder(args);
 var portOption = Array.FindIndex(args, argument => argument.Equals("--port", StringComparison.OrdinalIgnoreCase));
 var port = portOption >= 0 && portOption + 1 < args.Length && int.TryParse(args[portOption + 1], out var customPort) && customPort is > 0 and < 65536 ? customPort : 5178;
 builder.WebHost.UseUrls($"http://127.0.0.1:{port}");
-builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 2L * 1024 * 1024 * 1024);
+// Large native-resolution images are uploaded in bounded chunks below.
+builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 64L * 1024 * 1024);
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Services.ConfigureHttpJsonOptions(options => {
@@ -43,7 +44,7 @@ app.UseStaticFiles(new StaticFileOptions {
     RequestPath = "/atlas-data"
 });
 app.MapGet("/api/health", () => Results.Ok(new { status = "ready", product = "Silksong Scene Viewer" }));
-app.MapPut("/api/preprocessed/{bucket}/{fileName}", async (string bucket, string fileName, HttpRequest request,
+app.MapMethods("/api/preprocessed/{bucket}/{fileName}", new[] { "PUT", "POST" }, async (string bucket, string fileName, HttpRequest request,
         CancellationToken cancellationToken) => {
     var safeBucket = bucket.ToLowerInvariant();
     var extensions = safeBucket switch {
@@ -62,6 +63,89 @@ app.MapPut("/api/preprocessed/{bucket}/{fileName}", async (string bucket, string
     var bucketDirectory = safeBucket == "root" ? preprocessedDirectory : Path.Combine(preprocessedDirectory, safeBucket);
     Directory.CreateDirectory(bucketDirectory);
     var destination = Path.Combine(bucketDirectory, fileName);
+    if (request.Method == HttpMethods.Post) {
+        using var payload = await JsonDocument.ParseAsync(request.Body, cancellationToken: cancellationToken);
+        var root = payload.RootElement;
+        if (!root.TryGetProperty("uploadId", out var uploadIdElement) || uploadIdElement.ValueKind != JsonValueKind.String ||
+            !Guid.TryParseExact(uploadIdElement.GetString(), "N", out var uploadId) ||
+            !root.TryGetProperty("offset", out var offsetElement) || !offsetElement.TryGetInt64(out var offset) || offset < 0 ||
+            !root.TryGetProperty("total", out var totalElement) || !totalElement.TryGetInt64(out var total) || total <= 0 ||
+            total > 16L * 1024 * 1024 * 1024 || offset >= total ||
+            !root.TryGetProperty("chunkBase64", out var chunkElement) || chunkElement.ValueKind != JsonValueKind.String)
+            return Results.BadRequest(new { error = "Invalid JSON chunk upload parameters." });
+        const int maxJsonChunkBytes = 8 * 1024 * 1024;
+        byte[] chunkBytes;
+        try { chunkBytes = Convert.FromBase64String(chunkElement.GetString()!); }
+        catch (FormatException) { return Results.BadRequest(new { error = "Chunk payload is not valid base64." }); }
+        var expectedChunkBytes = (int)Math.Min(maxJsonChunkBytes, total - offset);
+        if (chunkBytes.Length != expectedChunkBytes)
+            return Results.BadRequest(new { error = $"Chunk must decode to exactly {expectedChunkBytes} bytes." });
+        var chunkTemporary = destination + "." + uploadId.ToString("N") + ".upload.tmp";
+        if (offset > 0 && !File.Exists(chunkTemporary) && File.Exists(destination) && new FileInfo(destination).Length == total)
+            return Results.Ok(new { fileName, offset, bytes = chunkBytes.Length, receivedBytes = total, total, complete = true });
+        await using (var output = new FileStream(chunkTemporary,
+                         offset == 0 ? FileMode.Create : FileMode.OpenOrCreate,
+                         FileAccess.Write, FileShare.None, 1024 * 1024,
+                         FileOptions.Asynchronous | FileOptions.SequentialScan)) {
+            if (offset > output.Length)
+                return Results.Conflict(new { error = "Upload offset does not match the saved chunk position." });
+            output.SetLength(offset);
+            output.Position = offset;
+            await output.WriteAsync(chunkBytes, cancellationToken);
+            await output.FlushAsync(cancellationToken);
+        }
+        var receivedBytes = offset + chunkBytes.Length;
+        if (receivedBytes == total) File.Move(chunkTemporary, destination, overwrite: true);
+        return Results.Ok(new { fileName, offset, bytes = chunkBytes.Length, receivedBytes, total, complete = receivedBytes == total });
+    }
+    var uploadIdText = request.Query["uploadId"].ToString();
+    if (uploadIdText.Length > 0) {
+        if (!Guid.TryParseExact(uploadIdText, "N", out var uploadId) ||
+            !long.TryParse(request.Query["offset"], out var offset) || offset < 0 ||
+            !long.TryParse(request.Query["total"], out var total) || total <= 0 || total > 16L * 1024 * 1024 * 1024 || offset >= total)
+            return Results.BadRequest(new { error = "Invalid chunk upload parameters." });
+        const int maxChunkBytes = 32 * 1024 * 1024;
+        var expectedBytes = (int)Math.Min(maxChunkBytes, total - offset);
+        if (request.ContentLength is > maxChunkBytes) return Results.BadRequest(new { error = "Upload chunk exceeds the 32 MiB limit." });
+        if (request.ContentLength is not null && request.ContentLength != expectedBytes)
+            return Results.BadRequest(new { error = $"Upload chunk must contain exactly {expectedBytes} bytes." });
+        var chunkTemporary = destination + "." + uploadId.ToString("N") + ".upload.tmp";
+        if (offset > 0 && !File.Exists(chunkTemporary) && File.Exists(destination) && new FileInfo(destination).Length == total)
+            return Results.Ok(new { fileName, offset, bytes = expectedBytes, receivedBytes = total, total, complete = true });
+        try {
+            await using (var output = new FileStream(chunkTemporary,
+                             offset == 0 ? FileMode.Create : FileMode.OpenOrCreate,
+                             FileAccess.Write, FileShare.None, 1024 * 1024,
+                             FileOptions.Asynchronous | FileOptions.SequentialScan)) {
+                if (offset > output.Length)
+                    return Results.Conflict(new { error = "Upload offset does not match the saved chunk position." });
+                // Rewriting from this offset makes retrying a chunk idempotent if
+                // the client lost the response after the server finished writing.
+                output.SetLength(offset);
+                output.Position = offset;
+                var buffer = new byte[1024 * 1024];
+                var copied = 0;
+                while (copied < expectedBytes) {
+                    var read = await request.Body.ReadAsync(buffer.AsMemory(0, Math.Min(buffer.Length, expectedBytes - copied)), cancellationToken);
+                    if (read == 0) break;
+                    await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+                    copied += read;
+                }
+                if (copied != expectedBytes) {
+                    await output.FlushAsync(cancellationToken);
+                    return Results.BadRequest(new { error = $"Incomplete upload chunk: expected {expectedBytes} bytes, received {copied}." });
+                }
+                await output.FlushAsync(cancellationToken);
+            }
+            var receivedBytes = offset + expectedBytes;
+            if (receivedBytes == total) File.Move(chunkTemporary, destination, overwrite: true);
+            return Results.Ok(new { fileName, offset, bytes = expectedBytes, receivedBytes, total, complete = receivedBytes == total });
+        } catch {
+            // Preserve the temporary file after a disconnect so the same offset
+            // can be retried; the next request truncates any partial chunk.
+            throw;
+        }
+    }
     var temporary = destination + "." + Guid.NewGuid().ToString("N") + ".tmp";
     try {
         await using (var output = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None,

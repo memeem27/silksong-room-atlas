@@ -65,6 +65,11 @@ function runWebpSample(name, sourcePath, hostedPath) {
 
 const results = [];
 const hostedManifest = JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(hostedRoot, 'manifest.json.gz'))).toString('utf8'));
+const tutorialSidecar = JSON.parse(fs.readFileSync(path.join(preprocessedRoot, 'rooms', 'tut_01.json'), 'utf8'));
+if (!tutorialSidecar.render?.gameBundleTexturesOnly || tutorialSidecar.render?.missingTextureSha256?.length ||
+    !tutorialSidecar.render?.excluded?.includes('shader-driven mask/light/fog effects')) {
+  throw new Error('The tut_01 render must use complete game textures and exclude shader mask/light/fog overlays.');
+}
 const cameraImageFiles = fs.readdirSync(path.join(hostedRoot, 'images')).filter(name => /-camera-\d+\.(?:webp|png)$/i.test(name));
 if (hostedManifest.cameraViewImagesIncluded === false) {
   if (cameraImageFiles.length || hostedManifest.cameraViewImageCount !== 0) throw new Error('The package says camera-view images are excluded, but camera images are present or still referenced.');
@@ -73,6 +78,12 @@ if (hostedManifest.cameraViewImagesIncluded === false) {
 results.push(runWebpSample('bone_01 room',
   path.join(preprocessedRoot, 'images', 'bone_01.png'),
   path.join(hostedRoot, 'images', 'bone_01.webp')));
+results.push(runWebpSample('tut_01 undiscovered-room fix',
+  path.join(preprocessedRoot, 'images', 'tut_01.png'),
+  path.join(hostedRoot, 'images', 'tut_01.webp')));
+results.push(runWebpSample('Bone East 07 fog-overlay fix',
+  path.join(preprocessedRoot, 'images', 'bone_east_07.png'),
+  path.join(hostedRoot, 'images', 'bone_east_07.webp')));
 for (const [label, baseName] of [
   ['bone_01 camera section', 'bone_01-camera-03'],
   ['ant_14 camera section', 'ant_14-camera-01'],
@@ -111,9 +122,21 @@ if (fs.existsSync(deltaPath)) {
 
 const sourcePng = path.join(preprocessedRoot, 'images', 'abandoned_town.png');
 const hostedPng = path.join(hostedRoot, 'images', 'abandoned_town.png');
-const sourceHash = hashFile(sourcePng), hostedHash = hashFile(hostedPng);
-results.push({ sample: 'oversized PNG fallback', exactFileCopy: sourceHash === hostedHash });
+const hostedWebp = path.join(hostedRoot, 'images', 'abandoned_town.webp');
+if (fs.existsSync(hostedPng)) {
+  results.push({ sample: 'PNG fallback copy', exactFileCopy: hashFile(sourcePng) === hashFile(hostedPng) });
+} else if (fs.existsSync(hostedWebp)) {
+  results.push(runWebpSample('browser-ready room image', sourcePng, hostedWebp));
+} else {
+  throw new Error('The hosted package has no image for abandoned_town.');
+}
 
-console.log(JSON.stringify({ status: results.every(result =>
-  result.exactFileCopy !== false && (result.visibleRgbDifferences ?? 0) === 0 && (result.alphaDifferences ?? 0) === 0) ? 'passed' : 'failed', results }, null, 2));
-if (results.some(result => result.exactFileCopy === false || (result.visibleRgbDifferences ?? 0) !== 0 || (result.alphaDifferences ?? 0) !== 0)) process.exit(1);
+const report = {
+  status: results.every(result => result.exactFileCopy !== false &&
+    (result.visibleRgbDifferences ?? 0) === 0 && (result.alphaDifferences ?? 0) === 0) ? 'passed' : 'failed',
+  results
+};
+const reportJson = JSON.stringify(report, null, 2);
+fs.writeFileSync(path.join(sceneViewerRoot, 'HostedAtlas', 'PIXEL-TEST-REPORT.json'), `${reportJson}\n`);
+console.log(reportJson);
+if (report.status !== 'passed') process.exit(1);

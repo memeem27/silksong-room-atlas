@@ -16,10 +16,19 @@ if (-not (Test-Path -LiteralPath (Join-Path $sourceRoot 'manifest.json'))) { thr
 if (-not (Test-Path -LiteralPath $artworkRoot)) { throw "Cached Silksong artwork is missing: $artworkRoot" }
 if ($Workers -lt 1 -or $Workers -gt 6) { throw 'Workers must be between 1 and 6.' }
 $sourceManifest = [IO.File]::ReadAllText((Join-Path $sourceRoot 'manifest.json'), [Text.Encoding]::UTF8) | ConvertFrom-Json
+$roomMetadataNames = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
 $cameraImageNames = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+$roomImageNames = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
 foreach ($room in $sourceManifest.rooms) {
+    if ($room.metadata) { [void]$roomMetadataNames.Add([IO.Path]::GetFileNameWithoutExtension([string]$room.metadata)) }
+    foreach ($imagePath in @($room.image, $room.previewImage)) {
+        if ($imagePath) { [void]$roomImageNames.Add([IO.Path]::GetFileNameWithoutExtension([string]$imagePath)) }
+    }
     foreach ($view in @($room.cameraViews)) {
         if ($view.file) { [void]$cameraImageNames.Add([IO.Path]::GetFileNameWithoutExtension([string]$view.file)) }
+        if ($IncludeCameraViewImages -and $view.file) {
+            [void]$roomImageNames.Add([IO.Path]::GetFileNameWithoutExtension([string]$view.file))
+        }
     }
 }
 $cameraViewCountInSource = $cameraImageNames.Count
@@ -72,7 +81,10 @@ function Write-GzipJson([string]$Json, [string]$OutputPath) {
 $tasks = [Collections.Generic.List[object]]::new()
 $roomImageExtensions = [Collections.Generic.Dictionary[string, string]]::new([StringComparer]::OrdinalIgnoreCase)
 $oversizedNames = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
-$roomImages = @(Get-ChildItem -LiteralPath (Join-Path $sourceRoot 'images') -Filter '*.png' -File | Where-Object { $_.Name -notmatch '-native' -and ($IncludeCameraViewImages -or -not $cameraImageNames.Contains($_.BaseName)) })
+$roomImages = @(Get-ChildItem -LiteralPath (Join-Path $sourceRoot 'images') -Filter '*.png' -File | Where-Object {
+    $_.Name -notmatch '-native' -and $roomImageNames.Contains($_.BaseName) -and
+    ($IncludeCameraViewImages -or -not $cameraImageNames.Contains($_.BaseName))
+})
 foreach ($file in $roomImages) {
     $dimensions = Get-PngDimensions $file.FullName
     $oversized = $dimensions.Width -gt 16383 -or $dimensions.Height -gt 16383
@@ -116,12 +128,19 @@ function Omit-CameraViewImageReferences([string]$Json) {
     return [regex]::Replace($Json, '(?<prefix>"file"\s*:\s*)"(?:images/)?[^"/]*-camera-\d+\.png"', '${prefix}null', [Text.RegularExpressions.RegexOptions]::IgnoreCase)
 }
 
+function Omit-NativeImageReferences([string]$Json) {
+    # Full native PNGs remain in the local export, while the hosted reader uses
+    # the bounded canonical room image. Do not publish dangling local-only links.
+    return [regex]::Replace($Json, ',\s*"nativeImage"\s*:\s*"[^"]*"', '', [Text.RegularExpressions.RegexOptions]::IgnoreCase)
+}
+
 Write-Output ("Found {0} clean room renders; {1} exceed WebP's 16,383-pixel side limit and will be preserved as PNG." -f $roomImages.Count, $oversizedNames.Count)
 Write-Output ("Preparing {0} game-derived image files, including the cached texture atlases once each." -f $tasks.Count)
 Write-Output 'Compressing JSON sidecars while preserving exact per-image file type references.'
 
 $manifestJson = ConvertTo-Json -InputObject $sourceManifest -Depth 100 -Compress
 $manifestJson = Rewrite-ImageReferences $manifestJson
+$manifestJson = Omit-NativeImageReferences $manifestJson
 Write-GzipJson -Json $manifestJson -OutputPath (Join-Path $dataRoot 'manifest.json.gz')
 
 $navigationPath = Join-Path $sourceRoot 'maps\navigation.json'
@@ -130,13 +149,16 @@ if (Test-Path -LiteralPath $navigationPath) {
     Write-GzipJson -Json $navigationJson -OutputPath (Join-Path (Join-Path $dataRoot 'maps') 'navigation.json.gz')
 }
 
-$roomFiles = @(Get-ChildItem -LiteralPath (Join-Path $sourceRoot 'rooms') -Filter '*.json' -File | Where-Object { $_.Name -notmatch '-native' })
+$roomFiles = @(Get-ChildItem -LiteralPath (Join-Path $sourceRoot 'rooms') -Filter '*.json' -File | Where-Object {
+    $_.Name -notmatch '-native' -and $roomMetadataNames.Contains($_.BaseName)
+})
 for ($index = 0; $index -lt $roomFiles.Count; $index++) {
     $file = $roomFiles[$index]
     $outputPath = Join-Path (Join-Path $dataRoot 'rooms') ($file.Name + '.gz')
     $json = [IO.File]::ReadAllText($file.FullName, [Text.Encoding]::UTF8)
     if (-not $IncludeCameraViewImages) { $json = Omit-CameraViewImageReferences $json }
     $json = Rewrite-ImageReferences $json
+    $json = Omit-NativeImageReferences $json
     if (-not $oversizedNames.Contains($file.BaseName)) {
         $json = [regex]::Replace($json, '(?<prefix>"mimeType"\s*:\s*")image/png(?<suffix>")', '${prefix}image/webp${suffix}')
     }

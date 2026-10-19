@@ -40,8 +40,8 @@ for ($retryIndex = 0; $retryIndex -lt $retry.rooms.Count; $retryIndex++) {
     if ($retryPreviewPath -and -not (Test-Path -LiteralPath (Join-Path $Workspace $retryPreviewPath))) {
         throw "Retry preview PNG is missing for $name."
     }
-    if ($UsePreviewAsCanonicalImage -and -not $retryPreviewPath) {
-        throw "A preview PNG is required to use a browser-sized canonical image for $name."
+    if ($UsePreviewAsCanonicalImage -and $room.status -ne 'no-artwork' -and -not $retryPreviewPath -and -not $retryImagePath) {
+        throw "A retry PNG is required to promote a canonical room image for $name."
     }
 
     $index = [int]$roomIndexes[$name]
@@ -60,7 +60,7 @@ for ($retryIndex = 0; $retryIndex -lt $retry.rooms.Count; $retryIndex++) {
         }
     }
 
-    if ($UsePreviewAsCanonicalImage) {
+    if ($UsePreviewAsCanonicalImage -and $retryPreviewPath) {
         $image = $newMetadata.image
         if (-not $image -or [double]$image.previewPixelsPerWorldUnit -le 0 -or
             [int]$image.previewWidth -le 0 -or [int]$image.previewHeight -le 0) {
@@ -80,25 +80,36 @@ for ($retryIndex = 0; $retryIndex -lt $retry.rooms.Count; $retryIndex++) {
     # stable filenames only after validating every input, then point the
     # canonical manifest and metadata at those promoted files.
     $canonicalMetadata = if ($previousRoom.metadata) { [string]$previousRoom.metadata } else { "rooms/$name.json" }
-    if ($UsePreviewAsCanonicalImage) {
+    if ($UsePreviewAsCanonicalImage -and ($retryPreviewPath -or $retryImagePath)) {
         $canonicalImage = if ($previousRoom.image) { [string]$previousRoom.image }
-            elseif ($retryImagePath) { $retryImagePath -replace '-native(?=\.png$)', '' }
-            else { $retryPreviewPath -replace '-native-preview(?=\.[^.]+$)', '' -replace '-native(?=\.[^.]+$)', '' }
-        $sourcePreview = Join-Path $Workspace $retryPreviewPath
+            elseif ($retryImagePath) { $retryImagePath -replace '-(?:native|node|clean|plain|smoke)(?=\.png$)', '' }
+            else { $retryPreviewPath -replace '-(?:native|node|clean|plain|smoke)-preview(?=\.[^.]+$)', '' }
+        $canonicalSource = if ($retryPreviewPath) { $retryPreviewPath } else { $retryImagePath }
+        $sourceImage = Join-Path $Workspace $canonicalSource
         $destinationImage = Join-Path $Workspace $canonicalImage
-        if (-not [string]::Equals([IO.Path]::GetFullPath($sourcePreview), [IO.Path]::GetFullPath($destinationImage), [StringComparison]::OrdinalIgnoreCase)) {
-            Move-Item -LiteralPath $sourcePreview -Destination $destinationImage -Force
+        if (-not [string]::Equals([IO.Path]::GetFullPath($sourceImage), [IO.Path]::GetFullPath($destinationImage), [StringComparison]::OrdinalIgnoreCase)) {
+            Move-Item -LiteralPath $sourceImage -Destination $destinationImage -Force
         }
         $room.image = $canonicalImage
-        if ($retryImagePath) {
+        if ($retryPreviewPath -and $retryImagePath) {
             if ($room.PSObject.Properties['nativeImage']) { $room.nativeImage = $retryImagePath }
             else { $room | Add-Member -NotePropertyName nativeImage -NotePropertyValue $retryImagePath }
+        } elseif ($room.PSObject.Properties['nativeImage']) {
+            $room.PSObject.Properties.Remove('nativeImage')
         }
         if (-not $room.PSObject.Properties['previewImage']) {
             $room | Add-Member -NotePropertyName previewImage -NotePropertyValue $null
         } else {
             $room.previewImage = $null
         }
+    } elseif ($UsePreviewAsCanonicalImage) {
+        $room.image = $null
+        if (-not $room.PSObject.Properties['previewImage']) {
+            $room | Add-Member -NotePropertyName previewImage -NotePropertyValue $null
+        } else {
+            $room.previewImage = $null
+        }
+        if ($room.PSObject.Properties['nativeImage']) { $room.PSObject.Properties.Remove('nativeImage') }
     } else {
         if ($retryImagePath) {
             $canonicalImage = if ($previousRoom.image) { [string]$previousRoom.image } else { $retryImagePath -replace '-native(?=\.png$)', '' }
@@ -201,6 +212,29 @@ for ($retryIndex = 0; $retryIndex -lt $retry.rooms.Count; $retryIndex++) {
 $counts = [ordered]@{}
 foreach ($group in ($manifest.rooms | Group-Object -Property status)) { $counts[$group.Name] = $group.Count }
 if ($manifest.renderProfile) {
+    # The retry pass may change which serialized renderers are baked into the
+    # canonical room image. Keep the top-level manifest profile in sync with
+    # the room sidecars instead of leaving the original active-only claim.
+    if ($retry.renderProfile) {
+        foreach ($propertyName in @(
+            'gameBundleTexturesOnly', 'activeRenderersOnly', 'inactiveRenderersIncluded',
+            'inactiveArtworkClippedToActiveBounds', 'disabledRenderersIncluded',
+            'normalWorldBranchesIncluded', 'screenEffectsIncluded', 'rendererColorsApplied',
+            'backgroundArtworkIncluded', 'lightingRendererArtworkIncluded',
+            'shaderDrivenLightingIncluded', 'runtimeLightingSimulation',
+            'viewerAnnotations', 'architectModAssets', 'architectPlacementMetadataIncluded'
+        )) {
+            $retryProperty = $retry.renderProfile.PSObject.Properties[$propertyName]
+            if (-not $retryProperty) { continue }
+            $manifestProperty = $manifest.renderProfile.PSObject.Properties[$propertyName]
+            if ($propertyName -eq 'architectPlacementMetadataIncluded' -and $manifestProperty -and
+                [bool]$manifestProperty.Value -and -not [bool]$retryProperty.Value) {
+                continue
+            }
+            if ($manifestProperty) { $manifest.renderProfile.$propertyName = $retryProperty.Value }
+            else { $manifest.renderProfile | Add-Member -NotePropertyName $propertyName -NotePropertyValue $retryProperty.Value }
+        }
+    }
     $profilePng = if ($UsePreviewAsCanonicalImage) {
         'browser-sized transparent RGBA room previews are canonical; native-resolution tiled PNGs remain staged separately as *-native files'
     } else {

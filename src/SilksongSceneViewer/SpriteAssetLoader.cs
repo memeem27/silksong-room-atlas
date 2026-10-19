@@ -184,7 +184,7 @@ internal sealed class SpriteAssetLoader {
         var references = candidates.Values.Select(candidate => candidate.Reference).ToArray();
         var placeholderObject = new SceneObject("enemy-art-catalog", "enemy-art-catalog", "", 0, true,
             new(0, 0, 0), new(0, 0, 0), [], [], references);
-        var package = new ScenePackage(26, "enemy-art-catalog", "", 0, "", DateTimeOffset.UtcNow,
+        var package = new ScenePackage(28, "enemy-art-catalog", "", 0, "", DateTimeOffset.UtcNow,
             DateTimeOffset.UtcNow, "unknown", false, [], [], [placeholderObject], [], [], null, []);
         var loaded = AttachAssets(package, cancellationToken).Objects[0].Sprites;
         var loadedByKey = loaded.Where(sprite => !string.IsNullOrWhiteSpace(sprite.ImageUrl))
@@ -452,7 +452,8 @@ internal sealed class SpriteAssetLoader {
                 if (info is null) { unresolved++; continue; }
                 var material = manager.GetBaseField(assetsFile, info);
                 var color = ReadMaterialColor(material);
-                data[key] = new(ReadBlendMode(material), color.R, color.G, color.B, color.A);
+                data[key] = new(ReadBlendMode(material), color.R, color.G, color.B, color.A,
+                    StringField(material, "m_Name", ""));
             } catch (Exception exception) when (exception is not OperationCanceledException) {
                 diagnostics.Add(new("warning", $"Could not read SpriteRenderer material {bundleKey}:{reference.MaterialPathId}: {exception.Message}"));
             }
@@ -462,7 +463,8 @@ internal sealed class SpriteAssetLoader {
                 var key = $"{BundleKey(sprite.MaterialExternalPath)}:{sprite.MaterialPathId}";
                 return data.TryGetValue(key, out var material)
                     ? sprite with { BlendMode = material.BlendMode, MaterialTintR = material.R,
-                        MaterialTintG = material.G, MaterialTintB = material.B, MaterialTintA = material.A }
+                        MaterialTintG = material.G, MaterialTintB = material.B, MaterialTintA = material.A,
+                        MaterialName = material.Name }
                     : sprite;
             }).ToArray()
         }).ToArray();
@@ -560,7 +562,13 @@ internal sealed class SpriteAssetLoader {
         return leaf.Split('.')[0];
     }
     private static AssetTypeValueField? Field(AssetTypeValueField? root, params string[] path) {
-        try { foreach (var name in path) root = root![name]; return root; } catch { return null; }
+        try {
+            foreach (var name in path) {
+                root = root![name];
+                if (root.IsDummy) return null;
+            }
+            return root;
+        } catch { return null; }
     }
     private static float FloatField(AssetTypeValueField? root, string name, float fallback = 0) {
         try { return root![name].AsFloat; } catch { return fallback; }
@@ -729,5 +737,5 @@ internal sealed class SpriteAssetLoader {
     private sealed record BundleLocation(string BundlePath, int FileIndex);
     private sealed record MeshMaterialData(string ImageUrl, int Width, int Height, float ScaleX, float ScaleY,
         float OffsetX, float OffsetY, string Name, float R, float G, float B, float A, string BlendMode);
-    private sealed record SpriteMaterialData(string BlendMode, float R, float G, float B, float A);
+    private sealed record SpriteMaterialData(string BlendMode, float R, float G, float B, float A, string Name);
 }

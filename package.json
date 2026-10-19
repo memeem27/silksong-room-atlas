@@ -1,0 +1,11 @@
+{
+  "name": "silksong-room-atlas-render-tools",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "render:rooms": "node Render-PreprocessedNode.js"
+  },
+  "devDependencies": {
+    "@napi-rs/canvas": "0.1.100"
+  }
+}

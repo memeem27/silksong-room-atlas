@@ -1,5 +1,5 @@
 const byId = id => document.getElementById(id);
-const state = { source: '', scenes: [], scene: null, requested: null, selected: null, scale: 1, centerX: 0, centerY: 0, fitBounds: null, fitted: false, gameView: false, cameraLockAreas: [], cameraLockIndex: -1, grid: true, drag: null, images: new Map(), tintedSpriteImages: new Map(), hiddenSortingLayers: new Set(), objectById: new Map(), meshAssets: new Map(), activationGroups: [], stateOverrideCandidates: [], objectVisibilityOverrides: new Map(), gradePreviewObjectId: null, gradePreviewFactor: 1, artworkCanvas: null, backgroundCanvas: null, gameCaptures: new Map(), gameCaptureObjectUrls: new Set(), gameCaptureSource: '', gameCapturesEnabled: false, gameCaptureView: 'latest', architectSources: new Map(), architectScenes: new Map(), architectPrefabs: new Map(), architectSource: '', architectMarkersEnabled: false, architectSelectedMarkerId: null, architectSelectedWaveKey: null, architectWaveFilterKeys: null, architectChangesVisible: false, architectPlacementVisibility: new Map(), architectWaveEnemyVisibility: new Map(), architectPreviewName: null, architectAssetFiles: new Map(), architectAssetImages: new Map(), architectObjectUrls: new Set(), architectEnemyArt: new Map(), architectEnemyArtRequested: new Set(), architectEnemyArtPendingIds: new Set(), architectEnemyTexturesVisible: true, architectModImagesVisible: true, architectEnemyArtError: '', architectEnemyArtSummary: '', batchRendering: false, bulkExporting: false, bulkExportCancelled: false, bulkExportZipUrl: null };
+const state = { source: '', scenes: [], scene: null, requested: null, selected: null, scale: 1, centerX: 0, centerY: 0, fitBounds: null, fitted: false, gameView: false, cameraLockAreas: [], cameraLockIndex: -1, grid: true, drag: null, images: new Map(), tintedSpriteImages: new Map(), hiddenSortingLayers: new Set(), objectById: new Map(), meshAssets: new Map(), activationGroups: [], stateOverrideCandidates: [], objectVisibilityOverrides: new Map(), batchDefaultStateOverrides: new Map(), gradePreviewObjectId: null, gradePreviewFactor: 1, artworkCanvas: null, backgroundCanvas: null, gameCaptures: new Map(), gameCaptureObjectUrls: new Set(), gameCaptureSource: '', gameCapturesEnabled: false, gameCaptureView: 'latest', architectSources: new Map(), architectScenes: new Map(), architectPrefabs: new Map(), architectSource: '', architectMarkersEnabled: false, architectSelectedMarkerId: null, architectSelectedWaveKey: null, architectWaveFilterKeys: null, architectChangesVisible: false, architectPlacementVisibility: new Map(), architectWaveEnemyVisibility: new Map(), architectPreviewName: null, architectAssetFiles: new Map(), architectAssetImages: new Map(), architectObjectUrls: new Set(), architectEnemyArt: new Map(), architectEnemyArtRequested: new Set(), architectEnemyArtPendingIds: new Set(), architectEnemyTexturesVisible: true, architectModImagesVisible: true, architectEnemyArtError: '', architectEnemyArtSummary: '', batchRendering: false, batchServerOutput: false, bulkExporting: false, bulkExportCancelled: false, bulkExportZipUrl: null };
 state.architectActiveEvents = new Set();
 state.readerMode = false;
 state.readerRoomName = null;
@@ -628,6 +628,22 @@ function isGameBundleTexture(url) {
   return typeof url === 'string' && /^\/api\/artwork\/[a-f0-9]{64}\.png$/i.test(url);
 }
 
+function batchRenderInactiveEnabled() {
+  const params = new URLSearchParams(window.location.search);
+  const override = params.get('batchRenderInactive');
+  // Full-room atlas exports should reveal progression-hidden room art by
+  // default. Camera-section exports stay tied to their authored active view.
+  return override === null ? params.get('batchCamera') !== '1' : override === '1';
+}
+
+function batchRendererColorsEnabled() {
+  return new URLSearchParams(window.location.search).get('batchRendererColors') === '1';
+}
+
+function batchIncludeDisabledRenderersEnabled() {
+  return new URLSearchParams(window.location.search).get('batchIncludeDisabledRenderers') === '1';
+}
+
 function objectIsActive(object) {
   let current = object;
   const seen = new Set();
@@ -677,17 +693,23 @@ function buildObjectStateIndex(objects) {
     return total;
   }
   for (const object of objects) subtreeSpriteCount(object);
-  const options = objects.filter(object => !object.active && subtreeSpriteCount(object) >= 20);
+  const options = objects.filter(object => subtreeSpriteCount(object) >= 20);
   const grouped = new Map();
   for (const option of options) {
     const key = option.parentId || '__root__';
-    const group = grouped.get(key) || { parentName: byId.get(option.parentId)?.name || 'Other scene states', options: [] };
+    const parent = byId.get(option.parentId);
+    const group = grouped.get(key) || { parentName: parent?.name || 'Other scene states', parent, options: [] };
     group.options.push({ id: option.id, name: option.name, spriteCount: spriteCounts.get(option.id) || 0 });
     grouped.set(key, group);
   }
-  const groups = [...grouped.entries()].map(([key, group]) => ({ key, ...group })).filter(group =>
-    group.options.length > 1 && /state|world|variant|phase|act/i.test(`${group.parentName} ${group.options.map(option => option.name).join(' ')}`));
-  const stateTerms = /event|condition|quest|door|destroy|repair|complete|check|active|activat|normal world|black thread|intro|pre.?cleanup|post.?cleanup|before|after|lit|dark|broken|phase|act[123]/i;
+  const groups = [...grouped.entries()].map(([key, group]) => ({ key, ...group })).filter(group => {
+    if (group.options.length < 2 || !group.options.some(option => !objectIsActive(byId.get(option.id)))) return false;
+    const names = `${group.parentName} ${group.options.map(option => option.name).join(' ')}`;
+    const parentHasController = componentsOf(group.parent || {}).some(component => /mono.?behaviour|playmaker|fsm/i.test(component.type || component.scriptName || ''));
+    return /state|world|variant|phase|act|control|controller|event|condition|quest|door|bridge|boss|battle/i.test(names) ||
+      parentHasController && /before|after|broken|fixed|open|closed|remains|repair|destroy|bridge/i.test(names);
+  });
+  const stateTerms = /event|condition|quest|door|destroy|repair|complete|check|active|activat|normal world|black thread|intro|pre.?cleanup|post.?cleanup|before|after|lit|dark|broken|phase|act[123]|bridge|battle/i;
   const pathById = new Map();
   function objectPath(object) {
     if (pathById.has(object.id)) return pathById.get(object.id);
@@ -774,8 +796,14 @@ function renderStateOverrideRows() {
 function spritePassesFilters(object, sprite, includeScreenEffects = false, gameArtworkOnly = false) {
   if (sprite.blendMode === 'destination' || manualVisibilityFor(object) === 'hide') return false;
   if (gameArtworkOnly) {
+    const includeInactive = batchRenderInactiveEnabled();
     if (object.sortingGroup?.enabled && object.sortingGroup.sortingLayerKnown === false) return false;
-    if (sprite.sortingLayerKnown === false || !objectIsActive(object) || sprite.rendererEnabled === false) return false;
+    if (sprite.sortingLayerKnown === false || (!includeInactive && !objectIsActive(object)) ||
+        (sprite.rendererEnabled === false && !batchIncludeDisabledRenderersEnabled())) return false;
+    // SceneBorder is a camera-boundary utility layer. Its black-tinted level
+    // tiles are meant to hide off-camera edges in-game, not to be baked into a
+    // room atlas where they can cover otherwise explorable room artwork.
+    if (isSceneBorderArtwork(sprite)) return false;
     // Shader-driven light/fog sprites are masks or intensity textures in the
     // bundle. Drawing them as ordinary RGBA artwork creates the large gray and
     // red discs seen in some rooms (for example lava haze in Bone Town).
@@ -795,9 +823,14 @@ function spritePassesFilters(object, sprite, includeScreenEffects = false, gameA
   return Boolean(sprite.imageUrl && sprite.rectWidth && sprite.rectHeight);
 }
 
-function visibleSpriteBounds(objects, includeScreenEffects = byId('layerEffects').checked, gameArtworkOnly = false) {
+function visibleSpriteBounds(objects, includeScreenEffects = byId('layerEffects').checked, gameArtworkOnly = false, includeInactiveForBounds = false) {
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   for (const object of objects) for (const sprite of object.sprites || []) {
+    // Progression-hidden art can contain serialized cutscene/enemy assets far
+    // outside the playable room. Let normal-world art define the canvas while
+    // the inactive sprites are still drawn when they intersect those bounds.
+    if (gameArtworkOnly && batchRenderInactiveEnabled() && !includeInactiveForBounds &&
+        (!objectIsActive(object) || sprite.rendererEnabled === false)) continue;
     if (!spritePassesFilters(object, sprite, includeScreenEffects, gameArtworkOnly)) continue;
     const geometry = spriteLocalGeometry(sprite);
     const x = object.worldPosition?.x || 0, y = object.worldPosition?.y || 0;
@@ -810,6 +843,8 @@ function visibleSpriteBounds(objects, includeScreenEffects = byId('layerEffects'
     }
   }
   for (const object of objects) for (const mesh of object.meshes || []) {
+    if (gameArtworkOnly && batchRenderInactiveEnabled() && !includeInactiveForBounds &&
+        (!objectIsActive(object) || mesh.rendererEnabled === false)) continue;
     if (!meshPassesFilters(object, mesh, includeScreenEffects, gameArtworkOnly)) continue;
     const asset = state.meshAssets.get(mesh.meshAssetId), vertices = asset?.vertices || [];
     const matrix = { m00: mesh.worldM00 ?? 1, m01: mesh.worldM01 ?? 0, m10: mesh.worldM10 ?? 0, m11: mesh.worldM11 ?? 1 };
@@ -821,14 +856,21 @@ function visibleSpriteBounds(objects, includeScreenEffects = byId('layerEffects'
       minY = Math.min(minY, worldY); maxY = Math.max(maxY, worldY);
     }
   }
-  return Number.isFinite(minX) ? { minX, maxX, minY, maxY } : null;
+  if (Number.isFinite(minX)) return { minX, maxX, minY, maxY };
+  if (gameArtworkOnly && batchRenderInactiveEnabled() && !includeInactiveForBounds)
+    return visibleSpriteBounds(objects, includeScreenEffects, gameArtworkOnly, true);
+  return null;
 }
 
 function meshPassesFilters(object, mesh, includeScreenEffects = false, gameArtworkOnly = false) {
-  if (!mesh.imageUrl || mesh.blendMode === 'destination' || manualVisibilityFor(object) === 'hide') return false;
+  if (!mesh.imageUrl || mesh.blendMode === 'destination' || manualVisibilityFor(object) === 'hide' ||
+      isGeneratedCollisionTileMesh(object, mesh)) return false;
   if (gameArtworkOnly) {
+    const includeInactive = batchRenderInactiveEnabled();
     if (object.sortingGroup?.enabled && object.sortingGroup.sortingLayerKnown === false) return false;
-    if (mesh.sortingLayerKnown === false || !objectIsActive(object) || mesh.rendererEnabled === false) return false;
+    if (mesh.sortingLayerKnown === false || (!includeInactive && !objectIsActive(object)) ||
+        (mesh.rendererEnabled === false && !batchIncludeDisabledRenderersEnabled())) return false;
+    if (isSceneBorderArtwork(mesh)) return false;
     return isGameBundleTexture(mesh.imageUrl) && (includeScreenEffects ||
       (!isScreenEffect(object, { name: mesh.materialName }) && !isLightingArtwork(object, { name: mesh.materialName })));
   }
@@ -841,10 +883,27 @@ function meshPassesFilters(object, mesh, includeScreenEffects = false, gameArtwo
   return includeScreenEffects || !isScreenEffect(object, { name: mesh.materialName });
 }
 
+function isGeneratedCollisionTileMesh(object, mesh) {
+  // Unity serializes the room's 32×32 collision chunks as MeshRenderers too.
+  // Their atlas0 material is an opaque black collider tile, not level art;
+  // drawing it as a normal mesh paints large black blocks over the sprites.
+  return /^chunk\s+\d+\s+\d+$/i.test(object?.name || '') &&
+    (object.components || []).some(component => component.type === 'EdgeCollider2D') &&
+    String(mesh?.materialName || '').trim().toLowerCase() === 'atlas0 material';
+}
+
 function nativeArtworkPixelsPerUnit(objects, includeScreenEffects = false) {
   let density = 1;
+  const measureInactiveArt = !(state.batchRendering && batchRenderInactiveEnabled());
   for (const object of objects) {
+    // Inactive variants can contain full-screen/cutscene sprites with enormous
+    // texture density even though their pixels are clipped to the active room.
+    // Use the active room's texel density as the canvas resolution, then draw
+    // progression-hidden artwork at that same density so one hidden sprite
+    // cannot inflate a room into thousands of unnecessary render tiles.
+    if (!measureInactiveArt && !objectIsActive(object)) continue;
     for (const sprite of object.sprites || []) {
+      if (!measureInactiveArt && sprite.rendererEnabled === false) continue;
       if (!spritePassesFilters(object, sprite, includeScreenEffects, true)) continue;
       const matrix = spriteWorldMatrix(sprite);
       const scaleX = Math.hypot(matrix.m00, matrix.m10), scaleY = Math.hypot(matrix.m01, matrix.m11);
@@ -852,6 +911,7 @@ function nativeArtworkPixelsPerUnit(objects, includeScreenEffects = false) {
       density = Math.max(density, ppu / Math.max(.0001, Math.min(scaleX || 1, scaleY || 1)));
     }
     for (const mesh of object.meshes || []) {
+      if (!measureInactiveArt && mesh.rendererEnabled === false) continue;
       if (!meshPassesFilters(object, mesh, includeScreenEffects, true)) continue;
       const asset = state.meshAssets.get(mesh.meshAssetId), submesh = asset?.submeshes?.[mesh.submeshIndex];
       if (!asset || submesh?.topology !== 0) continue;
@@ -2309,7 +2369,7 @@ function drawArtworkLayer(ctx, objects, toCanvas, scale, includeScreenEffects = 
     const point = toCanvas(object);
     const rotated = sprite.packingRotation === 4, geometry = spriteLocalGeometry(sprite);
     const { width, height } = geometry;
-    const useRendererColor = gameArtworkOnly || byId('applyRendererColors').checked;
+    const useRendererColor = gameArtworkOnly ? batchRendererColorsEnabled() : byId('applyRendererColors').checked;
     const tintR = Math.max(0, Math.min(1, (useRendererColor ? sprite.tintR ?? 1 : 1) * (sprite.materialTintR ?? 1)));
     const tintG = Math.max(0, Math.min(1, (useRendererColor ? sprite.tintG ?? 1 : 1) * (sprite.materialTintG ?? 1)));
     const tintB = Math.max(0, Math.min(1, (useRendererColor ? sprite.tintB ?? 1 : 1) * (sprite.materialTintB ?? 1)));
@@ -2461,16 +2521,32 @@ function canvasBlendMode(mode) {
 }
 
 function isScreenEffect(object, sprite) {
-  const name = `${object.name || ''} ${sprite.name || ''}`.toLowerCase();
-  return name.includes('black_solid') || name.includes('white_fader') || name.includes('black_fader') ||
-    name.includes('vignette') || name.includes('darkness') || name.includes('mask_beam') ||
-    name.includes('soft_masker') || name.includes('remasker');
+  const name = `${object.name || ''} ${sprite.name || ''} ${sprite.materialName || ''}`
+    .toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  return name.includes('black solid') || name.includes('white fader') || name.includes('black fader') ||
+    name.includes(' fader') || name.startsWith('fader') || name.includes('vignette') ||
+    name.includes('darkness') || name.includes('mask beam') ||
+    name.includes('tracking trail') || name.includes('tracking line') ||
+    name.includes('sprites darkness cutout') || name.includes('uiblendscreen') ||
+    name.includes('black thread') ||
+    name.includes('white solid') || name.includes('whitewave') || name.includes('white wave') ||
+    name.includes('bloom') || name.includes('ultrawide cutout') ||
+    name.includes('soft masker') || name.includes('remasker') ||
+    // These are shader inputs, not visible room artwork. If drawn as ordinary
+    // sprites, msk_generic and pipe_mask textures become opaque black patches
+    // over areas that should remain visible in the atlas.
+    /(?:^|\s)(?:msk|mask)(?:\s|$)/.test(name);
+}
+
+function isSceneBorderArtwork(artwork) {
+  return `${artwork?.sortingLayerName || ''} ${artwork?.materialName || ''}`.toLowerCase().includes('scene border');
 }
 
 function isLightingArtwork(object, artwork) {
-  const name = `${object.name || ''} ${artwork.name || ''}`.toLowerCase();
-  return name.includes('light_effect') || name.includes('white_light') || name.includes('light_beam') ||
-    name.includes('water_fog') || /\b(light|fog|haze|glow)\b/.test(name);
+  const name = `${object.name || ''} ${artwork.name || ''}`.toLowerCase()
+    .replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  return name.includes('light effect') || name.includes('white light') || name.includes('light beam') ||
+    name.includes('water fog') || /\b(light|fog|haze|glow)\b/.test(name);
 }
 
 function isBackgroundArtwork(object, artwork) {
@@ -2608,6 +2684,7 @@ async function withBatchSceneState(scene, callback) {
   const previous = {
     scene: state.scene, objectById: state.objectById, meshAssets: state.meshAssets,
     objectVisibilityOverrides: state.objectVisibilityOverrides, hiddenSortingLayers: state.hiddenSortingLayers,
+    batchDefaultStateOverrides: state.batchDefaultStateOverrides,
     images: state.images, tintedSpriteImages: state.tintedSpriteImages,
     architectPreviewName: state.architectPreviewName
   };
@@ -2618,6 +2695,26 @@ async function withBatchSceneState(scene, callback) {
   state.objectById = new Map(objects.map(object => [object.id, object]));
   state.meshAssets = new Map((scene.meshAssets || []).map(mesh => [mesh.id, mesh]));
   state.objectVisibilityOverrides = new Map();
+  state.batchDefaultStateOverrides = new Map();
+  const stateIndex = buildObjectStateIndex(objects);
+  for (const group of stateIndex.groups) {
+    const normalWorld = group.options.find(option => option.name.trim().toLowerCase() === 'normal world');
+    if (normalWorld) {
+      setGroupOverride(group, normalWorld.id);
+    } else if (batchRenderInactiveEnabled()) {
+      // Include room art that is disabled until a later game check, but keep
+      // mutually exclusive event/quest variants in their serialized state.
+      // Otherwise those alternate branches would be painted on top of each
+      // other when the undiscovered artwork is included.
+      const activeOptions = group.options.filter(option => objectIsActive(state.objectById.get(option.id)));
+      for (const option of group.options) {
+        state.objectVisibilityOverrides.set(option.id, activeOptions.includes(option) ? 'show' : 'hide');
+      }
+    } else {
+      continue;
+    }
+    for (const [id, visibility] of state.objectVisibilityOverrides) state.batchDefaultStateOverrides.set(id, visibility);
+  }
   state.hiddenSortingLayers = new Set();
   state.architectPreviewName = null;
   try { return await callback(objects); }
@@ -2639,7 +2736,7 @@ function encodePngChunk(type, data) {
   return chunk;
 }
 
-async function renderBatchScenePngTiled(objects, bounds, ppu, width, height, includeScreenEffects, drawTile = null, onProgress = null) {
+async function renderBatchScenePngTiled(objects, bounds, ppu, width, height, includeScreenEffects, drawTile = null, onProgress = null, returnByteParts = false) {
   if (typeof CompressionStream !== 'function') throw new Error('This browser does not support streaming full-resolution PNG export.');
   const tileWidth = 8192, tileHeight = 512, pad = 2;
   const tileCanvas = document.createElement('canvas'), tileContext = tileCanvas.getContext('2d', { willReadFrequently: true });
@@ -2679,10 +2776,21 @@ async function renderBatchScenePngTiled(objects, bounds, ppu, width, height, inc
         }
         completedTiles++;
         if (onProgress) onProgress(completedTiles, totalTiles);
-        await writer.write(band);
+      }
+      // Keep each CompressionStream write bounded. A full 512-row band can be
+      // hundreds of megabytes in very wide rooms; Chromium may stop draining
+      // that single write under backpressure, leaving the export at its last
+      // tile forever. Small row groups let compression and the reader advance
+      // steadily without changing the PNG's pixel data or order.
+      const rowsPerWrite = Math.max(1, Math.min(16, Math.floor((4 * 1024 * 1024) / rowBytes)));
+      for (let firstRow = 0; firstRow < bandHeight; firstRow += rowsPerWrite) {
+        const start = firstRow * rowBytes;
+        const end = Math.min(band.length, start + rowsPerWrite * rowBytes);
+        await writer.write(band.subarray(start, end));
         await new Promise(resolve => setTimeout(resolve, 0));
       }
     }
+    if (onProgress) onProgress(totalTiles, totalTiles, 'compressing');
     await writer.close();
     await readCompressed;
   } catch (error) {
@@ -2698,9 +2806,12 @@ async function renderBatchScenePngTiled(objects, bounds, ppu, width, height, inc
   header[8] = 8; header[9] = 6; header[10] = 0; header[11] = 0; header[12] = 0;
   const signature = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
   const parts = [signature, encodePngChunk('IHDR', header)];
+  if (onProgress) onProgress(totalTiles, totalTiles, 'assembling');
   for (const compressed of compressedChunks) parts.push(encodePngChunk('IDAT', compressed));
   parts.push(encodePngChunk('IEND', new Uint8Array()));
-  return new Blob(parts, { type: 'image/png' });
+  const fileSize = parts.reduce((sum, part) => sum + part.byteLength, 0);
+  if (onProgress) onProgress(totalTiles, totalTiles, 'complete');
+  return returnByteParts ? { size: fileSize, byteParts: parts } : new Blob(parts, { type: 'image/png' });
 }
 
 function spriteIntersectsWorldBounds(object, sprite, bounds) {
@@ -2729,8 +2840,9 @@ function meshIntersectsWorldBounds(object, mesh, bounds) {
 }
 
 function objectsVisibleWithinWorldBounds(objects, bounds, includeScreenEffects = false) {
+  const includeInactive = batchRenderInactiveEnabled();
   return objects.map(object => {
-    if (!objectIsActive(object) || (object.sortingGroup?.enabled && object.sortingGroup.sortingLayerKnown === false)) return null;
+    if ((!includeInactive && !objectIsActive(object)) || (object.sortingGroup?.enabled && object.sortingGroup.sortingLayerKnown === false)) return null;
     const sprites = (object.sprites || []).filter(sprite => spritePassesFilters(object, sprite, includeScreenEffects, true) &&
       spriteIntersectsWorldBounds(object, sprite, bounds));
     const meshes = (object.meshes || []).filter(mesh => meshPassesFilters(object, mesh, includeScreenEffects, true) &&
@@ -2804,23 +2916,40 @@ async function renderBatchScene(objects, includeScreenEffects, onProgress = null
     const point = object.worldPosition || { x: 0, y: 0 };
     return { x: pad + (point.x - bounds.minX) * ppu, y: pad + (bounds.maxY - point.y) * ppu };
   };
-  const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
-  const context = canvas.getContext('2d');
-  if (!context) throw new Error('The browser could not allocate a canvas for this room.');
-  context.clearRect(0, 0, width, height);
-  context.imageSmoothingEnabled = true; context.imageSmoothingQuality = 'high';
-  drawArtworkLayer(context, objects, toCanvas, ppu, includeScreenEffects, null, true);
-  const canvasBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-  canvas.width = 1; canvas.height = 1;
-  if (!canvasBlob) throw new Error(`The browser could not encode the ${fitsSingleCanvas ? 'room' : 'fast room preview'} PNG.`);
-  const previewBlob = fitsSingleCanvas || cappedCameraOutput ? null : canvasBlob;
-  const blob = fitsSingleCanvas || cappedCameraOutput ? canvasBlob : await renderBatchScenePngTiled(objects, bounds, nativePpu, nativeWidth, nativeHeight, includeScreenEffects, null, onProgress);
+  let blob, previewBlob = null;
+  if (state.batchServerOutput) {
+    if (!fitsSingleCanvas && !cappedCameraOutput) {
+      const nativePng = await renderBatchScenePngTiled(objects, bounds, nativePpu, nativeWidth, nativeHeight,
+        includeScreenEffects, null, onProgress, true);
+      blob = { size: nativePng.size, type: 'image/png', pngParts: nativePng.byteParts };
+      const previewPng = await renderBatchScenePngTiled(objects, bounds, previewPpu, previewWidth, previewHeight,
+        includeScreenEffects, null, null, true);
+      previewBlob = { size: previewPng.size, type: 'image/png', pngParts: previewPng.byteParts };
+    } else {
+      const roomPng = await renderBatchScenePngTiled(objects, bounds, ppu, width, height,
+        includeScreenEffects, null, onProgress, true);
+      blob = { size: roomPng.size, type: 'image/png', pngParts: roomPng.byteParts };
+    }
+  } else {
+    const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('The browser could not allocate a canvas for this room.');
+    context.clearRect(0, 0, width, height);
+    context.imageSmoothingEnabled = true; context.imageSmoothingQuality = 'high';
+    drawArtworkLayer(context, objects, toCanvas, ppu, includeScreenEffects, null, true);
+    const canvasBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    canvas.width = 1; canvas.height = 1;
+    if (!canvasBlob) throw new Error(`The browser could not encode the ${fitsSingleCanvas ? 'room' : 'fast room preview'} PNG.`);
+    previewBlob = fitsSingleCanvas || cappedCameraOutput ? null : canvasBlob;
+    blob = fitsSingleCanvas || cappedCameraOutput ? canvasBlob : await renderBatchScenePngTiled(objects, bounds, nativePpu, nativeWidth, nativeHeight, includeScreenEffects, null, onProgress);
+  }
   if (!blob) throw new Error('The browser could not encode the full-resolution room PNG.');
   return { blob, previewBlob, width: cappedCameraOutput ? width : nativeWidth, height: cappedCameraOutput ? height : nativeHeight,
     ppu: cappedCameraOutput ? ppu : nativePpu, nativePpu, bounds, resolutionLimited: cappedCameraOutput,
     previewWidth: fitsSingleCanvas ? nativeWidth : previewWidth, previewHeight: fitsSingleCanvas ? nativeHeight : previewHeight,
     previewPpu: fitsSingleCanvas ? nativePpu : previewPpu,
-    rendererCount: eligible.length, textureCount: textureUrls.length, missingTextures, screenEffectsIncluded: includeScreenEffects };
+    rendererCount: eligible.length, textureCount: textureUrls.length, missingTextures, screenEffectsIncluded: includeScreenEffects,
+    rendererColorsApplied: batchRendererColorsEnabled() };
 }
 
 async function renderBatchWorldMapAssets(target) {
@@ -2851,7 +2980,7 @@ async function renderBatchWorldMapAssets(target) {
         rooms: area.rooms.map(room => ({ name: room.scene.candidateName, bounds: room.bounds, center: room.center }))
       }))
     };
-    await writeBatchFile(target, 'maps/navigation.json', new Blob([JSON.stringify(navigation)], { type: 'application/json' }));
+    await writeBatchFile(target, 'maps/navigation.json', JSON.stringify(navigation));
     return { status: 'ready', areaCount: navigation.areas.length, maps: mapImages };
   } catch (error) {
     const message = String(error?.message || error);
@@ -2939,6 +3068,24 @@ function buildBatchArchitectMetadata(scene, render) {
   }
 }
 
+function batchFilteredEffectSummary(objects) {
+  const summary = { screenEffectRendererCount: 0, lightingFogRendererCount: 0, examples: [] };
+  for (const object of objects) {
+    if ((!batchRenderInactiveEnabled() && !objectIsActive(object)) || manualVisibilityFor(object) === 'hide' ||
+        (object.sortingGroup?.enabled && object.sortingGroup.sortingLayerKnown === false)) continue;
+    for (const artwork of [...(object.sprites || []), ...(object.meshes || [])]) {
+      if ((artwork.rendererEnabled === false && !batchIncludeDisabledRenderersEnabled()) || artwork.sortingLayerKnown === false ||
+          !isGameBundleTexture(artwork.imageUrl) || artwork.blendMode === 'destination' || isSceneBorderArtwork(artwork)) continue;
+      const effect = isScreenEffect(object, artwork) ? 'screen' : isLightingArtwork(object, artwork) ? 'lightingFog' : null;
+      if (!effect) continue;
+      if (effect === 'screen') summary.screenEffectRendererCount++;
+      else summary.lightingFogRendererCount++;
+      if (summary.examples.length < 24) summary.examples.push({ objectName: object.name || '', artworkName: artwork.name || '', category: effect });
+    }
+  }
+  return summary;
+}
+
 function buildBatchRoomMetadata(scene, entry, outputName, render, status, error = null) {
   const objects = scene.objects || [];
   const architectScene = architectSceneForCurrentRoom();
@@ -2986,14 +3133,26 @@ function buildBatchRoomMetadata(scene, entry, outputName, render, status, error 
       worldToPixel: { x: '2 + (worldX - bounds.minX) * pixelsPerWorldUnit', y: '2 + (bounds.maxY - worldY) * pixelsPerWorldUnit' }
     } : null,
     render: {
-      profile: 'active-silksong-bundle-renderers', activeRenderersOnly: true,
+      profile: batchRenderInactiveEnabled() ? 'all-in-room-silksong-bundle-renderers' : 'serialized-active-plus-normal-world-branches',
+      nativeResolutionDensityBasis: batchRenderInactiveEnabled()
+        ? 'active room renderers; progression-hidden artwork is drawn at the same density'
+        : 'selected active-state room renderers',
+      activeRenderersOnly: !batchRenderInactiveEnabled() && state.batchDefaultStateOverrides.size === 0,
+      inactiveRenderersIncluded: batchRenderInactiveEnabled() || state.batchDefaultStateOverrides.size > 0,
+      inactiveArtworkClippedToActiveBounds: batchRenderInactiveEnabled(),
+      defaultStateOverrides: Object.fromEntries(state.batchDefaultStateOverrides),
+      normalWorldBranchesIncluded: state.batchDefaultStateOverrides.size > 0,
       gameBundleTexturesOnly: true, screenEffectsIncluded: render?.screenEffectsIncluded ?? false,
-      shaderDrivenLightingIncluded: render?.screenEffectsIncluded ?? false, viewerAnnotations: false,
+      rendererColorsApplied: render?.rendererColorsApplied ?? false,
+      shaderDrivenLightingIncluded: false, shaderDrivenMaskArtworkIncluded: false, viewerAnnotations: false,
       architectModAssets: false, runtimeLightingSimulation: false, eligibleRendererCount: render?.rendererCount || 0,
       textureCount: render?.textureCount || 0, missingTextureSha256: render?.missingTextures || [],
+      filteredEffectRenderers: batchFilteredEffectSummary(objects),
       sorting: 'Unity sorting group, layer, order, and depth sequence; unresolved layer mappings are excluded',
-      excluded: ['inactive objects', 'disabled renderers', 'destination blend renderers',
-        ...(render?.screenEffectsIncluded ? [] : ['shader-driven light/fog effects']), 'non-bundle textures']
+      excluded: [...(batchRenderInactiveEnabled() ? [] : ['inactive objects outside selected Normal World branches', 'disabled renderers']),
+        'generated collision-only tile chunk meshes', 'destination blend renderers',
+        ...(render?.screenEffectsIncluded ? [] : ['shader-driven mask/light/fog effects']),
+        ...(batchRenderInactiveEnabled() ? ['inactive artwork outside active room bounds'] : []), 'non-bundle textures']
     },
     counts: { objectCount: objects.length, ...counts },
     objects: roomObjects,
@@ -3019,14 +3178,45 @@ function uniqueExportBasename(name, used) {
   return candidate;
 }
 
+async function loadBatchScene(entry) {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('batchSource') !== 'preprocessed')
+    return await getJson(`/api/scenes/${encodeURIComponent(entry.candidateName)}`);
+
+  const fileName = `${safeFilename(entry.candidateName)}.json`;
+  const metadata = await getJson(`/atlas-data/rooms/${encodeURIComponent(fileName)}`);
+  if (metadata.format !== 'silksong-room-atlas-room' || !Array.isArray(metadata.objects))
+    throw new Error(`Preprocessed room data is missing or invalid for ${entry.candidateName}.`);
+  const attachTextureUrl = renderer => {
+    const hash = String(renderer.textureSha256 || '').trim();
+    return { ...renderer, imageUrl: /^[a-f0-9]{64}$/i.test(hash) ? `/api/artwork/${hash.toLowerCase()}.png` : '' };
+  };
+  return {
+    sceneName: metadata.scene?.name || entry.candidateName,
+    sourceBundle: metadata.scene?.source?.bundle || entry.bundleFile || '',
+    sourceSha256: metadata.scene?.source?.sha256 || '',
+    schemaVersion: metadata.scene?.sourceSchemaVersion ?? null,
+    diagnostics: metadata.scene?.diagnostics || [],
+    objects: metadata.objects.map(object => ({
+      ...object,
+      sprites: (object.sprites || []).map(attachTextureUrl),
+      meshes: (object.meshes || []).map(attachTextureUrl)
+    })),
+    meshAssets: metadata.meshAssets || []
+  };
+}
+
 function exportReadme() {
   return `Silksong Room Atlas export\n\n` +
-    `images/ contains clean, transparent PNG renders at native texture resolution, made from active renderers and Silksong bundle textures. ` +
+    `images/ contains clean, transparent PNG renders at native room-art density, made from Silksong bundle textures. ` +
+    `Full-room exports include progression-hidden and disabled renderers inside the active room bounds. ` +
+    `The active room art sets the pixel density so hidden variants and transient effects cannot inflate the canvas. ` +
+    `Mutually exclusive event branches keep their serialized state; named Normal World branches are selected for the default image and recorded in the room metadata. ` +
     `Large rooms are rasterized in tiles and may include a smaller -preview.png for the reader; the sidecar records both paths and dimensions. ` +
     `Viewer markers, grid, captured screenshots, Architect images, and other external images are excluded from the PNGs. ` +
-    `Inactive and disabled renderers, destination-blend renderers, and renderers with unresolved sorting-layer mappings are skipped. ` +
+    `Generated collision-only tile meshes, destination-blend renderers, unresolved sorting layers, and shader-driven screen masks or lighting effects are excluded. ` +
     `Lighting and background renderer textures from the bundles are included. The viewer does not execute Unity's dynamic lighting, ` +
-    `event scripts, or shaders; serialized screen-effect artwork follows the viewer's Screen effects toggle.\n\n` +
+    `event scripts, or shaders; authored camera-section exports retain their active camera view.\n\n` +
     `rooms/ contains one JSON sidecar per indexed scene. Each sidecar includes Unity object hierarchy, world coordinates, ` +
     `components, collider points, enemy/spawn/check candidate flags, sprite and mesh sorting details, mesh geometry, and source texture SHA-256 references. ` +
     `When an Architect folder is loaded, JSON sidecars also include its matching placement and event metadata, with gauntlet markers marked off by default. ` +
@@ -3044,13 +3234,57 @@ async function writeBatchFile(target, path, blob) {
       : target.workerCount > 1 && parts.length === 0 && originalName === 'manifest.json'
         ? `manifest-worker-${target.workerIndex}.json` : originalName;
     const bucket = parts.shift() || 'root';
-    const response = await fetch(`/api/preprocessed/${bucket}/${encodeURIComponent(fileName)}`, {
-      method: 'PUT', headers: { 'Content-Type': blob.type || 'application/octet-stream' }, body: blob
-    });
-    if (!response.ok) throw new Error(`Could not save ${path}: ${response.status} ${await response.text()}`);
+    const url = `/api/preprocessed/${bucket}/${encodeURIComponent(fileName)}`;
+    const chunkSize = 8 * 1024 * 1024;
+    const uploadId = crypto.randomUUID().replaceAll('-', '');
+    const byteParts = blob?.pngParts || (typeof blob === 'string'
+      ? [new TextEncoder().encode(blob)]
+      : blob instanceof Uint8Array ? [blob] : null);
+    if (!byteParts) throw new Error(`Cannot stream ${path}: the server writer needs PNG bytes or text.`);
+    const total = blob?.pngParts ? blob.size : byteParts.reduce((sum, part) => sum + part.byteLength, 0);
+    if (total <= 0 || !byteParts.length) throw new Error(`Cannot save an empty file: ${path}`);
+    if (byId('bulkExportStatus'))
+      byId('bulkExportStatus').textContent = `Preparing local file · ${fileName} · ${target.mode}`;
+    let partIndex = 0, partOffset = 0, offset = 0;
+    while (offset < total) {
+      const chunkLength = Math.min(chunkSize, total - offset), chunkBytes = new Uint8Array(chunkLength);
+      let copied = 0;
+      while (copied < chunkLength) {
+        const part = byteParts[partIndex];
+        if (!part) throw new Error(`The generated file parts ended early while saving ${path}.`);
+        const count = Math.min(chunkLength - copied, part.byteLength - partOffset);
+        chunkBytes.set(part.subarray(partOffset, partOffset + count), copied);
+        copied += count; partOffset += count;
+        if (partOffset === part.byteLength) { partIndex++; partOffset = 0; }
+      }
+      if (byId('bulkExportStatus'))
+        byId('bulkExportStatus').textContent = `Encoding ${fileName} · ${Math.round(offset / total * 100)}%`;
+      const payload = JSON.stringify({ uploadId, offset, total, chunkBase64: uint8ArrayToBase64(chunkBytes) });
+      let lastError = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          if (byId('bulkExportStatus'))
+            byId('bulkExportStatus').textContent = `Uploading ${fileName} · ${Math.round(offset / total * 100)}%`;
+          const response = await fetch(url, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload
+          });
+          if (!response.ok) throw new Error(`Could not save ${fileName}: ${response.status} ${await response.text()}`);
+          lastError = null;
+          break;
+        } catch (error) {
+          lastError = error;
+          if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)));
+        }
+      }
+      if (lastError) throw lastError;
+      offset += chunkLength;
+      if (byId('bulkExportStatus'))
+        byId('bulkExportStatus').textContent = `Uploading ${fileName} · ${Math.round(offset / total * 100)}%`;
+    }
     return;
   }
-  if (target.mode === 'zip') { target.files.push({ path, blob }); return; }
+  const fileBlob = typeof blob === 'string' ? new Blob([blob], { type: path.endsWith('.json') ? 'application/json' : 'text/plain;charset=utf-8' }) : blob;
+  if (target.mode === 'zip') { target.files.push({ path, blob: fileBlob }); return; }
   const parts = path.split('/'), fileName = parts.pop();
   let directory = target.root;
   for (const part of parts) directory = await directory.getDirectoryHandle(part, { create: true });
@@ -3058,6 +3292,13 @@ async function writeBatchFile(target, path, blob) {
   const writable = await file.createWritable();
   await writable.write(blob);
   await writable.close();
+}
+
+function uint8ArrayToBase64(bytes) {
+  let binary = '';
+  for (let cursor = 0; cursor < bytes.length; cursor += 0x4000)
+    binary += String.fromCharCode(...bytes.subarray(cursor, Math.min(bytes.length, cursor + 0x4000)));
+  return btoa(binary);
 }
 
 const zipCrcTable = (() => {
@@ -3134,6 +3375,7 @@ async function exportAllRooms(serverOutput = false) {
   const cameraOnly = params.get('batchCamera') === '1';
   const batchSceneNames = new Set(params.getAll('batchScene').flatMap(value => value.split(',')
     .map(name => name.trim().toLowerCase()).filter(Boolean)));
+  const retryExport = batchSceneNames.size > 0 || params.get('batchRetry') === '1';
   if (cameraOnly && params.get('batchCameraLimited') === '1') {
     const requestedNames = batchSceneNames.size ? new Set(batchSceneNames) : null;
     batchSceneNames.clear();
@@ -3150,6 +3392,7 @@ async function exportAllRooms(serverOutput = false) {
     return;
   }
   state.bulkExporting = true;
+  state.batchServerOutput = serverOutput;
   byId('exportAllButton').disabled = true;
   const releasePickerLock = () => {
     state.bulkExporting = false;
@@ -3160,7 +3403,7 @@ async function exportAllRooms(serverOutput = false) {
   const stamp = new Date().toISOString().replace(/[.:]/g, '-');
   const folderName = `Silksong-Room-Atlas-${stamp}`;
   let target;
-  if (serverOutput) target = { mode: 'server', name: 'workspace/preprocessed', workerIndex, workerCount, retry: batchSceneNames.size > 0, cameraOnly };
+  if (serverOutput) target = { mode: 'server', name: 'workspace/preprocessed', workerIndex, workerCount, retry: retryExport, cameraOnly };
   else if (typeof window.showDirectoryPicker === 'function') {
     let parent;
     try { parent = await window.showDirectoryPicker({ id: 'silksong-room-atlas', startIn: 'downloads', mode: 'readwrite' }); }
@@ -3195,7 +3438,7 @@ async function exportAllRooms(serverOutput = false) {
   try {
     let navigation = null;
     if (serverOutput) {
-      if (workerIndex === 0 && !batchSceneNames.size) {
+      if (workerIndex === 0 && !retryExport) {
         byId('bulkExportStatus').textContent = 'Pre-rendering the game-authored wide and detailed maps…';
         navigation = await renderBatchWorldMapAssets(target);
         byId('bulkExportStatus').textContent = navigation.status === 'ready'
@@ -3215,7 +3458,7 @@ async function exportAllRooms(serverOutput = false) {
       await new Promise(resolve => setTimeout(resolve, 0));
       let scene = null, render = null, metadata = null, status = 'failed', errorMessage = null, cameraFiles = [];
       try {
-        scene = await getJson(`/api/scenes/${encodeURIComponent(entry.candidateName)}`);
+        scene = await loadBatchScene(entry);
         if (target.cameraOnly) {
           const result = await withBatchSceneState(scene, async () => {
             const baseName = outputName.replace(/-native$/, '');
@@ -3235,11 +3478,21 @@ async function exportAllRooms(serverOutput = false) {
           status = cameraFiles.length ? 'exported' : 'no-artwork';
         } else {
           const result = await withBatchSceneState(scene, async () => {
-            const rendered = await renderBatchScene(scene.objects || [], includeScreenEffects, (tile, total) => {
-              byId('bulkExportStatus').textContent = `Rendering native-resolution tiles ${tile.toLocaleString()} / ${total.toLocaleString()} · ${entry.candidateName}`;
+            const rendered = await renderBatchScene(scene.objects || [], includeScreenEffects, (tile, total, stage) => {
+              byId('bulkExportStatus').textContent = stage === 'compressing'
+                ? `Compressing native-resolution PNG · ${entry.candidateName}`
+                : stage === 'assembling'
+                  ? `Assembling native-resolution PNG · ${entry.candidateName}`
+                  : stage === 'complete'
+                    ? `Saving native-resolution PNG · ${entry.candidateName}`
+                    : `Rendering native-resolution tiles ${tile.toLocaleString()} / ${total.toLocaleString()} · ${entry.candidateName}`;
             });
+            byId('bulkExportStatus').textContent = `Preparing room metadata · ${entry.candidateName}`;
             const roomStatus = rendered.blob ? 'exported' : 'no-artwork';
-            return { rendered, metadata: buildBatchRoomMetadata(scene, entry, outputName, rendered, roomStatus) };
+            const roomMetadata = buildBatchRoomMetadata(scene, entry, outputName, rendered, roomStatus);
+            byId('bulkExportStatus').textContent = rendered.blob
+              ? `Writing native-resolution image · ${entry.candidateName}` : `Writing room metadata · ${entry.candidateName}`;
+            return { rendered, metadata: roomMetadata };
           });
           render = result.rendered; metadata = result.metadata; status = render.blob ? 'exported' : 'no-artwork';
         }
@@ -3264,13 +3517,16 @@ async function exportAllRooms(serverOutput = false) {
         }
       }
       const metadataFile = `rooms/${outputName}.json`;
-      await writeBatchFile(target, metadataFile, new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+    await writeBatchFile(target, metadataFile, JSON.stringify(metadata));
       rooms.push({ name: entry.candidateName, order: entry.exportOrder, kind: entry.kind || 'room', status, image: imageFile,
         previewImage: previewFile !== imageFile ? previewFile : undefined, metadata: metadataFile,
         objectCount: metadata.counts?.objectCount || 0, cameraViews: cameraFiles.length ? cameraFiles : undefined, error: errorMessage || undefined });
       progress.value = roomIndex;
       byId('bulkExportStatus').textContent = `${roomIndex.toLocaleString()} / ${entries.length.toLocaleString()} · ${entry.candidateName} · ${status}`;
-      if (serverOutput && (roomIndex === 1 || roomIndex % 10 === 0)) {
+      // Keep a per-room recovery checkpoint. Some bundled scenes contain
+      // thousands of native-resolution tiles, so a worker can fail long after
+      // its previous room and should not lose the rooms completed since then.
+      if (serverOutput) {
         const partialCounts = rooms.reduce((result, room) => { result[room.status] = (result[room.status] || 0) + 1; return result; }, {});
         const partialManifest = {
           format: 'silksong-room-atlas', formatVersion: 1, createdAt: new Date().toISOString(),
@@ -3278,12 +3534,18 @@ async function exportAllRooms(serverOutput = false) {
           cameraSectionPass: cameraOnly,
           processedSceneCount: rooms.length, unprocessedSceneCount: allEntries.length - rooms.length,
           counts: partialCounts, sourceFolderName: String(state.source || '').replace(/[\\/]+$/, '').split(/[\\/]/).pop() || null,
-          renderProfile: { gameBundleTexturesOnly: true, activeRenderersOnly: true, screenEffectsIncluded: includeScreenEffects,
+          renderProfile: { gameBundleTexturesOnly: true, activeRenderersOnly: !batchRenderInactiveEnabled() && state.batchDefaultStateOverrides.size === 0,
+            inactiveRenderersIncluded: batchRenderInactiveEnabled() || state.batchDefaultStateOverrides.size > 0,
+            inactiveArtworkClippedToActiveBounds: batchRenderInactiveEnabled(),
+            nativeResolutionDensityBasis: batchRenderInactiveEnabled()
+              ? 'active room renderers; progression-hidden artwork is drawn at the same density'
+              : 'selected active-state room renderers',
+            normalWorldBranchesIncluded: state.batchDefaultStateOverrides.size > 0, rendererColorsApplied: batchRendererColorsEnabled(), screenEffectsIncluded: includeScreenEffects,
             backgroundArtworkIncluded: true, lightingRendererArtworkIncluded: includeScreenEffects, shaderDrivenLightingIncluded: includeScreenEffects, runtimeLightingSimulation: false,
             viewerAnnotations: false, architectModAssets: false, architectPlacementMetadataIncluded: state.architectScenes.size > 0 },
           navigation, rooms
         };
-        await writeBatchFile(target, 'manifest.json', new Blob([JSON.stringify(partialManifest)], { type: 'application/json' }));
+        await writeBatchFile(target, 'manifest.json', JSON.stringify(partialManifest));
       }
     }
 
@@ -3297,7 +3559,13 @@ async function exportAllRooms(serverOutput = false) {
       workerComplete: !canceled && rooms.length === entries.length, workerIndex, workerCount,
       requestedSceneCount: allEntries.length, processedSceneCount: rooms.length, unprocessedSceneCount: allEntries.length - rooms.length,
       counts, sourceFolderName: String(state.source || '').replace(/[\\/]+$/, '').split(/[\\/]/).pop() || null,
-      renderProfile: { gameBundleTexturesOnly: true, activeRenderersOnly: true, screenEffectsIncluded: includeScreenEffects,
+      renderProfile: { gameBundleTexturesOnly: true, activeRenderersOnly: !batchRenderInactiveEnabled() && state.batchDefaultStateOverrides.size === 0,
+        inactiveRenderersIncluded: batchRenderInactiveEnabled() || state.batchDefaultStateOverrides.size > 0,
+        inactiveArtworkClippedToActiveBounds: batchRenderInactiveEnabled(),
+        nativeResolutionDensityBasis: batchRenderInactiveEnabled()
+          ? 'active room renderers; progression-hidden artwork is drawn at the same density'
+          : 'selected active-state room renderers',
+        normalWorldBranchesIncluded: state.batchDefaultStateOverrides.size > 0, rendererColorsApplied: batchRendererColorsEnabled(), screenEffectsIncluded: includeScreenEffects,
         backgroundArtworkIncluded: true, lightingRendererArtworkIncluded: includeScreenEffects, shaderDrivenLightingIncluded: includeScreenEffects, runtimeLightingSimulation: false,
         viewerAnnotations: false, architectModAssets: false, architectPlacementMetadataIncluded: state.architectScenes.size > 0,
         png: 'transparent RGBA at native bundle texture density; oversized rooms are tiled and a smaller preview is included for the reader' },
@@ -3305,8 +3573,8 @@ async function exportAllRooms(serverOutput = false) {
       coordinateConvention: { units: 'Unity world units', imageOrigin: 'top-left', pixelFormula: 'x=2+(worldX-minX)*pixelsPerWorldUnit; y=2+(maxY-worldY)*pixelsPerWorldUnit' },
       rooms
     };
-    if (!target.retry) await writeBatchFile(target, 'README.txt', new Blob([exportReadme()], { type: 'text/plain;charset=utf-8' }));
-    await writeBatchFile(target, 'manifest.json', new Blob([JSON.stringify(manifest)], { type: 'application/json' }));
+    if (!target.retry) await writeBatchFile(target, 'README.txt', exportReadme());
+    await writeBatchFile(target, 'manifest.json', JSON.stringify(manifest));
 
     if (target.mode === 'zip') {
       byId('bulkExportTitle').textContent = 'Packaging export';
@@ -3338,7 +3606,7 @@ async function exportAllRooms(serverOutput = false) {
     byId('bulkExportCancel').hidden = true; byId('bulkExportClose').hidden = false;
     showToast('The room export stopped before it could finish.');
   } finally {
-    state.batchRendering = false; state.bulkExporting = false; state.bulkExportCancelled = false;
+    state.batchRendering = false; state.batchServerOutput = false; state.bulkExporting = false; state.bulkExportCancelled = false;
     byId('exportAllButton').disabled = state.scenes.length === 0;
     byId('prepareReaderButton').disabled = state.scenes.length === 0;
     if (state.scene) drawScene();

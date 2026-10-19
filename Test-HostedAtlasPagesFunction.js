@@ -4,9 +4,10 @@ const path = require('node:path');
 
 async function main() {
   const releaseIndex = JSON.parse(fs.readFileSync(path.join(__dirname, 'HostedAtlas', 'site', 'release-assets.json'), 'utf8'));
-  assert.deepEqual(releaseIndex.assets['maps/navigation.json.gz'], {
-    tag: 'silksong-atlas-data-007', name: 'navigation.json.gz'
-  });
+  const navigationAsset = releaseIndex.assets['maps/navigation.json.gz'];
+  assert.equal(navigationAsset?.name, 'navigation.json.gz');
+  assert.match(navigationAsset?.tag || '', /^silksong-atlas-data-/,
+    'navigation should resolve through the current published data release');
   const functionPath = path.join(__dirname, 'HostedAtlas', 'site', 'functions', 'atlas-data', '[[path]].js');
   const source = fs.readFileSync(functionPath, 'utf8');
   const pagesFunction = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);

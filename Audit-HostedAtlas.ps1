@@ -64,7 +64,7 @@ $cappedCameraViewCount = 0
 $cameraViewImageCount = 0
 $cameraViewImagesIncluded = $true
 if ($null -ne $manifest.cameraViewImagesIncluded) { $cameraViewImagesIncluded = [bool]$manifest.cameraViewImagesIncluded }
-$cameraFallbackRooms = @($manifest.rooms | Where-Object { $_.cameraViewFallback -eq 'full-scene-image-no-authored-camera-bounds' })
+$cameraFallbackRooms = @($manifest.cameraSectionSummary.fullSceneFallbackRooms)
 foreach ($room in $manifest.rooms) {
     $metadataPath = Join-Path $dataRoot ($room.metadata + '.gz')
     if (-not (Test-Path -LiteralPath $metadataPath)) { $missingSidecars.Add($room.metadata + '.gz') }
@@ -181,7 +181,7 @@ $noArtworkRoomCount = @($manifest.rooms | Where-Object { $_.status -eq 'no-artwo
 if (-not $manifest.complete -or $manifest.rooms.Count -ne 590 -or $failedRoomCount -gt 0 -or $roomImageCount -ne ($manifest.rooms.Count - $noArtworkRoomCount)) { $issues.Add('Manifest completion, recovered scene count, or intentional no-artwork count is inconsistent.') }
 if ($mapImageCount -ne 2 -or $mapWebpCount -ne 2) { $issues.Add('The two navigation map references are incomplete.') }
 if ($indexedImageCount -ne $actualImageFileCount -or $atlasWebpCount -eq 0) { $issues.Add('Texture atlas or asset index counts do not match the prepared source.') }
-if ($gzipFiles.Count -ne 593) { $issues.Add("Expected 593 compressed JSON files; found $($gzipFiles.Count).") }
+if ($gzipFiles.Count -ne ($manifest.rooms.Count + 3)) { $issues.Add("Expected $($manifest.rooms.Count + 3) compressed JSON files from the manifest and shared indexes; found $($gzipFiles.Count).") }
 if ($missingImages.Count) { $issues.Add("Missing image references: $($missingImages.Count).") }
 if ($missingSidecars.Count) { $issues.Add("Missing room sidecars: $($missingSidecars.Count).") }
 if ($missingIndexedAssets.Count) { $issues.Add("Missing indexed assets: $($missingIndexedAssets.Count).") }

@@ -70,7 +70,7 @@ $releaseMap = [ordered]@{
     releaseCount = $groups.Count
     assets = $assetMap
 }
-$json = ConvertTo-Json -InputObject $releaseMap -Depth 6 -Compress
+$json = ConvertTo-Json -InputObject $releaseMap -Depth 6
 [IO.File]::WriteAllText($temporaryMap, $json, [Text.UTF8Encoding]::new($false))
 
 Write-Output ("Uploading {0} audited package files to public GitHub repository {1} in {2} releases." -f $files.Count, $Repository, $groups.Count)

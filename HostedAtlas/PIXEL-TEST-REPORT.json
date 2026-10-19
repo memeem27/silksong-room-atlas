@@ -2,26 +2,25 @@
   "status": "passed",
   "results": [
     {
+      "sample": "camera-section image policy",
+      "separateImages": 0,
+      "retainedRoomAreas": 4176
+    },
+    {
       "sample": "bone_01 room",
-      "pixels": 99807119,
+      "pixels": 25045830,
       "visibleRgbDifferences": 0,
       "alphaDifferences": 0
     },
     {
-      "sample": "bone_01 camera section",
-      "pixels": 10627668,
+      "sample": "tut_01 undiscovered-room fix",
+      "pixels": 25045130,
       "visibleRgbDifferences": 0,
       "alphaDifferences": 0
     },
     {
-      "sample": "ant_14 camera section",
-      "pixels": 90953544,
-      "visibleRgbDifferences": 0,
-      "alphaDifferences": 0
-    },
-    {
-      "sample": "aqueduct_03 camera section",
-      "pixels": 6525255,
+      "sample": "Bone East 07 fog-overlay fix",
+      "pixels": 25044056,
       "visibleRgbDifferences": 0,
       "alphaDifferences": 0
     },
@@ -38,8 +37,34 @@
       "alphaDifferences": 0
     },
     {
-      "sample": "oversized PNG fallback",
-      "exactFileCopy": true
+      "sample": "Architect enemy atlas 0fd14f4d090a",
+      "pixels": 1048576,
+      "visibleRgbDifferences": 0,
+      "alphaDifferences": 0
+    },
+    {
+      "sample": "Architect enemy atlas b72790665955",
+      "pixels": 4194304,
+      "visibleRgbDifferences": 0,
+      "alphaDifferences": 0
+    },
+    {
+      "sample": "Architect enemy atlas dcd18aaaf923",
+      "pixels": 4194304,
+      "visibleRgbDifferences": 0,
+      "alphaDifferences": 0
+    },
+    {
+      "sample": "Architect enemy atlas fb8891fb4413",
+      "pixels": 262144,
+      "visibleRgbDifferences": 0,
+      "alphaDifferences": 0
+    },
+    {
+      "sample": "browser-ready room image",
+      "pixels": 25064290,
+      "visibleRgbDifferences": 0,
+      "alphaDifferences": 0
     }
   ]
 }
