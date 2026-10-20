@@ -195,6 +195,8 @@ const roomEnemyContext = vm.createContext({ state: {
 } });
 vm.runInContext(`${roomArtworkFunction}\n${animationFrameFunction}\n${roomSpriteFunction}\nglobalThis.api={enemyArtworkForRoomObject,enemySpriteForRoomObject};`, roomEnemyContext);
 const rockRollerRoomObject = boneObjects.find(object => object.name === 'Rock Roller');
+const silhouettedFlintbeetle = boneObjects.find(object => object.name === 'Silhoutte (1)' &&
+  object.sprites?.some(sprite => sprite.name === 'RR_antic0003'));
 assert.ok(rockRollerRoomObject?.classification?.enemy,
   'Bone 01 must retain the real Rock Roller root as a classified enemy object');
 assert.equal(roomEnemyContext.api.enemyArtworkForRoomObject(rockRollerRoomObject)?.sprite?.name, 'RR_antic0003',
@@ -202,6 +204,10 @@ assert.equal(roomEnemyContext.api.enemyArtworkForRoomObject(rockRollerRoomObject
 assert.equal(roomEnemyContext.api.enemySpriteForRoomObject(rockRollerRoomObject)?.textureSha256,
   '35a6422836598c9d829eb9d893bece96e62771d83193d1eccb54e0019565b0c4',
   'the room overlay must use the same verified game atlas image shown in the user reference');
+assert.ok(silhouettedFlintbeetle?.classification?.enemy,
+  'Bone 01 must retain the visible Flintbeetle sprite under its generic Silhoutte child name');
+assert.equal(roomEnemyContext.api.enemyArtworkForRoomObject(silhouettedFlintbeetle)?.sprite?.name, 'RR_antic0003',
+  'generic room enemy children must resolve artwork from their exact serialized game sprite name');
 roomEnemyContext.state.animateEnemySprites = true;
 assert.equal(roomEnemyContext.api.enemySpriteForRoomObject(rockRollerRoomObject, 0)?.name, 'RR_idle0001',
   'ordinary room enemy overlays should use the verified idle animation when enabled');
@@ -223,6 +229,8 @@ const textureTarget = { save(){}, restore(){}, translate(){}, rotate(){}, scale(
 vm.runInContext(`${roomArtworkFunction}\n${animationFrameFunction}\n${roomSpriteFunction}\n${drawRoomTextureFunction}\nglobalThis.drawSprite=drawRoomEnemyTexture;`, textureContext);
 assert.equal(textureContext.drawSprite(rockRollerRoomObject, 220, 140, 1, 64, textureTarget), true,
   'the ordinary Rock Roller enemy layer should draw when its verified game texture is loaded');
+assert.equal(textureContext.drawSprite(silhouettedFlintbeetle, 220, 140, 1, 64, textureTarget), true,
+  'the generic Silhoutte child must draw the exact verified Flintbeetle texture instead of falling back to an E marker');
 assert.equal(textureDrawCalls[0][0], textureImage);
 assert.equal(textureDrawCalls[0][1], flintbeetleSceneSprite.rectX);
 assert.equal(textureDrawCalls[0][3], flintbeetleSceneSprite.rectWidth);
@@ -236,7 +244,7 @@ console.log(JSON.stringify({
     'Bone 01 enemy marker classification repaired', 'disguised silhouette/Rock Roller art omitted and marked',
     'Bone Roller maps to the native RR_idle0000 game frame',
     'Flintbeetle maps to the native RR_antic0003 game sprite frame',
-    'ordinary Rock Roller room objects resolve and draw the verified Flintbeetle/Rock Roller sprite and idle animation',
+    'ordinary Rock Roller roots and generic Silhoutte children resolve and draw their verified game sprite and idle animation',
     'gauntlet wrapper candidates deduplicated',
     'authentic enemy atlas match required', 'unmatched enemy art receives no substitute texture']
 }, null, 2));

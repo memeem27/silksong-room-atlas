@@ -1579,9 +1579,21 @@ function enemyFactsForRecord(record){
   return candidates.map(key=>facts[key]).find(item=>item?.displayName)||null;
 }
 function enemyArtworkForRoomObject(object){
-  const name=String(object?.name||'').toLowerCase().replace(/[^a-z0-9]/g,''),roomArtwork=state.roomMeta?.architect?.enemyArtwork||{},shared=state.gauntletCatalog?.enemyArtworkAliases||{},facts=state.gauntletCatalog?.enemyFacts||{},candidates=[name];
-  for(const [key,item] of Object.entries(facts))if([item.displayName,item.internalName].some(value=>String(value||'').toLowerCase().replace(/[^a-z0-9]/g,'')===name))candidates.push(key);
-  return [...new Set(candidates)].map(key=>roomArtwork[key]||shared[key]).find(item=>/^[a-f0-9]{64}$/i.test(item?.sprite?.textureSha256||''))||null;
+  const normalize=value=>String(value||'').toLowerCase().replace(/[^a-z0-9]/g,''),name=normalize(object?.name),roomArtwork=state.roomMeta?.architect?.enemyArtwork||{},shared=state.gauntletCatalog?.enemyArtworkAliases||{},facts=state.gauntletCatalog?.enemyFacts||{},candidates=[name],spriteNames=new Set((object?.sprites||[]).map(sprite=>normalize(sprite.name)).filter(Boolean));
+  for(const [key,item] of Object.entries(facts))if([item.displayName,item.internalName].some(value=>normalize(value)===name))candidates.push(key);
+  // Unity's room export can give the visible enemy child a generic name such
+  // as "Silhoutte (1)". Match its serialized game sprite name back to the
+  // same sourced artwork catalog used by Architect placements.
+  for(const source of [roomArtwork,shared])for(const [key,item] of Object.entries(source)){
+    const sourceNames=[item.objectName,item.sprite?.name,...(item.idleAnimation?.frames||[]).map(frame=>frame.name)].map(normalize);
+    if(sourceNames.some(spriteName=>spriteName&&spriteNames.has(spriteName)))candidates.push(key);
+  }
+  const artwork=[...new Set(candidates)].map(key=>roomArtwork[key]||shared[key]).find(item=>/^[a-f0-9]{64}$/i.test(item?.sprite?.textureSha256||''));
+  if(artwork)return artwork;
+  // If the room object already carries a real, hashed game sprite but has no
+  // named catalog alias, use that exact serialized sprite instead of an E pin.
+  const sceneSprite=(object?.sprites||[]).find(sprite=>/^[a-f0-9]{64}$/i.test(sprite?.textureSha256||''));
+  return sceneSprite?{sprite:sceneSprite}:null;
 }
 function enemyAnimationFrame(animation,nowMs){
   const frames=animation?.frames||[],fps=Math.max(0,Number(animation?.framesPerSecond)||0);if(!frames.length||fps<=0)return null;
