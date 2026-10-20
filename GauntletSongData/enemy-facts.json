@@ -1,0 +1,22 @@
+{
+  "flintbeetle": {
+    "displayName": "Flintbeetle",
+    "summary": "A rare beetle that burrows into bone and rock. Its Flintgem shell sheds explosive powder; it rolls, ejects Flintstones, and bursts when defeated.",
+    "health": 95,
+    "drops": ["Flintgem"],
+    "journalKills": 3,
+    "needleDamageModifiers": [1, 0.8, 0.8, 0.7, 0.7],
+    "internalName": "ROCK_ROLLER",
+    "sources": [
+      {
+        "label": "Flintbeetle entry",
+        "url": "https://hollowknight.wiki/w/Flintbeetle"
+      },
+      {
+        "label": "Silksong health and damage table",
+        "url": "https://hollowknight.wiki/w/Damage_Values_and_Enemy_Health_(Silksong)"
+      }
+    ],
+    "verifiedDate": "2026-10-20"
+  }
+}

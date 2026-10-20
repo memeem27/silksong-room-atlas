@@ -9,6 +9,8 @@ const sceneDirectory = path.join(root, 'workspace', 'gauntlet-song', 'source', '
 const roomDirectory = path.join(root, 'workspace', 'preprocessed', 'rooms');
 const navigationPath = path.join(root, 'workspace', 'preprocessed', 'maps', 'navigation.json');
 const outputPath = path.join(root, 'workspace', 'gauntlet-song', 'export', 'gauntlet-catalog.json');
+const rockRollerIdlePath = path.join(root, 'GauntletSongData', 'rockroller-idle.json');
+const enemyFactsPath = path.join(root, 'GauntletSongData', 'enemy-facts.json');
 
 function readJson(file) { return JSON.parse(fs.readFileSync(file, 'utf8')); }
 function sceneId(value) { return String(value || '').replace(/\.bundle$/i, '').toLowerCase(); }
@@ -39,13 +41,38 @@ function loadEnemyArtworkAliases() {
       !Array.isArray(sprite.meshIndices) || sprite.meshIndices.length < 3) {
     throw new Error('Bone 01 does not contain the expected authentic Flintbeetle/Rock Roller sprite frame and mesh.');
   }
+  if (!fs.existsSync(rockRollerIdlePath)) throw new Error(`Verified Rock Roller animation metadata is missing: ${rockRollerIdlePath}`);
+  const idleAnimation = readJson(rockRollerIdlePath);
+  if (idleAnimation.sourceBundle !== 'tk2danimations_assets_areabone.bundle' ||
+      idleAnimation.sourceCollection !== 'Rock Roller Cln' || idleAnimation.clip !== 'Idle' ||
+      Number(idleAnimation.framesPerSecond) !== 12 || !Array.isArray(idleAnimation.frames) || idleAnimation.frames.length !== 4) {
+    throw new Error('Rock Roller idle animation metadata does not match the verified source clip.');
+  }
+  for (const frame of idleAnimation.frames) {
+    if (!/^RR_idle\d{4}$/.test(frame.name || '') || !/^[a-f0-9]{64}$/i.test(frame.textureSha256 || '') ||
+        !Number.isFinite(Number(frame.pixelsPerUnit)) || !Number.isFinite(Number(frame.pivotX)) ||
+        !Number.isFinite(Number(frame.pivotY))) {
+      throw new Error(`Rock Roller idle frame metadata is incomplete: ${frame.name || 'unknown frame'}`);
+    }
+  }
   return { flintbeetle: {
     placementId: 'flintbeetle', objectName: sprite.name,
     sourceBundle: 'animations_assets_areabone.bundle', offsetX: 0, offsetY: 0,
-    sprite: { ...sprite }, aliasOf: 'rockroller-antic-frame'
+    sprite: { ...sprite }, idleAnimation: { ...idleAnimation }, aliasOf: 'rockroller-antic-frame'
   } };
 }
 const enemyArtworkAliases = loadEnemyArtworkAliases();
+if (!fs.existsSync(enemyFactsPath)) throw new Error(`Sourced enemy fact entries are missing: ${enemyFactsPath}`);
+const enemyFacts = readJson(enemyFactsPath);
+for (const [key, facts] of Object.entries(enemyFacts)) {
+  if (!/^[a-z0-9]+$/.test(key) || !facts.displayName || !facts.summary ||
+      !Number.isFinite(Number(facts.health)) || Number(facts.health) <= 0 ||
+      !Array.isArray(facts.needleDamageModifiers) || facts.needleDamageModifiers.length !== 5 ||
+      !Array.isArray(facts.sources) || !facts.sources.length ||
+      facts.sources.some(source => !/^https:\/\//.test(source.url || ''))) {
+    throw new Error(`Enemy fact entry is incomplete or lacks a source: ${key}`);
+  }
+}
 
 // Keep the hosted catalog as an index. Per-instance placement data and textures
 // stay in the already-compressed room sidecars and load only when a room opens.
@@ -167,6 +194,7 @@ function main() {
       customArenaImageStatus: 'Architect exports contain tile coordinates but no game tile textures or compiled scene bundles; no arena background is fabricated.'
     },
     enemyArtworkAliases,
+    enemyFacts,
     coverage: {
       hubEntrances: gauntlets.length,
       routeCount: gauntlets.reduce((sum, gauntlet) => sum + gauntlet.routes.length, 0),

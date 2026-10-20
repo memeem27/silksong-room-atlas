@@ -34,6 +34,18 @@ assert.equal(catalog.enemyArtworkAliases.flintbeetle?.objectName, 'RR_antic0003'
 assert.equal(catalog.enemyArtworkAliases.flintbeetle?.sourceBundle, 'animations_assets_areabone.bundle');
 assert.equal(catalog.enemyArtworkAliases.flintbeetle?.sprite?.textureSha256,
   '35a6422836598c9d829eb9d893bece96e62771d83193d1eccb54e0019565b0c4');
+const rockRollerIdle = catalog.enemyArtworkAliases.flintbeetle.idleAnimation;
+assert.equal(rockRollerIdle?.sourceBundle, 'tk2danimations_assets_areabone.bundle');
+assert.equal(rockRollerIdle?.sourceCollection, 'Rock Roller Cln');
+assert.equal(rockRollerIdle?.clip, 'Idle');
+assert.equal(rockRollerIdle?.framesPerSecond, 12);
+assert.deepEqual(rockRollerIdle?.frames.map(frame => frame.name),
+  ['RR_idle0001','RR_idle0002','RR_idle0003','RR_idle0004'],
+  'idle frame order must come from the serialized game animation clip');
+const flintbeetleFacts = catalog.enemyFacts?.flintbeetle;
+assert.equal(flintbeetleFacts?.health,95,'the Flintbeetle entry should include sourced base-game health');
+assert.deepEqual(flintbeetleFacts?.needleDamageModifiers,[1,0.8,0.8,0.7,0.7]);
+assert.ok(flintbeetleFacts?.sources?.some(source=>source.url==='https://hollowknight.wiki/w/Flintbeetle'));
 assert.ok(catalog.enemyArtworkAliases.flintbeetle.sprite.meshVertices.length >= 3 &&
   catalog.enemyArtworkAliases.flintbeetle.sprite.meshIndices.length >= 3,
   'Flintbeetle marker must retain the game sprite mesh needed to clip atlas bleed');
@@ -41,7 +53,13 @@ const packagedCatalog = readGzipJson(path.join(hostedDataRoot, 'maps', 'gauntlet
 assert.deepEqual(packagedCatalog.coverage, catalog.coverage, 'hosted gzip catalog must match the generated local index');
 assert.equal(packagedCatalog.enemyArtworkAliases?.flintbeetle?.sprite?.textureSha256,
   catalog.enemyArtworkAliases.flintbeetle.sprite.textureSha256, 'hosted catalog must carry the verified Flintbeetle alias');
+assert.deepEqual(packagedCatalog.enemyArtworkAliases?.flintbeetle?.idleAnimation?.frames?.map(frame => frame.textureSha256),
+  rockRollerIdle.frames.map(frame => frame.textureSha256), 'hosted catalog must preserve all verified idle-frame references');
+assert.deepEqual(packagedCatalog.enemyFacts?.flintbeetle,flintbeetleFacts,
+  'the hosted catalog must carry the sourced Flintbeetle facts used by its guide page');
 assert.ok(delta.changedFiles.includes('maps/gauntlet-song.json.gz'), 'delta should publish the portal index');
+assert.ok(delta.changedFiles.includes('asset-index.json.gz'),
+  'a prior verified but unpublished artwork batch must remain included in the next data delta');
 assert.ok(!delta.changedFiles.some(file => file.startsWith('images/')), 'portal-only package must not re-upload or replace room images');
 
 const gauntletKeys = new Set();
@@ -67,6 +85,13 @@ const manifest = readGzipJson(path.join(hostedDataRoot, 'manifest.json.gz'));
 const hostedRooms = new Map(manifest.rooms.map(room => [room.name.toLowerCase(), room]));
 const assetIndex = readGzipJson(path.join(hostedDataRoot, 'asset-index.json.gz'));
 const artwork = new Set((assetIndex.images || []).map(item => item.file));
+for (const frame of rockRollerIdle.frames) {
+  const png = path.join(root, 'workspace', 'scenes', 'artwork', `${frame.textureSha256}.png`);
+  assert.equal(require('node:crypto').createHash('sha256').update(fs.readFileSync(png)).digest('hex'), frame.textureSha256,
+    `${frame.name} source pixels must match their extracted frame hash`);
+  assert.ok(artwork.has(`artwork/${frame.textureSha256}.webp`), `${frame.name} must be packaged for the hosted animation`);
+  assert.ok(delta.changedFiles.includes(`artwork/${frame.textureSha256}.webp`), `${frame.name} should be in the GauntletSong delta package`);
+}
 assert.ok(artwork.has(`artwork/${catalog.enemyArtworkAliases.flintbeetle.sprite.textureSha256}.webp`),
   'the real Flintbeetle sprite atlas used by the updated catalog must already be available on the host');
 for (const room of catalog.mappedRooms) {
@@ -123,7 +148,7 @@ assert.ok(Math.abs(anchor.x*viewport.zoom+viewport.offsetX-600)<1e-7 && Math.abs
   'selected portal should zoom to the map canvas center');
 
 for (const id of ['gauntletMapButton','gauntletMapPanel','gauntletMapSummary','gauntletMapRoutes','gauntletGuidePage','openGauntletGuide']) assert.match(html, new RegExp(`id="${id}"`));
-for (const token of ["'gauntlet-map'", "loadJson('maps/gauntlet-song.json')", 'drawGauntletMap', 'openGauntletRoute', 'openGauntletGuide', 'data-guide-enemy-key', 'returnToGauntletMap', 'data-enemy-article', 'showEnemyArticle', 'drawEnemyArticleSprite']) {
+for (const token of ["'gauntlet-map'", "loadJson('maps/gauntlet-song.json')", 'drawGauntletMap', 'openGauntletRoute', 'openGauntletGuide', 'data-guide-enemy-key', 'returnToGauntletMap', 'data-enemy-article', 'showEnemyArticle', 'drawEnemyArticleSprite', 'enemyFactsForRecord', 'enemy-wiki-stats']) {
   assert.ok(reader.includes(token), `reader should include GauntletSong map integration: ${token}`);
 }
 assert.match(reader, /tile occupancy \+ portal coordinates · no hub texture included/i,
@@ -131,17 +156,61 @@ assert.match(reader, /tile occupancy \+ portal coordinates · no hub texture inc
 const boneSidecar = JSON.parse(fs.readFileSync(path.join(root, 'workspace', 'preprocessed', 'rooms', 'bone_01.json'), 'utf8'));
 const boneRoller = boneSidecar.architect.placements.find(record => record.enemyCandidate && record.placement?.id === 'bone_roller');
 const spriteContext = vm.createContext({ state: { roomMeta: boneSidecar, gauntletCatalog: catalog } });
-vm.runInContext(`${extractFunction(reader,'enemyArtworkForRecord')};${extractFunction(reader,'enemySpriteForRecord')};globalThis.api={enemyArtworkForRecord,enemySpriteForRecord};`, spriteContext);
+vm.runInContext(`${extractFunction(reader,'enemyArtworkForRecord')};${extractFunction(reader,'enemyFactsForRecord')};${extractFunction(reader,'enemyAnimationFrame')};${extractFunction(reader,'enemySpriteForRecord')};globalThis.api={enemyArtworkForRecord,enemyFactsForRecord,enemySpriteForRecord};`, spriteContext);
 const rollerArtwork = spriteContext.api.enemyArtworkForRecord(boneRoller);
 assert.equal(rollerArtwork?.sprite?.name, 'RR_idle0000', 'enemy article must resolve the real Rock Roller idle sprite');
 assert.equal(rollerArtwork?.sourceBundle, 'animations_assets_areabone.bundle', 'enemy article must identify the game sprite source bundle');
 assert.equal(spriteContext.api.enemySpriteForRecord(boneRoller)?.textureSha256, '29d0651e26a837a9cd34318b25b213f7f9a8ea022cbd89556236dd0b1f5d3aab');
 spriteContext.state.roomMeta = { architect: { enemyArtwork: {} } };
-const flintbeetleRecord = { placement: { id: 'prefab_gFlintbeetle' }, label: 'gFlintbeetle' };
+const flintbeetleRecord = { enemyCandidate:true, placement: { id: 'prefab_gFlintbeetle' }, label: 'gFlintbeetle' };
 const flintbeetleArtwork = spriteContext.api.enemyArtworkForRecord(flintbeetleRecord);
+assert.equal(spriteContext.api.enemyFactsForRecord(flintbeetleRecord)?.displayName,'Flintbeetle',
+  'prefixed Gauntlet enemy IDs should resolve to the sourced bestiary entry');
 assert.equal(flintbeetleArtwork?.sprite?.name, 'RR_antic0003', 'Gauntlet Flintbeetle must resolve through the verified upright game sprite alias');
 assert.equal(spriteContext.api.enemySpriteForRecord(flintbeetleRecord)?.textureSha256,
   '35a6422836598c9d829eb9d893bece96e62771d83193d1eccb54e0019565b0c4');
+spriteContext.state.animateEnemySprites = true;
+assert.equal(spriteContext.api.enemySpriteForRecord(flintbeetleRecord,0)?.name,'RR_idle0001');
+assert.equal(spriteContext.api.enemySpriteForRecord(flintbeetleRecord,84)?.name,'RR_idle0002');
+assert.equal(spriteContext.api.enemySpriteForRecord(flintbeetleRecord,167)?.name,'RR_idle0003');
+assert.equal(spriteContext.api.enemySpriteForRecord(flintbeetleRecord,250)?.name,'RR_idle0004');
+assert.equal(spriteContext.api.enemySpriteForRecord(flintbeetleRecord,334)?.name,'RR_idle0001',
+  'the source-authored Flintbeetle idle clip should loop in the overlay');
+spriteContext.state.animateEnemySprites = false;
+assert.equal(spriteContext.api.enemySpriteForRecord(flintbeetleRecord)?.name,'RR_antic0003',
+  'the matching upright reference sprite remains the non-animated overlay state');
+const animationControls={toggleGauntlets:{checked:true},toggleArenaChanges:{checked:true},toggleEnemyTextures:{checked:true}};
+const animationGateContext=vm.createContext({
+  state:{mode:'room',selectedGauntlet:{key:'boss9'},visiblePlacements:new Map(),roomMeta:{architect:{placements:[flintbeetleRecord]}}},
+  $:id=>animationControls[id],canonicalArchitectPlacements:records=>records,placementsForWave:()=>[flintbeetleRecord],
+  isPlacementEnabled:()=>true,enemyArtworkForRecord:()=>flintbeetleArtwork
+});
+vm.runInContext(`${extractFunction(reader,'hasVisibleAnimatedEnemy')};globalThis.api={hasVisibleAnimatedEnemy};`,animationGateContext);
+assert.equal(animationGateContext.api.hasVisibleAnimatedEnemy(),true,
+  'animation should run for visible animated enemies in a selected gauntlet overlay');
+animationControls.toggleEnemyTextures.checked=false;
+assert.equal(animationGateContext.api.hasVisibleAnimatedEnemy(),false,
+  'disabling enemy textures should stop the animation loop');
+animationControls.toggleEnemyTextures.checked=true;animationControls.toggleGauntlets.checked=false;
+assert.equal(animationGateContext.api.hasVisibleAnimatedEnemy(),false,
+  'the animation loop must remain off when the gauntlet layer is hidden');
+animationControls.toggleGauntlets.checked=true;animationGateContext.state.mode='area';
+assert.equal(animationGateContext.api.hasVisibleAnimatedEnemy(),false,
+  'the animation loop must remain off outside room view');
+const articleRecord={...flintbeetleRecord,key:'article-flintbeetle',worldPosition:{x:12.5,y:4.25,z:0.006},activeByDefault:true,config:{enemy_hp_scale:'True'},listeners:[]};
+const articleElements={enemyArticle:{hidden:true,innerHTML:'',scrollIntoView(){}},enemyArticleClose:{addEventListener(){}}};
+const articleContext=vm.createContext({state:{roomMeta:{architect:{placements:[articleRecord]}},gauntletCatalog:catalog},
+  $:id=>articleElements[id],esc:value=>String(value??''),labelCase:value=>String(value),fileBase:()=> 'Bone_07',
+  enemySpriteForRecord:()=>flintbeetleArtwork.sprite,enemyArtworkForRecord:()=>flintbeetleArtwork,
+  enemyFactsForRecord:spriteContext.api.enemyFactsForRecord,isPlacementEnabled:()=>true,drawEnemyArticleSprite(){}});
+vm.runInContext(`${extractFunction(reader,'showEnemyArticle')};globalThis.api={showEnemyArticle};`,articleContext);
+articleContext.api.showEnemyArticle(articleRecord.key);
+assert.match(articleElements.enemyArticle.innerHTML,/<article class="enemy-wiki-page">/);
+assert.match(articleElements.enemyArticle.innerHTML,/>95<\/span>/);
+assert.match(articleElements.enemyArticle.innerHTML,/Flintgem/);
+assert.match(articleElements.enemyArticle.innerHTML,/100% · 80% · 80% · 70% · 70%/);
+assert.match(articleElements.enemyArticle.innerHTML,/Selected Gauntlet placement/);
+assert.match(articleElements.enemyArticle.innerHTML,/https:\/\/hollowknight\.wiki\/w\/Flintbeetle/);
 const flintbeetleRooms = catalog.mappedRooms.filter(room => room.architect?.enemies?.some(enemy => /flintbeetle/i.test(enemy.id)));
 assert.ok(flintbeetleRooms.length >= 3, 'Gauntlet catalog should include each routed Flintbeetle room');
 assert.ok(flintbeetleRooms.every(room => room.architect.enemies.filter(enemy => /flintbeetle/i.test(enemy.id)).every(enemy => enemy.sprite?.textureSha256 === flintbeetleArtwork.sprite.textureSha256)),

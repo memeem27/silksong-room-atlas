@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "memeem27/silksong-room-atlas",
-  "assetCount": 2097,
+  "assetCount": 2101,
   "releaseCount": 8,
   "assets": {
     "artwork/00d10de1fa0d1dbcd96a755ad4bad91f57189cd9347fb2b1cef076dfad276ae2.webp": {
@@ -6905,7 +6905,7 @@
       "name": "wisp_09.json.gz"
     },
     "asset-index.json.gz": {
-      "tag": "silksong-atlas-data-v2-006",
+      "tag": "silksong-atlas-data-v2-011",
       "name": "asset-index.json.gz"
     },
     "images/abyss_08.webp": {
@@ -7645,7 +7645,7 @@
       "name": "manifest.json.gz"
     },
     "maps/navigation.json.gz": {
-      "tag": "silksong-atlas-data-v2-010",
+      "tag": "silksong-atlas-data-v2-011",
       "name": "navigation.json.gz"
     },
     "rooms/abyss_08.json.gz": {
@@ -8389,8 +8389,24 @@
       "name": "wisp_07.json.gz"
     },
     "maps/gauntlet-song.json.gz": {
-      "tag": "silksong-atlas-data-v2-010",
+      "tag": "silksong-atlas-data-v2-011",
       "name": "gauntlet-song.json.gz"
+    },
+    "artwork/3f1f9c66444936ecca453df0cbe27972aa1751b9e426a5e103963f4b57ccb49d.webp": {
+      "tag": "silksong-atlas-data-v2-011",
+      "name": "3f1f9c66444936ecca453df0cbe27972aa1751b9e426a5e103963f4b57ccb49d.webp"
+    },
+    "artwork/77a521c660c919419daf3d8f61916409479f4d587c01bf8ffc1a10a3493d94e8.webp": {
+      "tag": "silksong-atlas-data-v2-011",
+      "name": "77a521c660c919419daf3d8f61916409479f4d587c01bf8ffc1a10a3493d94e8.webp"
+    },
+    "artwork/c2a84b9c1d263416e8cfacee60a799f7d5a13b05af869e90e5361569dbb5da44.webp": {
+      "tag": "silksong-atlas-data-v2-011",
+      "name": "c2a84b9c1d263416e8cfacee60a799f7d5a13b05af869e90e5361569dbb5da44.webp"
+    },
+    "artwork/c418020a82d8e6aca9dd6a7fabc4916bf059b5afe374ad631c74027548fbdb3d.webp": {
+      "tag": "silksong-atlas-data-v2-011",
+      "name": "c418020a82d8e6aca9dd6a7fabc4916bf059b5afe374ad631c74027548fbdb3d.webp"
     }
   }
 }

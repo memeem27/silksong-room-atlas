@@ -130,6 +130,21 @@ button[hidden], [hidden] { display: none !important; }
 .enemy-article-copy strong { color: #302837; font-weight: 600; }
 .enemy-article-link { display: inline; min-height: 0; padding: 0; border: 0; background: transparent; color: #352342; font: inherit; text-align: left; text-decoration: underline; text-underline-offset: 2px; }
 .enemy-article-link:hover { border: 0; background: transparent; color: #815ba0; }
+.enemy-wiki-page { padding: 8px; color: #29252d; font: 9px/1.45 Georgia,"Times New Roman",serif; }
+.enemy-wiki-title { clear: both; margin: 6px 0; padding-bottom: 4px; border-bottom: 2px solid #7b668c; color: #211a27; font: 600 15px Georgia,"Times New Roman",serif; }
+.enemy-wiki-lead { margin: 6px 0; color: #504955; }
+.enemy-wiki-infobox { float: right; width: 42%; margin: 0 0 7px 7px; padding: 5px; border: 1px solid #d9d1e0; background: #faf8fc; font: 7px/1.4 Consolas,monospace; overflow-wrap: anywhere; }
+.enemy-wiki-infobox .enemy-article-sprite { display: block; width: 100%; height: 92px; margin-bottom: 4px; }
+.enemy-wiki-infobox div:not(:first-child) { margin-top: 3px; }
+.enemy-wiki-infobox strong,.enemy-wiki-stats strong { display: block; color: #352941; }
+.enemy-wiki-infobox span,.enemy-wiki-stats span { display: block; color: #5c5661; }
+.enemy-wiki-page h4 { clear: both; margin: 9px 0 3px; color: #44354f; font: 600 10px Georgia,"Times New Roman",serif; }
+.enemy-wiki-stats { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 4px; padding: 5px; border: 1px solid #e1dbe5; background: #fcfbfd; font: 7px/1.4 Consolas,monospace; }
+.enemy-wiki-stats .wide { grid-column: 1 / -1; }
+.enemy-wiki-source { margin: 4px 0; color: #69616d; font: 7px/1.4 Consolas,monospace; }
+.enemy-wiki-source a { color: #57406a; }
+.enemy-wiki-page > .enemy-article-copy { clear: both; }
+@media (max-width: 520px) { .enemy-wiki-infobox { width: 38%; } .enemy-wiki-infobox .enemy-article-sprite { height: 74px; } }
 .metadata-rows { display: flex; flex-direction: column; gap: 6px; }
 .metadata-row { display: flex; justify-content: space-between; gap: 8px; color: #666; font: 9px Consolas, monospace; }
 .metadata-row strong { color: #222; font-weight: 500; text-align: right; overflow-wrap: anywhere; }

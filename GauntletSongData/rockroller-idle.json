@@ -1,0 +1,109 @@
+{
+  "sourceBundle": "tk2danimations_assets_areabone.bundle",
+  "sourceCollection": "Rock Roller Cln",
+  "clip": "Idle",
+  "framesPerSecond": 12,
+  "loopStart": 0,
+  "frames": [
+    {
+      "spriteId": 20,
+      "name": "RR_idle0001",
+      "textureSha256": "c418020a82d8e6aca9dd6a7fabc4916bf059b5afe374ad631c74027548fbdb3d",
+      "file": "RR_idle0001.png",
+      "rectX": 0,
+      "rectY": 0,
+      "rectWidth": 167,
+      "rectHeight": 190,
+      "textureWidth": 167,
+      "textureHeight": 190,
+      "pixelsPerUnit": 64,
+      "originalWidth": 167,
+      "originalHeight": 190,
+      "trimOffsetX": 0,
+      "trimOffsetY": 0,
+      "pivotX": 0.5748503,
+      "pivotY": 0.5263158,
+      "worldBounds": {
+        "minX": -1.5,
+        "minY": -1.5625,
+        "maxX": 1.1093751,
+        "maxY": 1.4062499
+      }
+    },
+    {
+      "spriteId": 21,
+      "name": "RR_idle0002",
+      "textureSha256": "77a521c660c919419daf3d8f61916409479f4d587c01bf8ffc1a10a3493d94e8",
+      "file": "RR_idle0002.png",
+      "rectX": 0,
+      "rectY": 0,
+      "rectWidth": 186,
+      "rectHeight": 170,
+      "textureWidth": 186,
+      "textureHeight": 170,
+      "pixelsPerUnit": 64,
+      "originalWidth": 186,
+      "originalHeight": 170,
+      "trimOffsetX": 0,
+      "trimOffsetY": 0,
+      "pivotX": 0.57058823,
+      "pivotY": 0.53763443,
+      "worldBounds": {
+        "minX": -1.515625,
+        "minY": -1.5625,
+        "maxX": 1.1406251,
+        "maxY": 1.3437499
+      }
+    },
+    {
+      "spriteId": 23,
+      "name": "RR_idle0003",
+      "textureSha256": "c2a84b9c1d263416e8cfacee60a799f7d5a13b05af869e90e5361569dbb5da44",
+      "file": "RR_idle0003.png",
+      "rectX": 0,
+      "rectY": 0,
+      "rectWidth": 185,
+      "rectHeight": 171,
+      "textureWidth": 185,
+      "textureHeight": 171,
+      "pixelsPerUnit": 64,
+      "originalWidth": 185,
+      "originalHeight": 171,
+      "trimOffsetX": 0,
+      "trimOffsetY": 0,
+      "pivotX": 0.57309943,
+      "pivotY": 0.5243243,
+      "worldBounds": {
+        "minX": -1.53125,
+        "minY": -1.515625,
+        "maxX": 1.1406251,
+        "maxY": 1.3749999
+      }
+    },
+    {
+      "spriteId": 19,
+      "name": "RR_idle0004",
+      "textureSha256": "3f1f9c66444936ecca453df0cbe27972aa1751b9e426a5e103963f4b57ccb49d",
+      "file": "RR_idle0004.png",
+      "rectX": 0,
+      "rectY": 0,
+      "rectWidth": 184,
+      "rectHeight": 176,
+      "textureWidth": 184,
+      "textureHeight": 176,
+      "pixelsPerUnit": 64,
+      "originalWidth": 184,
+      "originalHeight": 176,
+      "trimOffsetX": 0,
+      "trimOffsetY": 0,
+      "pivotX": 0.5511364,
+      "pivotY": 0.52717394,
+      "worldBounds": {
+        "minX": -1.515625,
+        "minY": -1.515625,
+        "maxX": 1.2343751,
+        "maxY": 1.359375
+      }
+    }
+  ]
+}

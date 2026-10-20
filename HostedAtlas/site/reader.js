@@ -17,6 +17,7 @@ const state = { manifest: null, navigation: null, gauntletCatalog: null, roomMet
   worldMapStyle: 'sketch', showAreaLabels: true, showAreaConnectionLines: true,
   showRoomMapLabels: true,
   showArchitectMapMarkers: false,
+  animateEnemySprites: false, enemyAnimationStartedAt: null, enemyAnimationTime: 0, enemyAnimationTimer: null,
   roomStateOverrides: new Map(), roomStateOverrideSnapshot: null, roomStateGroups: [], roomStateCandidates: [], roomStateChanged: false, showAllInactiveArtwork: false,
   includeDisabledStateArtwork: false, conditionalCache: null, conditionalBuildVersion: 0 };
 const canvas = $('mapCanvas'), ctx = canvas.getContext('2d');
@@ -751,13 +752,15 @@ function renderPlacementList() {
 function showEnemyArticle(key){
   const record=(state.roomMeta?.architect?.placements||[]).find(item=>item.key===key&&item.enemyCandidate);
   if(!record)return;
-  const sprite=enemySpriteForRecord(record),artwork=enemyArtworkForRecord(record),position=record.worldPosition||{},config=record.config||{};
+  const sprite=enemySpriteForRecord(record),artwork=enemyArtworkForRecord(record),facts=enemyFactsForRecord(record),position=record.worldPosition||{},config=record.config||{};
   const events=(record.listeners||[]).map(listener=>`${esc(listener.event)} · ${esc(listener.action)}`);
   const stats=Object.entries(config).filter(([name,value])=>/^enemy_/i.test(name)&&String(value).trim()!=='').slice(0,8);
-  const statMarkup=stats.length?stats.map(([name,value])=>`<div><strong>${esc(labelCase(name))}:</strong> ${esc(value)}</div>`).join(''):'<div>No enemy-specific stat overrides are recorded in Architect.</div>';
+  const overrideMarkup=stats.length?stats.map(([name,value])=>`<div><strong>${esc(labelCase(name))}:</strong> ${esc(value)}</div>`).join(''):'<div>No enemy-specific stat overrides are recorded for this Architect placement.</div>';
   const eventMarkup=events.length?events.join('<br>'):'No event activation listener is saved for this placement.';
-  const displayName=record.label||record.placement?.id||'Enemy';
-  $('enemyArticle').innerHTML=`<div class="enemy-article-head"><div><span class="eyebrow">PLACEMENT DETAILS</span><strong>${esc(displayName)}</strong></div><button id="enemyArticleClose" class="enemy-article-close" type="button" aria-label="Close enemy details">×</button></div><div class="enemy-article-body">${sprite?'<canvas id="enemyArticleSpriteCanvas" class="enemy-article-sprite" width="112" height="112" aria-label="Authentic game enemy sprite"></canvas>':'<div class="enemy-article-sprite enemy-sprite-missing" aria-label="No verified enemy sprite">—</div>'}<div class="enemy-article-copy"><div><strong>Architect ID:</strong> ${esc(record.placement?.id||'unknown')}</div><div><strong>Position:</strong> ${Number(position.x||0).toFixed(2)}, ${Number(position.y||0).toFixed(2)}${Number.isFinite(Number(position.z))?`, ${Number(position.z).toFixed(3)}`:''}</div><div><strong>State:</strong> ${isPlacementEnabled(record)?'shown':'hidden'} · ${record.activeByDefault?'active by default':'inactive by default'}</div><div><strong>Sprite:</strong> ${sprite?`${esc(artwork?.objectName||sprite.name||'matched Silksong sprite')} · ${esc(artwork?.sourceBundle||'game sprite bundle')}`:'no verified matching Silksong atlas; no substitute art used'}</div></div></div><div class="enemy-article-copy">${statMarkup}<div><strong>Event links:</strong><br>${eventMarkup}</div><div><strong>Source:</strong> Architect placement in ${esc(fileBase(state.room?.name||''))}. Stat values are mod configuration values, not a complete in-game bestiary entry.</div></div>`;
+  const displayName=facts?.displayName||record.label||record.placement?.id||'Enemy',sceneName=fileBase(state.room?.name||'');
+  const sources=(facts?.sources||[]).map(source=>`<a href="${esc(source.url)}" target="_blank" rel="noopener noreferrer">${esc(source.label)}</a>`).join(' · ');
+  const gameStats=facts?`<h4>Published game data</h4><div class="enemy-wiki-stats"><div><strong>Health</strong><span>${Number(facts.health).toLocaleString()}</span></div><div><strong>Drop</strong><span>${(facts.drops||[]).map(esc).join(', ')||'Not listed'}</span></div><div><strong>Journal kills</strong><span>${Number(facts.journalKills)||'Not listed'}</span></div><div class="wide"><strong>Needle damage modifier by upgrade level</strong><span>${facts.needleDamageModifiers.map(value=>`${Math.round(Number(value)*100)}%`).join(' · ')}</span></div></div><p class="enemy-wiki-source">${sources} · checked ${esc(facts.verifiedDate||'')}</p>`:'<h4>Published game data</h4><p>No sourced base-game stat record is packaged for this enemy yet. The Architect values below are placement overrides only.</p>';
+  $('enemyArticle').innerHTML=`<article class="enemy-wiki-page"><div class="enemy-article-head"><div><span class="eyebrow">SILKSONG ENEMY GUIDE</span><strong>${esc(displayName)}</strong></div><button id="enemyArticleClose" class="enemy-article-close" type="button" aria-label="Close enemy details">×</button></div><div class="enemy-wiki-infobox">${sprite?'<canvas id="enemyArticleSpriteCanvas" class="enemy-article-sprite" width="112" height="112" aria-label="Authentic game enemy sprite"></canvas>':'<div class="enemy-article-sprite enemy-sprite-missing" aria-label="No verified enemy sprite">—</div>'}<div><strong>Game name</strong><span>${esc(displayName)}</span></div><div><strong>Internal name</strong><span>${esc(facts?.internalName||artwork?.objectName||record.placement?.id||'Unknown')}</span></div><div><strong>Sprite</strong><span>${sprite?esc(artwork?.objectName||sprite.name||'Verified Silksong sprite'):'No verified sprite found'}</span></div></div><h3 class="enemy-wiki-title">${esc(displayName)}</h3><p class="enemy-wiki-lead">${esc(facts?.summary||'This entry shows the available Architect spawn data for this enemy.')}</p>${gameStats}<h4>Selected Gauntlet placement</h4><div class="enemy-article-copy"><div><strong>Room:</strong> ${esc(sceneName)}</div><div><strong>Architect ID:</strong> ${esc(record.placement?.id||'unknown')}</div><div><strong>Position:</strong> ${Number(position.x||0).toFixed(2)}, ${Number(position.y||0).toFixed(2)}${Number.isFinite(Number(position.z))?`, ${Number(position.z).toFixed(3)}`:''}</div><div><strong>State:</strong> ${isPlacementEnabled(record)?'shown':'hidden'} · ${record.activeByDefault?'active by default':'inactive by default'}</div><div><strong>Architect overrides:</strong>${overrideMarkup}</div><div><strong>Activation events:</strong><br>${eventMarkup}</div><div><strong>Placement source:</strong> GauntletSong Architect data from ${esc(sceneName)}. Published game facts link to their sources above.</div></div></article>`;
   $('enemyArticle').hidden=false;
   $('enemyArticleClose').addEventListener('click',()=>{$('enemyArticle').hidden=true;});
   $('enemyArticle').scrollIntoView({block:'nearest'});
@@ -880,7 +883,7 @@ function allDetailBounds(){
 function draw() {
   if(!ctx)return; const {width,height}=canvasSize(); if(!width||!height)return;
   ctx.clearRect(0,0,width,height);ctx.fillStyle='#080a08';ctx.fillRect(0,0,width,height);
-  if(state.mode==='room'){drawRoom(width,height);return;}
+  if(state.mode==='room'){drawRoom(width,height);scheduleEnemyAnimationFrame();return;}
   if(state.mode==='gauntlet-map'){drawGauntletMap(width,height,mapTransform(mapBoundsForMode(),width,height,54));return;}
   const mapType=state.mode==='area'&&state.area?.detailBounds?'detail':state.worldMapStyle==='sketch'?'detail':'wide';
   const imageRecord=state.navigation?.maps?.[mapType];
@@ -1569,7 +1572,36 @@ function enemyArtworkForRecord(record){
   const id=String(record.placement?.id||'').replace(/^prefab_/i,'').toLowerCase().replace(/[^a-z0-9]/g,''),label=String(record.label||'').toLowerCase().replace(/[^a-z0-9]/g,''),artwork=state.roomMeta?.architect?.enemyArtwork||{},shared=state.gauntletCatalog?.enemyArtworkAliases||{},candidates=[id,...(id.startsWith('g')?[id.slice(1)]:[]),label,...(label.startsWith('g')?[label.slice(1)]:[])];
   return candidates.map(key=>artwork[key]||shared[key]).find(item=>/^[a-f0-9]{64}$/i.test(item?.sprite?.textureSha256||''))||null;
 }
-function enemySpriteForRecord(record){return enemyArtworkForRecord(record)?.sprite||null;}
+function enemyFactsForRecord(record){
+  const id=String(record.placement?.id||'').replace(/^prefab_/i,'').toLowerCase().replace(/[^a-z0-9]/g,''),label=String(record.label||'').toLowerCase().replace(/[^a-z0-9]/g,''),facts=state.gauntletCatalog?.enemyFacts||{},candidates=[id,...(id.startsWith('g')?[id.slice(1)]:[]),label,...(label.startsWith('g')?[label.slice(1)]:[])];
+  return candidates.map(key=>facts[key]).find(item=>item?.displayName)||null;
+}
+function enemyAnimationFrame(animation,nowMs){
+  const frames=animation?.frames||[],fps=Math.max(0,Number(animation?.framesPerSecond)||0);if(!frames.length||fps<=0)return null;
+  const frameNumber=Math.floor(Math.max(0,Number(nowMs)||0)*fps/1000),loopStart=Math.max(0,Math.min(frames.length-1,Number(animation.loopStart)||0));
+  const index=frameNumber<frames.length?frameNumber:loopStart+(frameNumber-loopStart)%(frames.length-loopStart);
+  return frames[index]||null;
+}
+function enemySpriteForRecord(record,nowMs=state.enemyAnimationTime){
+  const artwork=enemyArtworkForRecord(record);if(!artwork)return null;
+  return state.animateEnemySprites?enemyAnimationFrame(artwork.idleAnimation,nowMs)||artwork.sprite:artwork.sprite;
+}
+function hasVisibleAnimatedEnemy(){
+  if(state.mode!=='room'||!state.selectedGauntlet||!$('toggleGauntlets').checked||!$('toggleArenaChanges').checked||!$('toggleEnemyTextures').checked)return false;
+  return canonicalArchitectPlacements(placementsForWave()).some(record=>record.enemyCandidate&&isPlacementEnabled(record)&&
+    (enemyArtworkForRecord(record)?.idleAnimation?.frames?.length||0)>1);
+}
+function scheduleEnemyAnimationFrame(){
+  if(state.enemyAnimationTimer!==null)return;
+  if(!hasVisibleAnimatedEnemy()){state.animateEnemySprites=false;state.enemyAnimationStartedAt=null;return;}
+  state.animateEnemySprites=true;
+  state.enemyAnimationTimer=setTimeout(()=>{
+    state.enemyAnimationTimer=null;
+    if(!hasVisibleAnimatedEnemy()){state.animateEnemySprites=false;state.enemyAnimationStartedAt=null;return;}
+    const now=performance.now();if(state.enemyAnimationStartedAt===null)state.enemyAnimationStartedAt=now;
+    state.enemyAnimationTime=now-state.enemyAnimationStartedAt;draw();
+  },1000/12);
+}
 function drawEnemyTexture(record,px,py,roomScale,roomPpu,target){
   const sprite=enemySpriteForRecord(record);if(!sprite)return false;
   let image=state.atlasCache.get(sprite.textureSha256);if(!image){image=new Image();image.onload=draw;image.onerror=()=>{};image.src=`${ARTWORK_BASE}${sprite.textureSha256}.${ARTWORK_EXTENSION}`;state.atlasCache.set(sprite.textureSha256,image);}if(!image.complete||!image.naturalWidth)return false;

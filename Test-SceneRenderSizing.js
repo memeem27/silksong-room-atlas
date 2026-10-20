@@ -56,6 +56,23 @@ assert.equal(context.isScreenEffect({ name: 'hornet_fader (2)' }, { name: 'horne
   'Serialized underscores in the Hornet fader name must still identify it as a screen effect.');
 assert.equal(context.isLightingArtwork({ name: 'standard_fog (3)' }, { name: 'town_layered_0027_10' }), true,
   'Serialized underscores in standard_fog must still identify it as a lighting/fog effect.');
+const ambientLightSprite = { name:'white_light', blendMode:'normal', rendererEnabled:true, tintA:0.109,
+  materialTintA:1, tintR:1, tintG:1, tintB:1, materialTintR:1, materialTintG:1, materialTintB:1,
+  worldScaleX:2.1118, worldScaleY:2.1118, imageUrl:'/api/artwork/'+'a'.repeat(64)+'.png', rectWidth:400, rectHeight:338 };
+assert.equal(context.isSafeAmbientLightingArtwork({name:'Light',active:true},ambientLightSprite),true,
+  'The active neutral low-alpha room Light sprite should pass the narrow ambient-light whitelist.');
+assert.equal(context.spritePassesFilters({name:'Light',active:true},ambientLightSprite,false,true),true,
+  'A verified ambient Light should render without enabling other screen effects.');
+assert.equal(context.isSafeAmbientLightingArtwork({name:'Light Small',active:true},ambientLightSprite),false,
+  'The opaque Light Small mask must remain excluded.');
+assert.equal(context.isSafeAmbientLightingArtwork({name:'lava haze',active:true},ambientLightSprite),false,
+  'Haze objects must remain excluded even when their sprite uses the same white_light mask.');
+assert.equal(context.isSafeAmbientLightingArtwork({name:'Light',active:false},ambientLightSprite),false,
+  'Inactive ambient lights must not be pulled into the default scene state.');
+assert.equal(context.isSafeAmbientLightingArtwork({name:'Light',active:true},{...ambientLightSprite,tintA:0.5}),false,
+  'High-alpha Light masks must remain excluded.');
+assert.equal(context.isSafeAmbientLightingArtwork({name:'Light',active:true},{...ambientLightSprite,worldScaleY:9}),false,
+  'Elongated Light sprites must remain excluded as likely beams or masks.');
 assert.equal(context.isScreenEffect({ name: 'moss wall' }, { name: 'moss__0022_stalacmoss' }), false,
   'Normal room textures must remain renderable.');
 const disabledSprite = { imageUrl: '/api/artwork/' + 'a'.repeat(64) + '.png', rectWidth: 16, rectHeight: 16, rendererEnabled: false };
@@ -68,4 +85,4 @@ context.window.location.search = '?batchIncludeDisabledRenderers=1';
 assert.equal(context.spritePassesFilters({ active: false }, disabledSprite, false, true), true,
   'Disabled renderers should be available only through the explicit export override.');
 
-console.log('Room render sizing, transient-effect filters, and disabled-renderer handling passed.');
+console.log('Room render sizing, transient-effect filters, safe ambient lighting, and disabled-renderer handling passed.');

@@ -18,8 +18,14 @@ const manifest = readJson(path.join(sourceRoot, 'manifest.json'));
 const hostedManifest = parseJsonText(zlib.gunzipSync(fs.readFileSync(path.join(dataRoot, 'manifest.json.gz'))).toString('utf8'));
 const assetIndexPath = path.join(dataRoot, 'asset-index.json.gz');
 const assetIndex = readGzipJson(assetIndexPath);
+const releaseIndexPath = path.join(root, 'HostedAtlas', 'site', 'release-assets.json');
+const releaseIndex = readJson(releaseIndexPath);
+const publishedAssets = new Set(Object.keys(releaseIndex.assets || {}));
 const indexedAssets = new Set((assetIndex.images || []).map(asset => asset.file));
 const enemyTextureHashes = new Set();
+const gauntletCatalogPath = path.join(root, 'workspace', 'gauntlet-song', 'export', 'gauntlet-catalog.json');
+if (!fs.existsSync(gauntletCatalogPath)) throw new Error('GauntletSong catalog is missing. Run Build-GauntletSongCatalog.js first.');
+const gauntletCatalog = readJson(gauntletCatalogPath);
 let oversizedNames = new Set((hostedManifest.rooms || [])
   .filter(room => /\.png$/i.test(room.image || ''))
   .map(room => path.basename(room.image, '.png').toLowerCase()));
@@ -131,6 +137,18 @@ if (!gauntletMapOnly) for (const room of manifest.rooms || []) {
     enemyArtworkTypes: Object.keys(transformed.architect?.enemyArtwork || {}).length });
 }
 
+// Gauntlet-only exports still need the verified enemy frames referenced by
+// their compact catalog. Keep this independent of the much larger room-art
+// refresh path so a small marker update does not repackage every room sprite.
+for (const artwork of Object.values(gauntletCatalog.enemyArtworkAliases || {})) {
+  const hashes = [artwork.sprite?.textureSha256,
+    ...(artwork.idleAnimation?.frames || []).map(frame => frame.textureSha256)];
+  for (const value of hashes) {
+    const hash = String(value || '').toLowerCase();
+    if (/^[a-f0-9]{64}$/.test(hash)) enemyTextureHashes.add(hash);
+  }
+}
+
 const refreshedImages = [];
 if (imageUpdates.length) {
   const indexedByFile = new Map((assetIndex.images || []).map(asset => [asset.file, asset]));
@@ -177,9 +195,16 @@ if (imageUpdates.length) {
 }
 
 const newArtworkFiles = [];
-if (!gauntletMapOnly) for (const hash of enemyTextureHashes) {
+for (const hash of enemyTextureHashes) {
   const relative = `artwork/${hash}.webp`;
-  if (indexedAssets.has(relative)) continue;
+  if (indexedAssets.has(relative)) {
+    if (!publishedAssets.has(relative)) {
+      const existingOutput = path.join(dataRoot, 'artwork', `${hash}.webp`);
+      if (!fs.existsSync(existingOutput)) throw new Error(`Indexed but unpublished enemy artwork is missing locally: ${existingOutput}`);
+      newArtworkFiles.push(relative);
+    }
+    continue;
+  }
   const sourcePng = path.join(root, 'workspace', 'scenes', 'artwork', `${hash}.png`);
   if (!fs.existsSync(sourcePng)) throw new Error(`Missing authentic Silksong enemy atlas PNG: ${sourcePng}`);
   const png = fs.readFileSync(sourcePng);
@@ -209,7 +234,7 @@ if (!gauntletMapOnly) for (const hash of enemyTextureHashes) {
   indexedAssets.add(relative);
   newArtworkFiles.push(relative);
 }
-if (!gauntletMapOnly && newArtworkFiles.length) {
+if (newArtworkFiles.length) {
   assetIndex.images.sort((a, b) => a.file.localeCompare(b.file));
   assetIndex.imageCount = assetIndex.images.length;
   fs.writeFileSync(assetIndexPath, zlib.gzipSync(Buffer.from(JSON.stringify(assetIndex)), { level: 9 }));
@@ -224,9 +249,6 @@ changedFiles.push(navigationFile);
 
 // The portal map is a small index. Keep per-instance enemy placement and
 // sprite geometry in room sidecars so the initial map request stays lightweight.
-const gauntletCatalogPath = path.join(root, 'workspace', 'gauntlet-song', 'export', 'gauntlet-catalog.json');
-if (!fs.existsSync(gauntletCatalogPath)) throw new Error('GauntletSong catalog is missing. Run Build-GauntletSongCatalog.js first.');
-const gauntletCatalog = readJson(gauntletCatalogPath);
 if (gauntletCatalog.format !== 'silksong-gauntletsong-catalog' || gauntletCatalog.formatVersion !== 2) {
   throw new Error('GauntletSong catalog format is not the compact hosted format.');
 }
@@ -237,8 +259,6 @@ fs.mkdirSync(path.dirname(gauntletCatalogDestination), { recursive: true });
 fs.writeFileSync(gauntletCatalogDestination, zlib.gzipSync(Buffer.from(JSON.stringify(gauntletCatalog)), { level: 9 }));
 changedFiles.push(gauntletCatalogRelative);
 const unique = [...new Set(changedFiles)].sort();
-const releaseIndexPath = path.join(root, 'HostedAtlas', 'site', 'release-assets.json');
-const releaseIndex = readJson(releaseIndexPath);
 const versionTags = Object.values(releaseIndex.assets || {}).map(asset => String(asset.tag || '')).map(tag => /^silksong-atlas-data-v2-(\d{3})$/.exec(tag)).filter(Boolean);
 const nextVersion = Math.max(0, ...versionTags.map(match => Number(match[1]))) + 1;
 const delta = { releaseTag: `silksong-atlas-data-v2-${String(nextVersion).padStart(3, '0')}`, repository: releaseIndex.repository || 'memeem27/silksong-room-atlas',

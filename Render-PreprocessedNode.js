@@ -108,7 +108,7 @@ function makeRendererContext(source, { inactive, colors, disabledRenderers }) {
     'spritePassesFilters', 'meshPassesFilters', 'isGeneratedCollisionTileMesh', 'visibleSpriteBounds',
     'nativeArtworkPixelsPerUnit', 'spriteLocalGeometry', 'spriteWorldMatrix', 'drawArtworkLayer',
     'getTintedSpriteCrop', 'drawTexturedMesh', 'canvasBlendMode', 'isScreenEffect', 'isSceneBorderArtwork',
-    'isLightingArtwork', 'textureHashFromUrl', 'waitForDecodedImage', 'batchRenderInactiveEnabled',
+    'isLightingArtwork', 'isSafeAmbientLightingArtwork', 'textureHashFromUrl', 'waitForDecodedImage', 'batchRenderInactiveEnabled',
     'batchRendererColorsEnabled', 'batchIncludeDisabledRenderersEnabled', 'encodePngChunk', 'renderBatchScenePngTiled', 'renderBatchScene',
     'batchFilteredEffectSummary'
   ];
@@ -386,6 +386,7 @@ async function main() {
         disabledRenderersIncluded: options.disabledRenderers,
         nativeResolutionDensityBasis: options.inactive ? 'active room renderers; progression-hidden artwork is drawn at the same density' : 'selected active-state room renderers',
         rendererColorsApplied: options.colors, backgroundArtworkIncluded: true,
+        lightingRendererArtworkIncluded: true, safeAmbientLightingIncluded: true,
         shaderDrivenLightingIncluded: false, runtimeLightingSimulation: false,
         viewerAnnotations: false, architectModAssets: false, architectPlacementMetadataIncluded: true,
         png: 'native texture density; full-resolution PNGs with optional bounded-size reader previews'

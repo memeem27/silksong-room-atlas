@@ -846,7 +846,8 @@ function spritePassesFilters(object, sprite, includeScreenEffects = false, gameA
     // Shader-driven light/fog sprites are masks or intensity textures in the
     // bundle. Drawing them as ordinary RGBA artwork creates the large gray and
     // red discs seen in some rooms (for example lava haze in Bone Town).
-    if (!includeScreenEffects && (isScreenEffect(object, sprite) || isLightingArtwork(object, sprite))) return false;
+    if (!includeScreenEffects && (isScreenEffect(object, sprite) ||
+        (isLightingArtwork(object, sprite) && !isSafeAmbientLightingArtwork(object, sprite)))) return false;
     return Boolean(isGameBundleTexture(sprite.imageUrl) && sprite.rectWidth && sprite.rectHeight);
   }
   if (object.sortingGroup?.enabled && state.hiddenSortingLayers.has(Number(object.sortingGroup.sortingLayerId) || 0)) return false;
@@ -2410,6 +2411,7 @@ function drawArtworkLayer(ctx, objects, toCanvas, scale, includeScreenEffects = 
     const rotated = sprite.packingRotation === 4, geometry = spriteLocalGeometry(sprite);
     const { width, height } = geometry;
     const useRendererColor = gameArtworkOnly ? batchRendererColorsEnabled() : byId('applyRendererColors').checked;
+    const useRendererAlpha = useRendererColor || (gameArtworkOnly && isSafeAmbientLightingArtwork(object, sprite));
     const tintR = Math.max(0, Math.min(1, (useRendererColor ? sprite.tintR ?? 1 : 1) * (sprite.materialTintR ?? 1)));
     const tintG = Math.max(0, Math.min(1, (useRendererColor ? sprite.tintG ?? 1 : 1) * (sprite.materialTintG ?? 1)));
     const tintB = Math.max(0, Math.min(1, (useRendererColor ? sprite.tintB ?? 1 : 1) * (sprite.materialTintB ?? 1)));
@@ -2417,7 +2419,7 @@ function drawArtworkLayer(ctx, objects, toCanvas, scale, includeScreenEffects = 
     const coloredTint = Math.max(tintR, tintG, tintB) - Math.min(tintR, tintG, tintB) > 0.005;
     const tintedCrop = coloredTint ? getTintedSpriteCrop(sprite, image, tintR, tintG, tintB) : null;
     ctx.save();
-    ctx.globalAlpha = Math.max(0, Math.min(1, (useRendererColor ? sprite.tintA ?? 1 : 1) * (sprite.materialTintA ?? 1)));
+    ctx.globalAlpha = Math.max(0, Math.min(1, (useRendererAlpha ? sprite.tintA ?? 1 : 1) * (sprite.materialTintA ?? 1)));
     ctx.globalCompositeOperation = canvasBlendMode(sprite.blendMode);
     const matrix = spriteWorldMatrix(sprite);
     ctx.filter = useRendererColor && !tintedCrop ? `brightness(${tint})` : 'none'; ctx.translate(point.x, point.y);
@@ -2587,6 +2589,28 @@ function isLightingArtwork(object, artwork) {
     .replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
   return name.includes('light effect') || name.includes('white light') || name.includes('light beam') ||
     name.includes('water fog') || /\b(light|fog|haze|glow)\b/.test(name);
+}
+
+function isSafeAmbientLightingArtwork(object, artwork) {
+  // `white_light` is a grayscale shader mask in most contexts. Only retain the
+  // verified, active ambient Light sprite when it uses a neutral tint, normal
+  // blending, a low serialized alpha, and a near-round world scale. This keeps
+  // the soft room glow while excluding haze, beams, flashes, and shader inputs.
+  if (String(object?.name || '').trim().toLowerCase() !== 'light' ||
+      String(artwork?.name || '').trim().toLowerCase() !== 'white_light' ||
+      !objectIsActive(object) || artwork.rendererEnabled === false || artwork.blendMode !== 'normal') return false;
+  const alpha = Number(artwork.tintA ?? 1), materialAlpha = Number(artwork.materialTintA ?? 1);
+  if (!Number.isFinite(alpha) || alpha <= 0 || alpha > 0.2 || !Number.isFinite(materialAlpha) || materialAlpha <= 0 || materialAlpha > 1) return false;
+  const neutral = values => {
+    const channels = values.map(value => Number(value ?? 1));
+    return channels.every(value => Number.isFinite(value) && value >= 0.95 && value <= 1.05) &&
+      Math.max(...channels) - Math.min(...channels) <= 0.03;
+  };
+  if (!neutral([artwork.tintR, artwork.tintG, artwork.tintB]) ||
+      !neutral([artwork.materialTintR, artwork.materialTintG, artwork.materialTintB])) return false;
+  const scaleX = Math.abs(Number(artwork.worldScaleX)), scaleY = Math.abs(Number(artwork.worldScaleY));
+  return Number.isFinite(scaleX) && Number.isFinite(scaleY) && scaleX > 0 && scaleY > 0 &&
+    Math.max(scaleX, scaleY) / Math.min(scaleX, scaleY) <= 1.15;
 }
 
 function isBackgroundArtwork(object, artwork) {
@@ -3109,16 +3133,18 @@ function buildBatchArchitectMetadata(scene, render) {
 }
 
 function batchFilteredEffectSummary(objects) {
-  const summary = { screenEffectRendererCount: 0, lightingFogRendererCount: 0, examples: [] };
+  const summary = { screenEffectRendererCount: 0, lightingFogRendererCount: 0, safeAmbientLightRendererCount: 0, examples: [] };
   for (const object of objects) {
     if ((!batchRenderInactiveEnabled() && !objectIsActive(object)) || manualVisibilityFor(object) === 'hide' ||
         (object.sortingGroup?.enabled && object.sortingGroup.sortingLayerKnown === false)) continue;
     for (const artwork of [...(object.sprites || []), ...(object.meshes || [])]) {
       if ((artwork.rendererEnabled === false && !batchIncludeDisabledRenderersEnabled()) || artwork.sortingLayerKnown === false ||
           !isGameBundleTexture(artwork.imageUrl) || artwork.blendMode === 'destination' || isSceneBorderArtwork(artwork)) continue;
-      const effect = isScreenEffect(object, artwork) ? 'screen' : isLightingArtwork(object, artwork) ? 'lightingFog' : null;
+      const effect = isScreenEffect(object, artwork) ? 'screen' : isLightingArtwork(object, artwork)
+        ? isSafeAmbientLightingArtwork(object, artwork) ? 'safeAmbientLight' : 'lightingFog' : null;
       if (!effect) continue;
       if (effect === 'screen') summary.screenEffectRendererCount++;
+      else if (effect === 'safeAmbientLight') summary.safeAmbientLightRendererCount++;
       else summary.lightingFogRendererCount++;
       if (summary.examples.length < 24) summary.examples.push({ objectName: object.name || '', artworkName: artwork.name || '', category: effect });
     }
@@ -3129,6 +3155,8 @@ function batchFilteredEffectSummary(objects) {
 function buildBatchRoomMetadata(scene, entry, outputName, render, status, error = null) {
   const objects = scene.objects || [];
   const architectScene = architectSceneForCurrentRoom();
+  const filteredEffectRenderers = batchFilteredEffectSummary(objects);
+  const safeAmbientLightingIncluded = filteredEffectRenderers.safeAmbientLightRendererCount > 0;
   const imageFile = render?.blob ? `images/${outputName}.png` : null;
   const roomObjects = objects.map(object => {
     const { sprites = [], meshes = [], colliders = [], ...base } = object;
@@ -3184,14 +3212,19 @@ function buildBatchRoomMetadata(scene, entry, outputName, render, status, error 
       normalWorldBranchesIncluded: state.batchDefaultStateOverrides.size > 0,
       gameBundleTexturesOnly: true, screenEffectsIncluded: render?.screenEffectsIncluded ?? false,
       rendererColorsApplied: render?.rendererColorsApplied ?? false,
-      shaderDrivenLightingIncluded: false, shaderDrivenMaskArtworkIncluded: false, viewerAnnotations: false,
+      lightingRendererArtworkIncluded: safeAmbientLightingIncluded || Boolean(render?.screenEffectsIncluded),
+      safeAmbientLightingIncluded,
+      shaderDrivenLightingIncluded: Boolean(render?.screenEffectsIncluded),
+      shaderDrivenMaskArtworkIncluded: Boolean(render?.screenEffectsIncluded), viewerAnnotations: false,
       architectModAssets: false, runtimeLightingSimulation: false, eligibleRendererCount: render?.rendererCount || 0,
       textureCount: render?.textureCount || 0, missingTextureSha256: render?.missingTextures || [],
-      filteredEffectRenderers: batchFilteredEffectSummary(objects),
+      filteredEffectRenderers,
       sorting: 'Unity sorting group, layer, order, and depth sequence; unresolved layer mappings are excluded',
       excluded: [...(batchRenderInactiveEnabled() ? [] : ['inactive objects outside selected Normal World branches', 'disabled renderers']),
         'generated collision-only tile chunk meshes', 'destination blend renderers',
-        ...(render?.screenEffectsIncluded ? [] : ['shader-driven mask/light/fog effects']),
+        ...(render?.screenEffectsIncluded ? [] : [safeAmbientLightingIncluded
+          ? 'shader-driven masks, beams, haze, and fog effects; only verified neutral low-alpha ambient Light sprites are retained'
+          : 'shader-driven mask/light/fog effects']),
         ...(batchRenderInactiveEnabled() ? ['inactive artwork outside active room bounds'] : []), 'non-bundle textures']
     },
     counts: { objectCount: objects.length, ...counts },
@@ -3255,7 +3288,8 @@ function exportReadme() {
     `Large rooms are rasterized in tiles and may include a smaller -preview.png for the reader; the sidecar records both paths and dimensions. ` +
     `Viewer markers, grid, captured screenshots, Architect images, and other external images are excluded from the PNGs. ` +
     `Generated collision-only tile meshes, destination-blend renderers, unresolved sorting layers, and shader-driven screen masks or lighting effects are excluded. ` +
-    `Lighting and background renderer textures from the bundles are included. The viewer does not execute Unity's dynamic lighting, ` +
+    `Verified active, neutral, low-alpha ambient Light sprites and background renderer textures from the bundles are included; ` +
+    `shader-driven masks, beams, haze, and fog remain excluded. The viewer does not execute Unity's dynamic lighting, ` +
     `event scripts, or shaders; authored camera-section exports retain their active camera view.\n\n` +
     `rooms/ contains one JSON sidecar per indexed scene. Each sidecar includes Unity object hierarchy, world coordinates, ` +
     `components, collider points, enemy/spawn/check candidate flags, sprite and mesh sorting details, mesh geometry, and source texture SHA-256 references. ` +
@@ -3581,7 +3615,8 @@ async function exportAllRooms(serverOutput = false) {
               ? 'active room renderers; progression-hidden artwork is drawn at the same density'
               : 'selected active-state room renderers',
             normalWorldBranchesIncluded: state.batchDefaultStateOverrides.size > 0, rendererColorsApplied: batchRendererColorsEnabled(), screenEffectsIncluded: includeScreenEffects,
-            backgroundArtworkIncluded: true, lightingRendererArtworkIncluded: includeScreenEffects, shaderDrivenLightingIncluded: includeScreenEffects, runtimeLightingSimulation: false,
+            backgroundArtworkIncluded: true, lightingRendererArtworkIncluded: true, safeAmbientLightingIncluded: true,
+            shaderDrivenLightingIncluded: includeScreenEffects, runtimeLightingSimulation: false,
             viewerAnnotations: false, architectModAssets: false, architectPlacementMetadataIncluded: state.architectScenes.size > 0 },
           navigation, rooms
         };
@@ -3606,7 +3641,8 @@ async function exportAllRooms(serverOutput = false) {
           ? 'active room renderers; progression-hidden artwork is drawn at the same density'
           : 'selected active-state room renderers',
         normalWorldBranchesIncluded: state.batchDefaultStateOverrides.size > 0, rendererColorsApplied: batchRendererColorsEnabled(), screenEffectsIncluded: includeScreenEffects,
-        backgroundArtworkIncluded: true, lightingRendererArtworkIncluded: includeScreenEffects, shaderDrivenLightingIncluded: includeScreenEffects, runtimeLightingSimulation: false,
+        backgroundArtworkIncluded: true, lightingRendererArtworkIncluded: true, safeAmbientLightingIncluded: true,
+        shaderDrivenLightingIncluded: includeScreenEffects, runtimeLightingSimulation: false,
         viewerAnnotations: false, architectModAssets: false, architectPlacementMetadataIncluded: state.architectScenes.size > 0,
         png: 'transparent RGBA at native bundle texture density; oversized rooms are tiled and a smaller preview is included for the reader' },
       navigation,

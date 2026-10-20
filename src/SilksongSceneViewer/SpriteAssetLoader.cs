@@ -47,9 +47,9 @@ internal sealed class SpriteAssetLoader {
     private readonly object _indexLock = new();
     private readonly object _namedSpriteIndexLock = new();
     private NamedSpriteIndexCache? _namedSpriteIndex;
-    private IndexedSpriteName[]? _rockRollerIdleSprites;
-    private string _rockRollerIdleBundlePath = "";
-    private long _rockRollerIdleBundleTicks;
+    private IndexedSpriteName[]? _bone01RockRollerSprites;
+    private string _bone01RockRollerScenePath = "";
+    private long _bone01RockRollerSceneTicks;
 
     public SpriteAssetLoader(IEnumerable<string> assetDirectories, string packageDirectory,
         Func<string> sceneBundleDirectory) {
@@ -194,14 +194,22 @@ internal sealed class SpriteAssetLoader {
             }
         }
 
-        if (requested.Any(name => name is "boneroller" or "rockroller")) {
-            var sceneSprites = GetRockRollerIdleSprites(cancellationToken, out var sceneBundleErrors);
+        if (requested.Any(name => aliases[name].Any(alias =>
+                alias.StartsWith("rridle", StringComparison.Ordinal) ||
+                alias.StartsWith("rrantic", StringComparison.Ordinal)))) {
+            // Some Rock Roller frames, including the upright Flintbeetle pose,
+            // are referenced by the Bone 01 scene sidecar rather than the
+            // animation bundle's Sprite table. Include those source-backed
+            // references so the existing aliases can resolve the actual game art.
+            var sceneSprites = GetBone01RockRollerSprites(cancellationToken, out var sceneBundleErrors);
             bundleErrors += sceneBundleErrors;
-            foreach (var sprite in sceneSprites) {
+            foreach (var target in requested.Where(name => aliases[name].Any(alias =>
+                         alias.StartsWith("rridle", StringComparison.Ordinal) ||
+                         alias.StartsWith("rrantic", StringComparison.Ordinal)))) {
                 cancellationToken.ThrowIfCancellationRequested();
-                foreach (var target in requested.Where(name => name is "boneroller" or "rockroller")) {
-                    // When a real idle frame and journal portrait both match,
-                    // prefer the scene frame even if their normalized scores tie.
+                foreach (var sprite in sceneSprites) {
+                    // Prefer the room's serialized scene frame over a smaller
+                    // journal portrait when both names match the same enemy.
                     var score = SpriteNameMatchScore(sprite.NormalizedName, aliases[target]) + 1;
                     if (score == 0 || (candidates.TryGetValue(target, out var previous) && previous.Score >= score)) continue;
                     candidates[target] = (score, target, sprite.SpriteName, sprite.SourceBundle,
@@ -230,36 +238,38 @@ internal sealed class SpriteAssetLoader {
         return new(result, scannedBundles, bundleErrors);
     }
 
-    private IndexedSpriteName[] GetRockRollerIdleSprites(CancellationToken cancellationToken,
+    private IndexedSpriteName[] GetBone01RockRollerSprites(CancellationToken cancellationToken,
         out int bundleErrors) {
         bundleErrors = 0;
         var scenePath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(_assetOutputDirectory)!, "bone_01.json"));
         if (!File.Exists(scenePath)) return [];
         var stamp = new FileInfo(scenePath);
         lock (_namedSpriteIndexLock) {
-            if (_rockRollerIdleSprites is not null &&
-                string.Equals(_rockRollerIdleBundlePath, scenePath, StringComparison.OrdinalIgnoreCase) &&
-                _rockRollerIdleBundleTicks == stamp.LastWriteTimeUtc.Ticks)
-                return _rockRollerIdleSprites;
+            if (_bone01RockRollerSprites is not null &&
+                string.Equals(_bone01RockRollerScenePath, scenePath, StringComparison.OrdinalIgnoreCase) &&
+                _bone01RockRollerSceneTicks == stamp.LastWriteTimeUtc.Ticks)
+                return _bone01RockRollerSprites;
 
             try {
                 cancellationToken.ThrowIfCancellationRequested();
                 using var stream = File.OpenRead(scenePath);
                 var package = JsonSerializer.Deserialize<ScenePackage>(stream,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                var sourceBundle = string.IsNullOrWhiteSpace(package?.SourceBundle)
+                    ? "bone_01.json" : Path.GetFileName(package.SourceBundle);
                 var sprites = (package?.Objects ?? [])
                     .SelectMany(sceneObject => sceneObject.Sprites ?? [])
                     .Where(sprite => System.Text.RegularExpressions.Regex.IsMatch(
-                        NormalizeSpriteName(sprite.Name), @"^rridle\d{4}$"))
+                        NormalizeSpriteName(sprite.Name), @"^rr(?:idle|antic)\d{4}$"))
                     .Select(sprite => new IndexedSpriteName(NormalizeSpriteName(sprite.Name), sprite.Name,
-                        "animations_assets_areabone.bundle", sprite.PathId, sprite.ExternalPath))
+                        sourceBundle, sprite.PathId, sprite.ExternalPath))
                     .DistinctBy(sprite => (sprite.NormalizedName, sprite.PathId, sprite.ExternalPath))
                     .OrderBy(sprite => sprite.NormalizedName, StringComparer.Ordinal)
                     .ToArray();
-                _rockRollerIdleSprites = sprites;
-                _rockRollerIdleBundlePath = scenePath;
-                _rockRollerIdleBundleTicks = stamp.LastWriteTimeUtc.Ticks;
-                return _rockRollerIdleSprites;
+                _bone01RockRollerSprites = sprites;
+                _bone01RockRollerScenePath = scenePath;
+                _bone01RockRollerSceneTicks = stamp.LastWriteTimeUtc.Ticks;
+                return _bone01RockRollerSprites;
             } catch {
                 bundleErrors++;
                 return [];
