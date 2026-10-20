@@ -5,7 +5,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $delta = Get-Content -LiteralPath $DeltaPath -Raw | ConvertFrom-Json
-$releaseIndex = Get-Content -LiteralPath $ReleaseIndexPath -Raw | ConvertFrom-Json
+$releaseIndex = [IO.File]::ReadAllText($ReleaseIndexPath, [Text.Encoding]::UTF8) | ConvertFrom-Json
 $repository = [string]$delta.repository
 $tag = [string]$delta.releaseTag
 $dataRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot 'HostedAtlas\r2-data'))
@@ -24,26 +24,41 @@ foreach ($relative in $changed) {
     $files.Add($fullPath)
 }
 
+function Invoke-GhQuietly([string[]]$Arguments) {
+    $previousPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        & gh @Arguments 2>$null | Out-Null
+        return [int]$LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $previousPreference
+    }
+}
+
 gh auth status | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'GitHub CLI authentication is unavailable.' }
-gh release view $tag --repo $repository 2>$null | Out-Null
-if ($LASTEXITCODE -ne 0) {
-    gh release create $tag --repo $repository --title $tag --notes 'Incremental clean room renders and metadata for the hosted Silksong room atlas.'
-    if ($LASTEXITCODE -ne 0) { throw "Could not create GitHub release $tag." }
+$releaseViewExit = Invoke-GhQuietly -Arguments @('release', 'view', $tag, '--repo', $repository)
+if ($releaseViewExit -ne 0) {
+    $createExit = Invoke-GhQuietly -Arguments @('release', 'create', $tag, '--repo', $repository, '--title', $tag, '--notes', 'Incremental clean room renders and metadata for the hosted Silksong room atlas.')
+    if ($createExit -ne 0) { throw "Could not create GitHub release $tag." }
 }
 
 for ($offset = 0; $offset -lt $files.Count; $offset += 35) {
     $end = [Math]::Min($offset + 35, $files.Count)
     $batch = @($files.GetRange($offset, $end - $offset))
-    & gh release upload $tag @batch --repo $repository --clobber
-    if ($LASTEXITCODE -ne 0) { throw "Upload failed for delta files $($offset + 1)-$end of $($files.Count)." }
+    $uploadArguments = @('release', 'upload', $tag) + $batch + @('--repo', $repository, '--clobber')
+    $uploadExit = Invoke-GhQuietly -Arguments $uploadArguments
+    if ($uploadExit -ne 0) { throw "Upload failed for delta files $($offset + 1)-$end of $($files.Count)." }
     Write-Output "Uploaded release assets $($offset + 1)-$end of $($files.Count)."
 }
 
 foreach ($relative in $changed) {
     $key = ([string]$relative).Replace('\', '/')
     $name = [IO.Path]::GetFileName($key)
-    $releaseIndex.assets | Add-Member -NotePropertyName $key -NotePropertyValue ([pscustomobject]@{ tag = $tag; name = $name }) -Force
+    $entry = [pscustomobject]@{ tag = $tag; name = $name }
+    $existingAsset = $releaseIndex.assets.PSObject.Properties[$key]
+    if ($existingAsset) { $existingAsset.Value = $entry }
+    else { $releaseIndex.assets | Add-Member -NotePropertyName $key -NotePropertyValue $entry }
 }
 foreach ($relative in @($delta.removedFiles)) {
     $key = ([string]$relative).Replace('\', '/')
@@ -55,3 +70,33 @@ $releaseIndex.releaseCount = @($assetProperties | ForEach-Object { [string]$_.Va
 $json = ConvertTo-Json -InputObject $releaseIndex -Depth 12
 [IO.File]::WriteAllText([IO.Path]::GetFullPath($ReleaseIndexPath), $json, [Text.UTF8Encoding]::new($false))
 Write-Output "Updated $ReleaseIndexPath to use $tag for $($changed.Count) changed assets."
+
+$hostConfigPath = Join-Path $PSScriptRoot 'HostedAtlas\site\host-config.js'
+$hostConfig = [IO.File]::ReadAllText($hostConfigPath, [Text.Encoding]::UTF8)
+$versionLine = "window.SILKSONG_ATLAS_DATA_VERSION = '$tag';"
+if ($hostConfig -match '(?m)^window\.SILKSONG_ATLAS_DATA_VERSION\s*=') {
+    $hostConfig = [regex]::Replace($hostConfig, '(?m)^window\.SILKSONG_ATLAS_DATA_VERSION\s*=\s*[^;]+;', $versionLine)
+} else {
+    $hostConfig = $hostConfig.TrimEnd() + "`n$versionLine`n"
+}
+[IO.File]::WriteAllText([IO.Path]::GetFullPath($hostConfigPath), $hostConfig, [Text.UTF8Encoding]::new($false))
+Write-Output "Updated hosted data cache-buster in $hostConfigPath to $tag."
+
+$indexPath = Join-Path $PSScriptRoot 'HostedAtlas\site\index.html'
+$indexHtml = [IO.File]::ReadAllText($indexPath, [Text.Encoding]::UTF8)
+$versionedConfig = "./host-config.js?v=$tag"
+if ($indexHtml -notmatch '(?m)host-config\.js') { throw "The host-config.js script tag was not found in $indexPath." }
+$indexHtml = [regex]::Replace($indexHtml, '(<script src=")([.]/host-config\.js)(?:\?v=[^"]*)?("></script>)', ('$1' + $versionedConfig + '$3'))
+[IO.File]::WriteAllText([IO.Path]::GetFullPath($indexPath), $indexHtml, [Text.UTF8Encoding]::new($false))
+Write-Output "Updated host-config script URL in $indexPath to $tag."
+
+$indexTemporaryPath = [IO.Path]::GetTempFileName()
+try {
+    $compactJson = ConvertTo-Json -InputObject $releaseIndex -Depth 12 -Compress
+    [IO.File]::WriteAllText($indexTemporaryPath, $compactJson, [Text.UTF8Encoding]::new($false))
+    $nodeScript = "const fs=require('node:fs');const source=process.argv[1];const target=process.argv[2];const data=JSON.parse(fs.readFileSync(source,'utf8'));fs.writeFileSync(target,JSON.stringify(data,null,2)+'\n');"
+    & node -e $nodeScript $indexTemporaryPath ([IO.Path]::GetFullPath($ReleaseIndexPath))
+    if ($LASTEXITCODE -ne 0) { throw 'Could not serialize the hosted release index.' }
+} finally {
+    Remove-Item -LiteralPath $indexTemporaryPath -Force -ErrorAction SilentlyContinue
+}

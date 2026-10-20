@@ -1,8 +1,8 @@
 Silksong GauntletSong Atlas data export completed
 
 Data folder: D:\SSrip\SceneViewer\HostedAtlas\r2-data
-Room images: 577 clean composite renders plus 0 optional preview images. Camera-area metadata covers 4176 sections across 474 rooms; 0 separate camera images are included (353 capped for browser-safe dimensions). 7 oversized full-room images are retained as PNG and the rest converted to lossless WebP.
+Room images: 575 clean composite renders plus 0 optional preview images. Camera-area metadata covers 4176 sections across 474 rooms; 0 separate camera images are included (353 capped for browser-safe dimensions). 7 oversized full-room images are retained as PNG and the rest converted to lossless WebP. Sixteen rooms were refreshed in v2-005 to remove unclassified enemy actors and enemy-only animation sprites while retaining their marker metadata.
 Unique bundle-derived artwork atlases: 926, included once each for enemy sprite overlays.
-Image files: 1505 total (1498 WebP, 7 PNG); compressed JSON metadata/index files: 593.
-Prepared data size: 5.59 GiB.
+Image files: 1503 total (1496 WebP, 7 PNG); compressed JSON metadata/index files: 593.
+Prepared data size: 5.58 GiB.
 The room image assets contain only the clean preprocessed game artwork. Enemy, spawn/check, and Architect/GauntletSong markers are stored in metadata and must be drawn by the viewer. Camera-area choices crop from the full-room image when separate camera images are omitted.

@@ -4,6 +4,7 @@ const DATA_BASE = String(window.SILKSONG_ATLAS_DATA_BASE || '/atlas-data/').repl
 const ARTWORK_BASE = String(window.SILKSONG_ATLAS_ARTWORK_BASE || '/api/artwork/').replace(/\/?$/, '/');
 const ARTWORK_EXTENSION = String(window.SILKSONG_ATLAS_ARTWORK_EXTENSION || 'png').replace(/^\./, '');
 const GZIP_JSON = Boolean(window.SILKSONG_ATLAS_GZIP_JSON);
+const DATA_VERSION = String(window.SILKSONG_ATLAS_DATA_VERSION || '').trim();
 const MAX_MAP_ZOOM = 64;
 const state = { manifest: null, navigation: null, mode: 'world', area: null, room: null, roomMeta: null,
   roomImage: null, roomViewImage: null, wideImage: null, detailImage: null, imageCache: new Map(), atlasCache: new Map(),
@@ -43,7 +44,11 @@ function esc(value) { return String(value ?? '').replace(/[&<>"']/g, ch => ({'&'
 function cleanLabel(value) { return String(value ?? '').replaceAll('Ã‚Â·','·').replaceAll('Â·','·'); }
 function labelCase(value) { return String(value || '').replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[_-]+/g,' ').trim(); }
 function fileBase(value) { return String(value || '').replace(/\.bundle$/i, ''); }
-function mapByFile(file) { return file ? `${DATA_BASE}${String(file).replace(/^\/+/, '')}` : ''; }
+function mapByFile(file) {
+  if (!file) return '';
+  const url = `${DATA_BASE}${String(file).replace(/^\/+/, '')}`;
+  return DATA_VERSION ? `${url}?v=${encodeURIComponent(DATA_VERSION)}` : url;
+}
 async function loadJson(file) {
   const response = await fetch(mapByFile(`${file}${GZIP_JSON ? '.gz' : ''}`), { cache: 'no-cache' });
   if (!response.ok) throw new Error(`Could not load ${file} (${response.status}).`);

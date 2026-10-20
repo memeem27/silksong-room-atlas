@@ -615,10 +615,29 @@ function renderObjectTree() {
 }
 
 function classifyObject(object) {
-  const enemy = matchComponents(object, componentTerms.enemy);
+  const enemy = matchComponents(object, componentTerms.enemy) || isKnownEnemyActorName(object?.name);
   const spawn = matchComponents(object, componentTerms.spawn);
   const check = matchComponents(object, componentTerms.check);
   return { enemy, spawn, check };
+}
+
+function normalizeSceneArtworkName(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+}
+
+function isKnownEnemyActorName(value) {
+  const name = normalizeSceneArtworkName(value);
+  // Some scene-bundle enemy prefabs expose only a Transform and SpriteRenderer
+  // (for example Rock Roller Scene's Bone_Goomba_Large0013), so component
+  // classification alone misses them.
+  return /(?:^|_)bone_goomba(?:_large\d*)?(?:_\d+)?$/.test(name);
+}
+
+function isKnownEnemyArtworkName(value) {
+  const name = normalizeSceneArtworkName(value);
+  return /(?:^|_)bone_goomba(?:_|$)/.test(name) ||
+    /(?:^|_)goomba_mask_chunk(?:_|$)/.test(name) ||
+    /^(?:bgl|bg)_appear_burst\d*$/.test(name);
 }
 
 function isGameBundleTexture(url) {
@@ -681,7 +700,9 @@ function isEnemyArtworkObject(object) {
   const seen = new Set();
   while (current && !seen.has(current.id)) {
     seen.add(current.id);
-    if (current.classification?.enemy === true) return true;
+    if (current.classification?.enemy === true || isKnownEnemyActorName(current.name) ||
+        isKnownEnemyArtworkName(current.name) ||
+        [...(current.sprites || []), ...(current.meshes || [])].some(artwork => isKnownEnemyArtworkName(artwork.name))) return true;
     current = state.objectById.get(current.parentId);
   }
   return false;

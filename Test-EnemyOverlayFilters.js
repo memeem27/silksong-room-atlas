@@ -32,11 +32,14 @@ function extractFunction(source, name) {
 const rendererPath = path.join(root, 'src', 'SilksongSceneViewer', 'wwwroot', 'app.js');
 const rendererSource = fs.readFileSync(rendererPath, 'utf8');
 const rendererFunctions = [
-  'isEnemyArtworkObject', 'spritePassesFilters', 'meshPassesFilters'
+  'normalizeSceneArtworkName', 'isKnownEnemyActorName', 'isKnownEnemyArtworkName',
+  'isEnemyArtworkObject', 'classifyObject', 'spritePassesFilters', 'meshPassesFilters'
 ].map(name => extractFunction(rendererSource, name)).join('\n');
 const state = { batchRendering: true, objectById: new Map(), objectVisibilityOverrides: new Map() };
 const context = vm.createContext({
   state,
+  componentTerms: { enemy: [], spawn: [], check: [] },
+  matchComponents: () => false,
   manualVisibilityFor: () => 'auto',
   batchRenderInactiveEnabled: () => false,
   batchIncludeDisabledRenderersEnabled: () => false,
@@ -47,7 +50,7 @@ const context = vm.createContext({
   isGameBundleTexture: () => true,
   isGeneratedCollisionTileMesh: () => false
 });
-vm.runInContext(`${rendererFunctions}\nglobalThis.filters = { isEnemyArtworkObject, spritePassesFilters, meshPassesFilters };`, context);
+vm.runInContext(`${rendererFunctions}\nglobalThis.filters = { isEnemyArtworkObject, classifyObject, spritePassesFilters, meshPassesFilters };`, context);
 
 const enemyRoot = { id: 'enemy', parentId: null, classification: { enemy: true } };
 const enemyChild = { id: 'enemy-renderer', parentId: enemyRoot.id, classification: { enemy: false } };
@@ -61,6 +64,23 @@ assert.equal(context.filters.meshPassesFilters(enemyChild, mesh, false, true), f
   'enemy child meshes must be omitted from clean batch room images');
 assert.equal(context.filters.spritePassesFilters(roomProp, sprite, false, true), true,
   'ordinary room artwork must remain in clean batch room images');
+
+const missedBoneGoomba = { id: 'unclassified-goomba', name: 'Bone_Goomba_Large0013', parentId: null,
+  classification: { enemy: false }, sprites: [{ name: 'Bone_Goomba_Large0013' }] };
+const goombaDeathEffect = { id: 'goomba-effect', name: 'bone_goomba_skull_break', parentId: null,
+  classification: { enemy: false }, sprites: [{ name: 'BG_appear_burst0000' }] };
+const boneDecoration = { id: 'bone-decoration', name: 'Bone_Skull_pile', parentId: null,
+  classification: { enemy: false }, sprites: [{ name: 'Bone_Skull_pile' }] };
+state.objectById = new Map([[missedBoneGoomba.id, missedBoneGoomba], [goombaDeathEffect.id, goombaDeathEffect],
+  [boneDecoration.id, boneDecoration]]);
+assert.equal(context.filters.spritePassesFilters(missedBoneGoomba, sprite, false, true), false,
+  'unclassified enemy actors must not be baked into clean room images');
+assert.equal(context.filters.spritePassesFilters(goombaDeathEffect, sprite, false, true), false,
+  'enemy-specific animation effects must not be baked into clean room images');
+assert.equal(context.filters.spritePassesFilters(boneDecoration, sprite, false, true), true,
+  'enemy-themed bone scenery must remain in clean room images');
+assert.equal(context.filters.classifyObject(missedBoneGoomba).enemy, true,
+  'known enemy actors must receive enemy marker classification even without enemy components');
 state.batchRendering = false;
 assert.equal(context.filters.spritePassesFilters(enemyChild, sprite, false, true), true,
   'the filter must not alter the interactive scene renderer');
@@ -85,6 +105,15 @@ assert.equal(bone01.render?.enemyArtworkInBaseImage, false,
   'refreshed Bone 01 metadata must identify its clean base image as enemy-free');
 assert.ok((bone01.render?.excluded || []).includes('enemy object subtrees'),
   'refreshed Bone 01 metadata must document the excluded enemy subtree renderers');
+const missedBoneGoombaFixture = boneObjects.find(object => object.name === 'Bone_Goomba_Large0013');
+assert.ok(missedBoneGoombaFixture?.sprites?.length,
+  'Bone 01 fixture must retain the unclassified scene-bundle Goomba renderer for this regression');
+state.batchRendering = true;
+state.objectById = new Map(boneObjects.map(object => [object.id, object]));
+assert.equal(context.filters.spritePassesFilters(missedBoneGoombaFixture, missedBoneGoombaFixture.sprites[0], false, true), false,
+  'the real Bone 01 Rock Roller enemy sprite must not be baked into the clean image');
+assert.equal(context.filters.classifyObject(missedBoneGoombaFixture).enemy, true,
+  'the real Bone 01 Rock Roller enemy must have an enemy marker classification');
 
 const readerPath = path.join(root, 'HostedAtlas', 'site', 'reader.js');
 const readerSource = fs.readFileSync(readerPath, 'utf8');
@@ -117,6 +146,7 @@ console.log(JSON.stringify({
   status: 'passed',
   bone01EnemyRendererObjects: bakedEnemyRenderers.length,
   verified: ['batch enemy sprites omitted', 'batch enemy meshes omitted', 'room props retained',
-    'interactive renderer unchanged', 'gauntlet wrapper candidates deduplicated',
+    'interactive renderer unchanged', 'unclassified Goomba sprites and effects omitted',
+    'Bone 01 enemy marker classification repaired', 'gauntlet wrapper candidates deduplicated',
     'authentic enemy atlas match required', 'unmatched enemy art receives no substitute texture']
 }, null, 2));

@@ -100,7 +100,9 @@ function findFunction(source, name) {
 
 function makeRendererContext(source, { inactive, colors, disabledRenderers }) {
   const names = [
-    'isGameBundleTexture', 'objectIsActive', 'manualVisibilityFor', 'isEnemyArtworkObject', 'buildObjectStateIndex', 'setGroupOverride',
+    'isGameBundleTexture', 'objectIsActive', 'manualVisibilityFor', 'normalizeSceneArtworkName',
+    'isKnownEnemyArtworkName', 'isKnownEnemyActorName',
+    'isEnemyArtworkObject', 'buildObjectStateIndex', 'setGroupOverride',
     'spritePassesFilters', 'meshPassesFilters', 'isGeneratedCollisionTileMesh', 'visibleSpriteBounds',
     'nativeArtworkPixelsPerUnit', 'spriteLocalGeometry', 'spriteWorldMatrix', 'drawArtworkLayer',
     'getTintedSpriteCrop', 'drawTexturedMesh', 'canvasBlendMode', 'isScreenEffect', 'isSceneBorderArtwork',
@@ -139,7 +141,7 @@ function makeRendererContext(source, { inactive, colors, disabledRenderers }) {
     function loadSceneImage(url) { return state.images.get(url) || { complete: true, naturalWidth: 0, naturalHeight: 0 }; }
     globalThis.__state = state;
     globalThis.__helpers = {
-      buildObjectStateIndex, setGroupOverride, objectIsActive, renderBatchScene,
+      buildObjectStateIndex, setGroupOverride, objectIsActive, isKnownEnemyActorName, renderBatchScene,
       batchFilteredEffectSummary, batchRenderInactiveEnabled, batchRendererColorsEnabled, batchIncludeDisabledRenderersEnabled
     };
   `;
@@ -216,6 +218,8 @@ function refreshedMetadata(previous, scene, render, outputName, status, renderer
     const worldPosition = object.worldPosition || { x: 0, y: 0, z: 0 };
     return {
       ...oldObject, worldPosition,
+      classification: oldObject.classification?.enemy || renderer.helpers.isKnownEnemyActorName(object.name)
+        ? { ...(oldObject.classification || {}), enemy: true } : oldObject.classification,
       activeInRoom: renderer.helpers.objectIsActive(object),
       imagePixel: pointToImage(worldPosition, render),
       colliders: (oldObject.colliders || []).map(collider => ({
@@ -257,7 +261,8 @@ function refreshedMetadata(previous, scene, render, outputName, status, renderer
     excluded: [
       ...(!renderer.helpers.batchRenderInactiveEnabled() ? ['inactive objects outside selected Normal World branches'] : []),
       ...(!renderer.helpers.batchIncludeDisabledRenderersEnabled() ? ['disabled renderers'] : []),
-      'enemy object subtrees', 'generated collision-only tile chunk meshes', 'destination blend renderers',
+      'enemy object subtrees', 'known enemy actor sprites and enemy-only animation frames',
+      'generated collision-only tile chunk meshes', 'destination blend renderers',
       ...(!render.screenEffectsIncluded ? ['shader-driven mask/light/fog effects'] : []),
       ...(renderer.helpers.batchRenderInactiveEnabled() ? ['inactive artwork outside active room bounds'] : []), 'non-bundle textures'
     ]

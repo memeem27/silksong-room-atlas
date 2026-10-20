@@ -8,8 +8,13 @@ const { isDeepStrictEqual } = require('node:util');
 const root = __dirname;
 const sourceRoot = path.join(root, 'workspace', 'preprocessed');
 const dataRoot = path.join(root, 'HostedAtlas', 'r2-data');
-const manifest = JSON.parse(fs.readFileSync(path.join(sourceRoot, 'manifest.json'), 'utf8'));
-const hostedManifest = JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(dataRoot, 'manifest.json.gz'))));
+function parseJsonText(text) {
+  if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
+  return JSON.parse(text);
+}
+function readJson(file) { return parseJsonText(fs.readFileSync(file, 'utf8')); }
+const manifest = readJson(path.join(sourceRoot, 'manifest.json'));
+const hostedManifest = parseJsonText(zlib.gunzipSync(fs.readFileSync(path.join(dataRoot, 'manifest.json.gz'))).toString('utf8'));
 const assetIndexPath = path.join(dataRoot, 'asset-index.json.gz');
 const assetIndex = readGzipJson(assetIndexPath);
 const indexedAssets = new Set((assetIndex.images || []).map(asset => asset.file));
@@ -23,7 +28,7 @@ const changedRoomMetadata = [];
 const imagePlanArg = process.argv.indexOf('--rooms-from');
 if (imagePlanArg >= 0 && !process.argv[imagePlanArg + 1]) throw new Error('--rooms-from requires a JSON plan path.');
 const imagePlan = imagePlanArg >= 0
-  ? JSON.parse(fs.readFileSync(path.resolve(process.argv[imagePlanArg + 1]), 'utf8')) : null;
+  ? readJson(path.resolve(process.argv[imagePlanArg + 1])) : null;
 const imageRoomNames = imagePlan
   ? new Set((imagePlan.workers || []).flatMap(worker => worker.rooms || []).map(room => String(room.name || room).toLowerCase()))
   : new Set();
@@ -33,7 +38,7 @@ const removedFiles = [];
 const imageUpdates = [];
 
 function readGzipJson(file) {
-  return JSON.parse(zlib.gunzipSync(fs.readFileSync(file), { maxOutputLength: 1_000_000_000 }).toString('utf8'));
+  return parseJsonText(zlib.gunzipSync(fs.readFileSync(file), { maxOutputLength: 1_000_000_000 }).toString('utf8'));
 }
 
 function pngDimensions(file) {
@@ -106,7 +111,7 @@ function rewrite(value, key, sourceBase) {
 for (const room of manifest.rooms || []) {
   if (!room.metadata) continue;
   const sourcePath = path.resolve(sourceRoot, room.metadata);
-  const source = JSON.parse(fs.readFileSync(sourcePath, 'utf8'));
+  const source = readJson(sourcePath);
   for (const artwork of Object.values(source.architect?.enemyArtwork || {})) {
     const hash = String(artwork.sprite?.textureSha256 || '').toLowerCase();
     if (/^[a-f0-9]{64}$/.test(hash)) enemyTextureHashes.add(hash);
@@ -217,7 +222,7 @@ readGzipJson(navigationPath);
 changedFiles.push(navigationFile);
 const unique = [...new Set(changedFiles)].sort();
 const releaseIndexPath = path.join(root, 'HostedAtlas', 'site', 'release-assets.json');
-const releaseIndex = JSON.parse(fs.readFileSync(releaseIndexPath, 'utf8'));
+const releaseIndex = readJson(releaseIndexPath);
 const versionTags = Object.values(releaseIndex.assets || {}).map(asset => String(asset.tag || '')).map(tag => /^silksong-atlas-data-v2-(\d{3})$/.exec(tag)).filter(Boolean);
 const nextVersion = Math.max(0, ...versionTags.map(match => Number(match[1]))) + 1;
 const delta = { releaseTag: `silksong-atlas-data-v2-${String(nextVersion).padStart(3, '0')}`, repository: releaseIndex.repository || 'memeem27/silksong-room-atlas',

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "repository": "memeem27/silksong-room-atlas",
   "assetCount": 2096,
-  "releaseCount": 4,
+  "releaseCount": 5,
   "assets": {
     "artwork/00d10de1fa0d1dbcd96a755ad4bad91f57189cd9347fb2b1cef076dfad276ae2.webp": {
       "tag": "silksong-atlas-data-v2-001",
@@ -3745,7 +3745,7 @@
       "name": "abyss_07.webp"
     },
     "images/abyss_09.webp": {
-      "tag": "silksong-atlas-data-v2-002",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "abyss_09.webp"
     },
     "images/abyss_11.webp": {
@@ -3837,11 +3837,11 @@
       "name": "arborium_01.webp"
     },
     "images/arborium_02.webp": {
-      "tag": "silksong-atlas-data-v2-002",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "arborium_02.webp"
     },
     "images/arborium_03.webp": {
-      "tag": "silksong-atlas-data-v2-002",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "arborium_03.webp"
     },
     "images/arborium_05.webp": {
@@ -4001,11 +4001,11 @@
       "name": "bellway_shadow.webp"
     },
     "images/bone_01c.webp": {
-      "tag": "silksong-atlas-data-v2-002",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "bone_01c.webp"
     },
     "images/bone_03.webp": {
-      "tag": "silksong-atlas-data-v2-002",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "bone_03.webp"
     },
     "images/bone_05_boss.webp": {
@@ -4037,7 +4037,7 @@
       "name": "bone_12.webp"
     },
     "images/bone_16.webp": {
-      "tag": "silksong-atlas-data-v2-002",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "bone_16.webp"
     },
     "images/bone_17.webp": {
@@ -4445,7 +4445,7 @@
       "name": "dock_15.webp"
     },
     "images/dock_16.webp": {
-      "tag": "silksong-atlas-data-v2-002",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "dock_16.webp"
     },
     "images/dust_02.webp": {
@@ -5321,7 +5321,7 @@
       "name": "abyss_07.json.gz"
     },
     "rooms/abyss_09.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "abyss_09.json.gz"
     },
     "rooms/abyss_11.json.gz": {
@@ -5413,11 +5413,11 @@
       "name": "arborium_01.json.gz"
     },
     "rooms/arborium_02.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "arborium_02.json.gz"
     },
     "rooms/arborium_03.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "arborium_03.json.gz"
     },
     "rooms/arborium_05.json.gz": {
@@ -5593,11 +5593,11 @@
       "name": "bellway_shadow.json.gz"
     },
     "rooms/bone_01c.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "bone_01c.json.gz"
     },
     "rooms/bone_03.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "bone_03.json.gz"
     },
     "rooms/bone_05_bellway.json.gz": {
@@ -5633,7 +5633,7 @@
       "name": "bone_12.json.gz"
     },
     "rooms/bone_16.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "bone_16.json.gz"
     },
     "rooms/bone_17.json.gz": {
@@ -6069,7 +6069,7 @@
       "name": "dock_15.json.gz"
     },
     "rooms/dock_16.json.gz": {
-      "tag": "silksong-atlas-data-v2-002",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "dock_16.json.gz"
     },
     "rooms/dust_02.json.gz": {
@@ -6905,7 +6905,7 @@
       "name": "wisp_09.json.gz"
     },
     "asset-index.json.gz": {
-      "tag": "silksong-atlas-data-v2-004",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "asset-index.json.gz"
     },
     "images/abyss_08.webp": {
@@ -6969,7 +6969,7 @@
       "name": "belltown_shrine.webp"
     },
     "images/bone_01.webp": {
-      "tag": "silksong-atlas-data-v2-004",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "bone_01.webp"
     },
     "images/bone_01b.webp": {
@@ -6977,11 +6977,11 @@
       "name": "bone_01b.webp"
     },
     "images/bone_02.webp": {
-      "tag": "silksong-atlas-data-v2-004",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "bone_02.webp"
     },
     "images/bone_04.webp": {
-      "tag": "silksong-atlas-data-v2-004",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "bone_04.webp"
     },
     "images/bone_05b.webp": {
@@ -6989,23 +6989,23 @@
       "name": "bone_05b.webp"
     },
     "images/bone_06.webp": {
-      "tag": "silksong-atlas-data-v2-004",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "bone_06.webp"
     },
     "images/bone_07.webp": {
-      "tag": "silksong-atlas-data-v2-004",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "bone_07.webp"
     },
     "images/bone_09.webp": {
-      "tag": "silksong-atlas-data-v2-004",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "bone_09.webp"
     },
     "images/bone_14.webp": {
-      "tag": "silksong-atlas-data-v2-004",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "bone_14.webp"
     },
     "images/bone_15.webp": {
-      "tag": "silksong-atlas-data-v2-004",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "bone_15.webp"
     },
     "images/bone_east_02b.webp": {
@@ -7013,7 +7013,7 @@
       "name": "bone_east_02b.webp"
     },
     "images/bone_east_03.webp": {
-      "tag": "silksong-atlas-data-v2-004",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "bone_east_03.webp"
     },
     "images/bone_east_04c.webp": {
@@ -7645,7 +7645,7 @@
       "name": "manifest.json.gz"
     },
     "maps/navigation.json.gz": {
-      "tag": "silksong-atlas-data-v2-004",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "navigation.json.gz"
     },
     "rooms/abyss_08.json.gz": {
@@ -7709,7 +7709,7 @@
       "name": "belltown_shrine.json.gz"
     },
     "rooms/bone_01.json.gz": {
-      "tag": "silksong-atlas-data-v2-004",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "bone_01.json.gz"
     },
     "rooms/bone_01b.json.gz": {
@@ -7717,11 +7717,11 @@
       "name": "bone_01b.json.gz"
     },
     "rooms/bone_02.json.gz": {
-      "tag": "silksong-atlas-data-v2-004",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "bone_02.json.gz"
     },
     "rooms/bone_04.json.gz": {
-      "tag": "silksong-atlas-data-v2-004",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "bone_04.json.gz"
     },
     "rooms/bone_05b.json.gz": {
@@ -7729,23 +7729,23 @@
       "name": "bone_05b.json.gz"
     },
     "rooms/bone_06.json.gz": {
-      "tag": "silksong-atlas-data-v2-004",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "bone_06.json.gz"
     },
     "rooms/bone_07.json.gz": {
-      "tag": "silksong-atlas-data-v2-004",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "bone_07.json.gz"
     },
     "rooms/bone_09.json.gz": {
-      "tag": "silksong-atlas-data-v2-004",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "bone_09.json.gz"
     },
     "rooms/bone_14.json.gz": {
-      "tag": "silksong-atlas-data-v2-004",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "bone_14.json.gz"
     },
     "rooms/bone_15.json.gz": {
-      "tag": "silksong-atlas-data-v2-004",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "bone_15.json.gz"
     },
     "rooms/bone_east_02b.json.gz": {
@@ -7753,7 +7753,7 @@
       "name": "bone_east_02b.json.gz"
     },
     "rooms/bone_east_03.json.gz": {
-      "tag": "silksong-atlas-data-v2-004",
+      "tag": "silksong-atlas-data-v2-005",
       "name": "bone_east_03.json.gz"
     },
     "rooms/bone_east_04c.json.gz": {
