@@ -628,13 +628,26 @@ function roomFrame(width,height,image=currentRoomImage(),meta=state.roomMeta){
 }
 
 function waveGroups(architect) {
-  const groups=architect?.eventGroups||[], byName=new Map(groups.map(group=>[String(group.name).toLowerCase(),group]));
-  return groups.flatMap(group=>{
-    const start=/^(.+?)([_-]?)start$/i.exec(group.name||'');
-    if(!start||!/enable|show|activate/i.test(group.actions||''))return [];
-    const end=byName.get(`${start[1]}${start[2]}end`.toLowerCase());
-    return [{key:String(group.name),label:labelCase(start[1]),startEvent:group.name,endEvent:end?.name||null,placementCount:group.placementCount||0}];
-  }).sort((a,b)=>a.label.localeCompare(b.label,undefined,{numeric:true}));
+  const groups=architect?.eventGroups||[], byName=new Map(groups.map(group=>[String(group.name||'').toLowerCase(),group])), phases=[], pairedEnds=new Set();
+  const phaseLabel=value=>labelCase(String(value||'').replace(/([a-z])([0-9])/gi,'$1 $2')).replace(/\b[a-z]/g,char=>char.toUpperCase());
+  for(const group of groups){
+    const name=String(group.name||''),start=/^(.+?)([_-]?)start$/i.exec(name);
+    if(!name||!/enable|show|activate/i.test(group.actions||''))continue;
+    if(start){
+      const end=byName.get(`${start[1]}${start[2]}end`.toLowerCase());
+      if(end)pairedEnds.add(String(end.name||'').toLowerCase());
+      phases.push({key:name,label:phaseLabel(start[1]),startEvent:name,endEvent:end?.name||null,placementCount:group.placementCount||0});
+      continue;
+    }
+    // Architect also uses direct activation events such as `boss9` without a
+    // matching `boss9Start`/`boss9End` pair. Keep those selectable so their
+    // event-linked enemies and arena changes are not stranded in the hidden
+    // default state. A paired end is already represented by its start phase.
+    const lowerName=name.toLowerCase();
+    if(pairedEnds.has(lowerName)||/[_-]?end$/i.test(name))continue;
+    phases.push({key:name,label:phaseLabel(name),startEvent:name,endEvent:null,placementCount:group.placementCount||0});
+  }
+  return phases.sort((a,b)=>a.label.localeCompare(b.label,undefined,{numeric:true}));
 }
 function setupArchitect(architect) {
   const markers=architect.markers||[], placements=architect.placements||[], waves=waveGroups(architect);

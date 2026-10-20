@@ -155,13 +155,51 @@ const guideArchitect = {
   ]
 };
 const phases = guideContext.api.waveGroups(guideArchitect);
-assert.deepEqual(phases.map(phase=>phase.startEvent), ['wave1Start','wave2Start']);
+assert.deepEqual(Array.from(phases,phase=>phase.startEvent), ['wave1Start','wave2Start']);
 const firstPhase = guideContext.api.placementsForGuidePhase(guideArchitect,phases[0]);
-assert.deepEqual(firstPhase.map(record=>record.key).sort(), ['a','b','c','parent/child']);
+assert.deepEqual(Array.from(firstPhase,record=>record.key).sort(), ['a','b','c','parent/child']);
 assert.equal(guideContext.api.guidePlacementEnabled(firstPhase.find(record=>record.key==='a'),phases[0]), true,
   'an authored phase start action should determine the guide state for linked enemies');
 assert.equal(guideContext.api.guidePlacementEnabled(firstPhase.find(record=>record.key==='b'),phases[0]), true,
   'a listener-free enemy should retain its serialized active state across phases');
 assert.ok(!firstPhase.some(record=>record.key==='d'), 'the guide must not list a different wave’s listener as present in this phase');
+
+const directEventArchitect = {
+  eventGroups: [
+    {name:'bossStart',actions:'enable'},{name:'bossEnd',actions:'disable / enable'},
+    {name:'boss9',actions:'display_text / enable'}
+  ],
+  placements: [{key:'flintbeetle-spawn',enemyCandidate:true,activeByDefault:false,
+    listeners:[{event:'boss9',action:'enable'}]}]
+};
+const eventContext = vm.createContext({
+  state: {roomMeta:{architect:directEventArchitect},selectedWave:'boss9',visiblePlacements:new Map()},
+  $: () => ({checked:true})
+});
+vm.runInContext(`${extractFunction(reader,'labelCase')};${extractFunction(reader,'waveGroups')};${extractFunction(reader,'selectedWaveData')};${extractFunction(reader,'placementsForWave')};${extractFunction(reader,'eventActionState')};${extractFunction(reader,'applySelectedWaveState')};${extractFunction(reader,'isPlacementEnabled')};globalThis.api={waveGroups,selectedWaveData,placementsForWave,applySelectedWaveState,isPlacementEnabled};`, eventContext);
+const directPhases = eventContext.api.waveGroups(directEventArchitect);
+assert.ok(directPhases.some(phase=>phase.startEvent==='boss9'&&phase.label==='Boss 9'),
+  'standalone activation events such as boss9 must be selectable even without Start/End suffixes');
+assert.equal(eventContext.api.selectedWaveData().startEvent,'boss9');
+assert.deepEqual(Array.from(eventContext.api.placementsForWave(),record=>record.key),['flintbeetle-spawn']);
+eventContext.api.applySelectedWaveState({virtualEvent:'bossStart',virtualEndEvent:'bossEnd'});
+assert.equal(eventContext.api.isPlacementEnabled(directEventArchitect.placements[0]),true,
+  'selecting an event phase should reveal its initially inactive Flintbeetle placement');
+
+const bone15Sidecar=readGzipJson(path.join(hostedDataRoot,'rooms','bone_15.json.gz'));
+const bone15Flintbeetles=bone15Sidecar.architect.placements.filter(record=>record.enemyCandidate&&record.placement?.id==='flintbeetle');
+assert.equal(bone15Flintbeetles.length,5,'Bone 15 should preserve the five event-activated Flintbeetle placements');
+eventContext.state.roomMeta=bone15Sidecar;
+eventContext.state.selectedWave='boss9';
+assert.ok(eventContext.api.waveGroups(bone15Sidecar.architect).some(phase=>phase.startEvent==='boss9'&&phase.label==='Boss 9'),
+  'Bone 15 boss9 must be exposed as a selectable activation phase');
+assert.equal(Array.from(eventContext.api.placementsForWave()).filter(record=>record.placement?.id==='flintbeetle').length,5,
+  'the boss9 phase must include all five Flintbeetles');
+eventContext.api.applySelectedWaveState(bone15Sidecar.architect.markers[0]);
+assert.ok(bone15Flintbeetles.every(record=>eventContext.api.isPlacementEnabled(record)),
+  'the boss9 phase must turn on each saved inactive Flintbeetle placement');
+spriteContext.state.roomMeta=bone15Sidecar;
+assert.ok(bone15Flintbeetles.every(record=>spriteContext.api.enemySpriteForRecord(record)?.name==='RR_idle0000'),
+  'all Bone 15 Flintbeetles must resolve to their authentic game sprite');
 
 console.log(`GauntletSong map: ${catalog.coverage.hubEntrances} portals, ${catalog.coverage.routeCount} room routes, ${routeScenes.size} linked rooms, ${catalog.coverage.enemyTypes} enemy types; ${positions.length} independently clickable markers tested.`);
