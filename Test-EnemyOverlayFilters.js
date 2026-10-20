@@ -153,12 +153,20 @@ assert.deepEqual(Array.from(placementContext.select(placements), record => recor
 
 const spriteFunction = extractFunction(readerSource, 'enemySpriteForRecord');
 const realEnemyHash = 'a'.repeat(64);
+const boneRollerArt = bone01.architect?.enemyArtwork?.boneroller;
+assert.ok(boneRollerArt?.sprite?.textureSha256 && boneRollerArt?.sprite?.name === 'RR_idle0000',
+  'Bone Roller must use the real Rock Roller idle frame, not the journal portrait');
+assert.equal(boneRollerArt.sourceBundle, 'animations_assets_areabone.bundle',
+  'Bone Roller artwork must come from the game animation bundle');
 const spriteContext = vm.createContext({ state: { roomMeta: { architect: { enemyArtwork: {
-  gbeastfly: { sprite: { textureSha256: realEnemyHash } }
+  gbeastfly: { sprite: { textureSha256: realEnemyHash } },
+  boneroller: boneRollerArt
 } } } } });
 vm.runInContext(`${spriteFunction}\nglobalThis.matchSprite = enemySpriteForRecord;`, spriteContext);
 assert.equal(spriteContext.matchSprite({ placement: { id: 'prefab_gBeastfly' }, label: 'g Beastfly' }).textureSha256,
   realEnemyHash, 'matched gauntlet enemy placements must use their Silksong atlas sprite');
+assert.equal(spriteContext.matchSprite({ placement: { id: 'bone_roller' }, label: 'Bone Roller' }).name,
+  'RR_idle0000', 'Bone Roller placements must display the real animated Rock Roller frame');
 assert.equal(spriteContext.matchSprite({ placement: { id: 'unknown_enemy' }, label: 'unknown enemy' }), null,
   'unmatched enemy types must not be assigned invented or unrelated textures');
 
@@ -168,6 +176,7 @@ console.log(JSON.stringify({
   verified: ['batch enemy sprites omitted', 'batch enemy meshes omitted', 'room props retained',
     'interactive renderer unchanged', 'unclassified Goomba sprites and effects omitted',
     'Bone 01 enemy marker classification repaired', 'disguised silhouette/Rock Roller art omitted and marked',
+    'Bone Roller maps to the native RR_idle0000 game frame',
     'gauntlet wrapper candidates deduplicated',
     'authentic enemy atlas match required', 'unmatched enemy art receives no substitute texture']
 }, null, 2));

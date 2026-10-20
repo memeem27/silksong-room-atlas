@@ -24,6 +24,7 @@ const context = {
   batchRenderInactiveEnabled: () => true,
   batchIncludeDisabledRenderersEnabled: () => new URLSearchParams(context.window.location.search).get('batchIncludeDisabledRenderers') === '1',
   objectIsActive: object => object.active === true,
+  isEnemyArtworkObject: () => false,
   spritePassesFilters: () => true,
   spriteWorldMatrix: sprite => ({ m00: sprite.scaleX ?? 1, m01: 0, m10: 0, m11: sprite.scaleY ?? 1 }),
   meshPassesFilters: () => true,

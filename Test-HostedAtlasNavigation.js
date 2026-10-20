@@ -108,6 +108,14 @@ const bone01 = areas.find(area => area.key === 'PATH_OF_BONE')?.rooms.find(room 
 assert.ok(bone01?.architect?.markerCount >= 2, 'Bone_01 must expose its multiple GauntletSong markers on The Marrow map');
 assert.ok(bone01,
   'Bone_01 gauntlet rooms must remain indexed under The Marrow');
+const bone01Meta = readGzipJson(path.join(dataRoot, 'rooms', 'bone_01.json.gz'));
+const boneRollerArt = bone01Meta.architect?.enemyArtwork?.boneroller;
+assert.equal(boneRollerArt?.sprite?.name, 'RR_idle0000',
+  'Hosted Bone 01 must use the real Rock Roller idle sprite instead of its journal portrait');
+assert.equal(boneRollerArt?.sourceBundle, 'animations_assets_areabone.bundle',
+  'Hosted Bone 01 Rock Roller artwork must come from the Silksong animation bundle');
+assert.ok(textureAssets.has(`artwork/${boneRollerArt.sprite.textureSha256}.webp`),
+  'Hosted Bone 01 Rock Roller marker must reference its packaged real-game texture');
 const tutorialRoom = rendered.find(room => room.name.toLowerCase() === 'tut_01');
 assert.ok(tutorialRoom?.metadata, 'The tutorial room must retain its rendered sidecar');
 const tutorialMetadata = readGzipJson(path.join(dataRoot, `${tutorialRoom.metadata}.gz`));

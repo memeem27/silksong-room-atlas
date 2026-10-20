@@ -515,10 +515,31 @@ function setupArchitect(architect) {
   document.querySelectorAll('[data-marker]').forEach(button=>button.addEventListener('click',()=>selectGauntlet(Number(button.dataset.marker))));
   const options=[{key:'all',label:'All gauntlet changes',startEvent:null,endEvent:null},...waves];
   $('waveSelect').innerHTML=options.map(wave=>`<option value="${esc(wave.key)}">${esc(wave.label)}${wave.startEvent?` · ${esc(wave.startEvent)}${wave.endEvent?` → ${esc(wave.endEvent)}`:''}`:''}</option>`).join('');
-  $('waveSelect').onchange=()=>{state.selectedWave=$('waveSelect').value;applySelectedWaveState();renderPlacementList();draw();};
-  $('toggleGauntlets').onchange=()=>{state.selectedGauntlet=null;$('gauntletDetails').hidden=true;document.querySelectorAll('.gauntlet-button').forEach(button=>button.classList.remove('active'));draw();};
+  $('waveSelect').onchange=()=>{state.selectedWave=$('waveSelect').value;updateWaveNavigation();applySelectedWaveState();renderPlacementList();draw();};
+  $('toggleGauntlets').onchange=()=>{if(!$('toggleGauntlets').checked){state.selectedGauntlet=null;state.selectedWave='all';state.visiblePlacements.clear();$('waveSelect').value='all';$('gauntletDetails').hidden=true;document.querySelectorAll('.gauntlet-button').forEach(button=>button.classList.remove('active'));}draw();};
   $('toggleArenaChanges').onchange=()=>{if($('toggleArenaChanges').checked)applySelectedWaveState();draw();}; $('toggleEnemyTextures').onchange=()=>draw();
+  updateWaveNavigation();
   renderPlacementList();
+}
+function updateWaveNavigation(){
+  const waves=waveGroups(state.roomMeta?.architect),index=waves.findIndex(wave=>wave.key===state.selectedWave);
+  $('wavePosition').textContent=index<0?(waves.length?`All · ${waves.length} phases`:'No phases'):`${index+1} / ${waves.length}`;
+  $('previousWaveButton').disabled=index<=0;
+  $('nextWaveButton').disabled=index<0||index>=waves.length-1;
+}
+function navigateWave(step){
+  const waves=waveGroups(state.roomMeta?.architect);if(!waves.length)return;
+  const current=waves.findIndex(wave=>wave.key===state.selectedWave);
+  const next=current<0?(step<0?waves.length-1:0):current+step;
+  if(next<0||next>=waves.length)return;
+  state.selectedWave=waves[next].key;$('waveSelect').value=state.selectedWave;
+  updateWaveNavigation();applySelectedWaveState();renderPlacementList();draw();
+}
+function exitGauntletView(){
+  state.selectedGauntlet=null;state.selectedWave='all';state.visiblePlacements.clear();
+  $('toggleGauntlets').checked=false;$('waveSelect').value='all';$('gauntletDetails').hidden=true;
+  document.querySelectorAll('.gauntlet-button').forEach(button=>button.classList.remove('active'));
+  updateWaveNavigation();renderPlacementList();draw();
 }
 function selectedWaveData() {
   const architect=state.roomMeta?.architect; const waves=waveGroups(architect);
@@ -590,6 +611,7 @@ function selectGauntlet(index) {
   // the controller should show its first authored phase instead of the empty
   // "all" view so those arena changes are visible immediately.
   state.selectedWave=(matching||(!markerStart&&!markerEnd?waves[0]:null))?.key||'all'; $('waveSelect').value=state.selectedWave;
+  updateWaveNavigation();
   document.querySelectorAll('.gauntlet-button').forEach((button,i)=>button.classList.toggle('active',i===index));
   if($('toggleArenaChanges').checked)applySelectedWaveState(marker);
   renderPlacementList(); draw();
@@ -1473,6 +1495,7 @@ $('toggleUnmappedMapArtwork').addEventListener('change',event=>{state.showUnmapp
 $('toggleConditionalMapArtwork').addEventListener('change',event=>{state.showConditionalMapArtwork=event.target.checked;draw();});
 $('toggleArchitectMapMarkers').addEventListener('change',event=>{state.showArchitectMapMarkers=event.target.checked;draw();});
 $('toggleGauntlets').addEventListener('change',()=>{if($('toggleGauntlets').checked&&!state.selectedGauntlet&&state.roomMeta?.architect?.markers?.length)selectGauntlet(0);});
+$('previousWaveButton').addEventListener('click',()=>navigateWave(-1));$('nextWaveButton').addEventListener('click',()=>navigateWave(1));$('exitGauntletButton').addEventListener('click',exitGauntletView);
 $('exportPngButton').addEventListener('click',exportCleanPng);
 for(const id of ['toggleEnemies','toggleSpawns','toggleChecks'])$(id).addEventListener('change',draw);
 new ResizeObserver(resizeCanvas).observe(canvas);window.addEventListener('resize',resizeCanvas);

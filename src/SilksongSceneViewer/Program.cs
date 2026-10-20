@@ -29,8 +29,11 @@ builder.Services.AddSingleton(sp => new SceneSourceOptions(
     Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "../../../ExportedProject/ProjectSettings/TagManager.asset")),
     Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "../../../ExtractionInput/Bundles/maps_assets_all.bundle"))));
 builder.Services.AddSingleton<SceneIndex>();
-builder.Services.AddSingleton(sp => new SpriteAssetLoader(sp.GetRequiredService<SceneSourceOptions>().ArtworkBundleDirectories,
-    sp.GetRequiredService<SceneSourceOptions>().PackageDirectory));
+builder.Services.AddSingleton(sp => {
+    var source = sp.GetRequiredService<SceneSourceOptions>();
+    return new SpriteAssetLoader(source.ArtworkBundleDirectories, source.PackageDirectory,
+        () => source.SceneBundleDirectory);
+});
 builder.Services.AddSingleton<UnityBundleInspector>();
 builder.Services.AddSingleton(sp => new EnemyArtworkCatalog(sp.GetRequiredService<SpriteAssetLoader>()));
 

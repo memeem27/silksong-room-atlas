@@ -200,7 +200,7 @@ async function main() {
     }
     const matched = roomIds.filter((key) => Object.hasOwn(architect.enemyArtwork, key)).length;
     const lookup = {
-      source: 'Silksong sprite atlases',
+      source: 'Silksong game sprite bundles',
       requestedEnemyTypes: roomIds.length,
       matchedEnemyTypes: matched,
       unmatchedEnemyTypes: roomIds.length - matched,

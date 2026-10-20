@@ -28,19 +28,30 @@ internal sealed class SpriteAssetLoader {
             ["envoy"] = ["songpilgrim01"],
             ["pilgrimhulk"] = ["pilgrim02"],
             ["pilgrimguide"] = ["pilgrimstaffweilder"],
-            ["pilgrimbell"] = ["pilgrimbellthrower"]
+            ["pilgrimbell"] = ["pilgrimbellthrower"],
+            // The in-game idle sprite is named RR_idle0000 and lives in the
+            // area-bone animation bundle, not either journal atlas. Prefer it
+            // over the small journal portrait for both Architect spellings.
+            ["boneroller"] = ["rridle0000"],
+            ["rockroller"] = ["rridle0000"]
         };
     private readonly string[] _assetDirectories;
     private readonly string _assetOutputDirectory;
+    private readonly Func<string> _sceneBundleDirectory;
     private readonly Dictionary<string, BundleLocation> _bundleIndex = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _loadedCandidates = new(StringComparer.OrdinalIgnoreCase);
     private readonly object _indexLock = new();
     private readonly object _namedSpriteIndexLock = new();
     private NamedSpriteIndexCache? _namedSpriteIndex;
+    private IndexedSpriteName[]? _rockRollerIdleSprites;
+    private string _rockRollerIdleBundlePath = "";
+    private long _rockRollerIdleBundleTicks;
 
-    public SpriteAssetLoader(IEnumerable<string> assetDirectories, string packageDirectory) {
+    public SpriteAssetLoader(IEnumerable<string> assetDirectories, string packageDirectory,
+        Func<string> sceneBundleDirectory) {
         _assetDirectories = assetDirectories.Select(Path.GetFullPath).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         _assetOutputDirectory = Path.Combine(packageDirectory, "artwork");
+        _sceneBundleDirectory = sceneBundleDirectory;
     }
 
     public ScenePackage AttachAssets(ScenePackage scene, CancellationToken cancellationToken) {
@@ -179,6 +190,22 @@ internal sealed class SpriteAssetLoader {
             }
         }
 
+        if (requested.Any(name => name is "boneroller" or "rockroller")) {
+            var sceneSprites = GetRockRollerIdleSprites(cancellationToken, out var sceneBundleErrors);
+            bundleErrors += sceneBundleErrors;
+            foreach (var sprite in sceneSprites) {
+                cancellationToken.ThrowIfCancellationRequested();
+                foreach (var target in requested.Where(name => name is "boneroller" or "rockroller")) {
+                    // When a real idle frame and journal portrait both match,
+                    // prefer the scene frame even if their normalized scores tie.
+                    var score = SpriteNameMatchScore(sprite.NormalizedName, aliases[target]) + 1;
+                    if (score == 0 || (candidates.TryGetValue(target, out var previous) && previous.Score >= score)) continue;
+                    candidates[target] = (score, target, sprite.SpriteName, sprite.SourceBundle,
+                        new SceneSpriteReference(sprite.PathId, 0, sprite.ExternalPath, sprite.SpriteName));
+                }
+            }
+        }
+
         if (candidates.Count == 0)
             return new(new Dictionary<string, NamedSpriteAsset>(StringComparer.Ordinal), scannedBundles, bundleErrors);
         var references = candidates.Values.Select(candidate => candidate.Reference).ToArray();
@@ -188,7 +215,8 @@ internal sealed class SpriteAssetLoader {
             DateTimeOffset.UtcNow, "unknown", false, [], [], [placeholderObject], [], [], null, []);
         var loaded = AttachAssets(package, cancellationToken).Objects[0].Sprites;
         var loadedByKey = loaded.Where(sprite => !string.IsNullOrWhiteSpace(sprite.ImageUrl))
-            .ToDictionary(sprite => $"{BundleKey(sprite.ExternalPath)}:{sprite.PathId}", StringComparer.OrdinalIgnoreCase);
+            .GroupBy(sprite => $"{BundleKey(sprite.ExternalPath)}:{sprite.PathId}", StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
         var result = new Dictionary<string, NamedSpriteAsset>(StringComparer.Ordinal);
         foreach (var (key, candidate) in candidates) {
             var lookup = $"{BundleKey(candidate.Reference.ExternalPath)}:{candidate.Reference.PathId}";
@@ -196,6 +224,43 @@ internal sealed class SpriteAssetLoader {
                 result[key] = new(candidate.PlacementId, candidate.SpriteName, candidate.SourceBundle, sprite);
         }
         return new(result, scannedBundles, bundleErrors);
+    }
+
+    private IndexedSpriteName[] GetRockRollerIdleSprites(CancellationToken cancellationToken,
+        out int bundleErrors) {
+        bundleErrors = 0;
+        var scenePath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(_assetOutputDirectory)!, "bone_01.json"));
+        if (!File.Exists(scenePath)) return [];
+        var stamp = new FileInfo(scenePath);
+        lock (_namedSpriteIndexLock) {
+            if (_rockRollerIdleSprites is not null &&
+                string.Equals(_rockRollerIdleBundlePath, scenePath, StringComparison.OrdinalIgnoreCase) &&
+                _rockRollerIdleBundleTicks == stamp.LastWriteTimeUtc.Ticks)
+                return _rockRollerIdleSprites;
+
+            try {
+                cancellationToken.ThrowIfCancellationRequested();
+                using var stream = File.OpenRead(scenePath);
+                var package = JsonSerializer.Deserialize<ScenePackage>(stream,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                var sprites = (package?.Objects ?? [])
+                    .SelectMany(sceneObject => sceneObject.Sprites ?? [])
+                    .Where(sprite => System.Text.RegularExpressions.Regex.IsMatch(
+                        NormalizeSpriteName(sprite.Name), @"^rridle\d{4}$"))
+                    .Select(sprite => new IndexedSpriteName(NormalizeSpriteName(sprite.Name), sprite.Name,
+                        "animations_assets_areabone.bundle", sprite.PathId, sprite.ExternalPath))
+                    .DistinctBy(sprite => (sprite.NormalizedName, sprite.PathId, sprite.ExternalPath))
+                    .OrderBy(sprite => sprite.NormalizedName, StringComparer.Ordinal)
+                    .ToArray();
+                _rockRollerIdleSprites = sprites;
+                _rockRollerIdleBundlePath = scenePath;
+                _rockRollerIdleBundleTicks = stamp.LastWriteTimeUtc.Ticks;
+                return _rockRollerIdleSprites;
+            } catch {
+                bundleErrors++;
+                return [];
+            }
+        }
     }
 
     private NamedSpriteIndexCache GetOrBuildNamedSpriteIndex(CancellationToken cancellationToken,
@@ -209,12 +274,12 @@ internal sealed class SpriteAssetLoader {
 
             var spriteAtlasDirectory = _assetDirectories.FirstOrDefault(directory =>
                 Path.GetFileName(directory).Equals("_atlases", StringComparison.OrdinalIgnoreCase) && Directory.Exists(directory));
-            var searchDirectories = spriteAtlasDirectory is not null
-                ? [spriteAtlasDirectory]
-                : _assetDirectories.Where(Directory.Exists).ToArray();
+            var searchDirectories = _assetDirectories.Where(Directory.Exists).ToArray();
+            var atlasPrefix = spriteAtlasDirectory is null ? null :
+                Path.GetFullPath(spriteAtlasDirectory).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
             var bundles = searchDirectories
                 .SelectMany(directory => Directory.EnumerateFiles(directory, "*.bundle", SearchOption.AllDirectories))
-                .Where(path => spriteAtlasDirectory is not null || IsSpriteSearchBundle(path))
+                .Where(path => (atlasPrefix is not null && Path.GetFullPath(path).StartsWith(atlasPrefix, StringComparison.OrdinalIgnoreCase)) || IsSpriteSearchBundle(path))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(path => IsJournalSpriteBundle(path) ? 1 : 0)
                 .ThenBy(path => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase)
@@ -224,17 +289,15 @@ internal sealed class SpriteAssetLoader {
                 return new SpriteBundleStamp(file.FullName, file.Length, file.LastWriteTimeUtc.Ticks);
             }).ToArray();
             var cachePath = Path.Combine(_assetOutputDirectory, "enemy-sprite-name-index.json");
-            if (TryLoadNamedSpriteIndex(cachePath, bundleStamps, out var cached)) {
-                _namedSpriteIndex = cached;
-                scannedBundles = cached.Bundles.Length;
-                bundleErrors = cached.BundleErrors;
-                return cached;
-            }
-
             Directory.CreateDirectory(_assetOutputDirectory);
-            var sprites = new List<IndexedSpriteName>();
-            bundleErrors = 0;
-            foreach (var bundlePath in bundles) {
+            var hasCachedIndex = TryLoadNamedSpriteIndex(cachePath, bundleStamps, out var cached);
+            var indexedBundlePaths = hasCachedIndex
+                ? cached.Bundles.Select(stamp => stamp.Path).ToHashSet(StringComparer.OrdinalIgnoreCase)
+                : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var bundlesToScan = bundles.Where(path => !indexedBundlePaths.Contains(path)).ToArray();
+            var sprites = hasCachedIndex ? cached.Sprites.ToList() : new List<IndexedSpriteName>();
+            bundleErrors = hasCachedIndex ? cached.BundleErrors : 0;
+            foreach (var bundlePath in bundlesToScan) {
                 cancellationToken.ThrowIfCancellationRequested();
                 var manager = new AssetsManager();
                 try {
@@ -270,7 +333,7 @@ internal sealed class SpriteAssetLoader {
                 }
             }
 
-            var index = new NamedSpriteIndexCache(1, bundleStamps, sprites.ToArray(), bundleErrors);
+            var index = new NamedSpriteIndexCache(2, bundleStamps, sprites.ToArray(), bundleErrors);
             var temporaryPath = cachePath + "." + Guid.NewGuid().ToString("N") + ".tmp";
             try {
                 var options = new JsonSerializerOptions { WriteIndented = false };
@@ -293,8 +356,9 @@ internal sealed class SpriteAssetLoader {
         try {
             using var stream = File.OpenRead(path);
             var cached = JsonSerializer.Deserialize<NamedSpriteIndexCache>(stream);
-            if (cached is null || cached.FormatVersion != 1 || cached.Bundles.Length != bundles.Count ||
-                !cached.Bundles.SequenceEqual(bundles)) return false;
+            if (cached is null || cached.FormatVersion is < 1 or > 2) return false;
+            var currentByPath = bundles.ToDictionary(stamp => stamp.Path, StringComparer.OrdinalIgnoreCase);
+            if (cached.Bundles.Any(stamp => !currentByPath.TryGetValue(stamp.Path, out var current) || current != stamp)) return false;
             index = cached;
             return true;
         } catch (IOException) { return false; }
@@ -308,7 +372,8 @@ internal sealed class SpriteAssetLoader {
     }
 
     private static bool IsSpriteSearchBundle(string path) {
-        return IsJournalSpriteBundle(path);
+        return IsJournalSpriteBundle(path) ||
+            Path.GetFileName(path).StartsWith("animations_assets_", StringComparison.OrdinalIgnoreCase);
     }
 
     private sealed record SpriteBundleStamp(string Path, long Length, long LastWriteUtcTicks);
@@ -326,6 +391,10 @@ internal sealed class SpriteAssetLoader {
         var aliases = new List<string> { normalized };
         if (KnownEnemySpriteAliases.TryGetValue(normalized, out var known)) aliases.AddRange(known);
         if (normalized.Length > 5 && normalized[0] == 'g') aliases.Add(normalized[1..]);
+        // Many game animation bundles label their first animation frame with
+        // the enemy's normalized placement name followed by idle0000.
+        aliases.Add(normalized + "idle0000");
+        if (normalized.Length > 5 && normalized[0] == 'g') aliases.Add(normalized[1..] + "idle0000");
         return aliases.Distinct(StringComparer.Ordinal).ToArray();
     }
 
@@ -333,7 +402,12 @@ internal sealed class SpriteAssetLoader {
         var best = 0;
         foreach (var alias in aliases) {
             if (spriteName == alias) best = Math.Max(best, 1000 + alias.Length);
-            else if (spriteName.StartsWith(alias, StringComparison.Ordinal)) best = Math.Max(best, 800 + alias.Length);
+            else if (spriteName.StartsWith(alias, StringComparison.Ordinal)) {
+                var suffix = spriteName.AsSpan(alias.Length);
+                var idleFrame = suffix.StartsWith("idle", StringComparison.Ordinal) &&
+                    (suffix.Length == 4 || char.IsAsciiDigit(suffix[4]));
+                best = Math.Max(best, (idleFrame ? 1400 : 800) + alias.Length);
+            }
             else if (alias.Length >= 9 && spriteName.Contains(alias, StringComparison.Ordinal)) best = Math.Max(best, 500 + alias.Length);
         }
         if (best > 0 && (spriteName.EndsWith("0000", StringComparison.Ordinal) || spriteName.Contains("idle", StringComparison.Ordinal))) best += 5;
@@ -512,11 +586,21 @@ internal sealed class SpriteAssetLoader {
 
     private Dictionary<string, BundleLocation> GetLocations(HashSet<string> wanted) {
         lock (_indexLock) {
-            var existingDirectories = _assetDirectories.Where(Directory.Exists).ToArray();
+            var existingDirectories = _assetDirectories.Where(Directory.Exists)
+                .Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
             if (existingDirectories.Length == 0) return _bundleIndex;
             var missing = wanted.Where(k => !_bundleIndex.ContainsKey(k)).ToHashSet(StringComparer.OrdinalIgnoreCase);
             if (missing.Count == 0) return _bundleIndex;
-            foreach (var path in existingDirectories.SelectMany(directory => Directory.EnumerateFiles(directory, "*.bundle", SearchOption.AllDirectories))) {
+            var animationBundlePath = Path.Combine(
+                Directory.GetParent(_sceneBundleDirectory())?.FullName ?? _sceneBundleDirectory(),
+                "animations_assets_areabone.bundle");
+            var bundleFiles = existingDirectories.SelectMany(directory =>
+                    Directory.EnumerateFiles(directory, "*.bundle", SearchOption.AllDirectories))
+                .Concat(_assetDirectories.Where(path => File.Exists(path) &&
+                    Path.GetExtension(path).Equals(".bundle", StringComparison.OrdinalIgnoreCase)))
+                .Concat(File.Exists(animationBundlePath) ? [animationBundlePath] : [])
+                .Distinct(StringComparer.OrdinalIgnoreCase);
+            foreach (var path in bundleFiles) {
                 if (FindKeys(path, missing).Count == 0 || !_loadedCandidates.Add(path)) continue;
                 try {
                     var manager = new AssetsManager();

@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#161a18" />
   <title>Silksong Room Atlas</title>
-  <link rel="stylesheet" href="./reader.css?v=atlas-8" />
-  <script src="./host-config.js?v=silksong-atlas-data-v2-006"></script>
-  <script src="./reader.js?v=atlas-24" defer></script>
+  <link rel="stylesheet" href="./reader.css?v=atlas-9" />
+  <script src="./host-config.js?v=silksong-atlas-data-v2-007"></script>
+  <script src="./reader.js?v=atlas-25" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -112,9 +112,15 @@
         <div id="gauntletList" class="gauntlet-list"><div class="hint">No gauntlets recorded in this room.</div></div>
         <div id="gauntletDetails" class="gauntlet-details" hidden>
           <label class="select-label">Wave / event phase<select id="waveSelect"></select></label>
+          <div class="wave-navigation" aria-label="Navigate event phases">
+            <button id="previousWaveButton" type="button" aria-label="Previous wave or event phase">‹ Previous</button>
+            <span id="wavePosition" aria-live="polite">0 / 0</span>
+            <button id="nextWaveButton" type="button" aria-label="Next wave or event phase">Next ›</button>
+          </div>
           <div id="waveSummary" class="hint"></div>
           <label class="toggle sub-toggle"><input id="toggleArenaChanges" type="checkbox" checked />Show arena changes</label>
           <label class="toggle sub-toggle"><input id="toggleEnemyTextures" type="checkbox" checked />Show matching enemy textures</label>
+          <button id="exitGauntletButton" class="exit-gauntlet-button" type="button">Exit gauntlet view</button>
           <div class="section-title small-title">ENEMY / OBJECT PLACEMENTS <span id="placementCount">0</span></div>
           <div id="placementList" class="placement-list"></div>
         </div>
