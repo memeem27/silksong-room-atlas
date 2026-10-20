@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#161a18" />
   <title>Silksong Room Atlas</title>
-  <link rel="stylesheet" href="./reader.css?v=atlas-12" />
-  <script src="./host-config.js?v=silksong-atlas-data-v2-012"></script>
-  <script src="./reader.js?v=atlas-35" defer></script>
+  <link rel="stylesheet" href="./reader.css?v=atlas-13" />
+  <script src="./host-config.js?v=silksong-atlas-data-v2-013"></script>
+  <script src="./reader.js?v=atlas-36" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -70,11 +70,29 @@
       <section id="gauntletMapPanel" class="control-section architect" hidden>
         <div class="section-title">GAUNTLETSONG INDEX <span id="gauntletMapCount">0 portals</span></div>
         <div id="gauntletMapSummary" class="gauntlet-map-summary"><div class="hint">Choose a portal to inspect its linked room scenes.</div></div>
+        <button id="openGauntletArena" class="gauntlet-guide-open" type="button" hidden>Open authored arena layout</button>
         <button id="openGauntletGuide" class="gauntlet-guide-open" type="button" hidden>Read gauntlet field guide</button>
         <div id="gauntletGuidePage" class="gauntlet-guide-page" hidden></div>
         <div id="gauntletRouteHeading" class="section-title small-title">LINKED ROOMS &amp; EVENTS <span id="gauntletRouteCount">0</span></div>
         <div id="gauntletMapRoutes" class="gauntlet-list"><div class="hint">No portal selected.</div></div>
         <p class="hint">Portal positions come from the Architect hub scene. Its tile coordinates are available, but the export contains no authentic hub or arena tile textures. Room buttons open the real pre-rendered Silksong room and load that room’s event and placement data.</p>
+      </section>
+
+      <section id="gauntletArenaPanel" class="control-section architect gauntlet-arena-panel" hidden>
+        <div class="section-title">ARCHITECT ARENA <span id="gauntletArenaCount">SOURCE LAYOUT</span></div>
+        <button id="backToGauntletMap" class="gauntlet-guide-open" type="button">‹ Back to portal map</button>
+        <div id="gauntletArenaSummary" class="gauntlet-map-summary"><div class="hint">Loading Architect scene data…</div></div>
+        <label class="select-label">Architect challenge option<select id="arenaChoiceSelect"></select></label>
+        <p id="arenaChoiceDetails" class="hint">No challenge option is selected.</p>
+        <label class="toggle"><input id="toggleArenaTileCells" type="checkbox" checked />Show authored tile-cell footprint</label>
+        <label class="toggle"><input id="toggleArenaEnemyPlacements" type="checkbox" checked /><span class="swatch enemy"></span>Enemy placements <small id="arenaEnemyCount">0</small></label>
+        <label class="toggle"><input id="toggleArenaOtherPlacements" type="checkbox" /><span class="swatch gauntlet">O</span>Other scene objects <small id="arenaObjectCount">0</small></label>
+        <div class="section-title small-title">ENEMY PLACEMENTS <span>CLICK MARKER FOR DETAILS</span></div>
+        <div id="arenaEnemyPlacements" class="placement-list"><div class="hint">Enemy placement data is loading.</div></div>
+        <div id="arenaPlacementDetails" class="arena-placement-details"><div class="hint">Select an enemy marker or list entry to inspect its source coordinates.</div></div>
+        <div class="section-title small-title">CONNECTED SCENES <span id="arenaRouteCount">0</span></div>
+        <div id="arenaRouteList" class="gauntlet-list"><div class="hint">No scene transitions are recorded.</div></div>
+        <p class="hint">The Architect export contains exact tile occupancy and placement coordinates, but no arena terrain textures. This view outlines only authored cells. A selected challenge lists its script outputs; enemy sets change only where the source contains placement links.</p>
       </section>
 
       <section id="mapLayers" class="control-section" hidden>
@@ -143,7 +161,7 @@
         <div class="section-title">IMAGE &amp; SOURCE</div>
         <div id="metadataRows" class="metadata-rows"></div>
       </section>
-      <div class="inspector-foot">Enemy, spawn, check, and Architect overlays start hidden. Toggle a layer when you need it.</div>
+      <div class="inspector-foot">Enemy sprites show by default in room views. Spawn, check, and Architect map overlays stay off until enabled.</div>
     </aside>
   </main>
 </body>

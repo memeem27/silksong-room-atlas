@@ -1,0 +1,2276 @@
+{
+  "format": "gauntletsong-enemy-registry",
+  "formatVersion": 1,
+  "source": {
+    "mod": "GauntletSong",
+    "version": "0.73.2",
+    "import": "GauntletSongImport/evidence.json"
+  },
+  "entries": [
+    {
+      "id": "alita",
+      "displayName": "Coral Hunter",
+      "runtimeName": "[Architect] Alita",
+      "sourceScenes": [
+        "Memory_Coral_Tower",
+        "Battle Scenes/Battle Scene Chamber 2/Wave 1/Coral Hunter"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "aspid_collector",
+      "displayName": "Aspid Collector",
+      "runtimeName": "[Architect] Aknid",
+      "sourceScenes": [
+        "Mosstown_01",
+        "Black Thread States Thread Only Variant/Black Thread World/Aspid Collector"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 4
+    },
+    {
+      "id": "beastfly",
+      "displayName": "Bone Flyer",
+      "runtimeName": "[Architect] Beastfly",
+      "sourceScenes": [
+        "Ant_19",
+        "Enemy Break Cage (9)/Enemy/Bone Flyer"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 58
+    },
+    {
+      "id": "bloat_roach",
+      "displayName": "Bloat Roach",
+      "runtimeName": "[Architect] Bloatroach",
+      "sourceScenes": [
+        "Shadow_02",
+        "Bloat Roach"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 2
+    },
+    {
+      "id": "bloom_puncher",
+      "displayName": "Bloom Puncher",
+      "runtimeName": "[Architect] Gahlia",
+      "sourceScenes": [
+        "Arborium_05",
+        "Bloom Puncher"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 13
+    },
+    {
+      "id": "bloom_shooter",
+      "displayName": "Bloom Shooter",
+      "runtimeName": "[Architect] Pollenica",
+      "sourceScenes": [
+        "Arborium_03",
+        "Bloom Shooter"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 14
+    },
+    {
+      "id": "bone_circler",
+      "displayName": "Bone Circler",
+      "runtimeName": "[Architect] Caranid",
+      "sourceScenes": [
+        "Bone_East_03",
+        "Black Thread States Thread Only Variant/Normal World/Hunting PreScene/Bone Circler"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 10
+    },
+    {
+      "id": "bone_circler_v",
+      "displayName": "Bone Circler Vicious",
+      "runtimeName": "[Architect] Vicious Caranid",
+      "sourceScenes": [
+        "Bone_East_03",
+        "Black Thread States Thread Only Variant/Black Thread World/Bone Circler Vicious (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 11
+    },
+    {
+      "id": "bone_crawler",
+      "displayName": "Bone Crawler",
+      "runtimeName": "[Architect] Kilik",
+      "sourceScenes": [
+        "Ant_19",
+        "Bone Crawler (2)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 18
+    },
+    {
+      "id": "bone_goomba",
+      "displayName": "Bone Goomba",
+      "runtimeName": "[Architect] Skull Scuttler",
+      "sourceScenes": [
+        "Bone_East_03",
+        "Black Thread States Thread Only Variant/Normal World/Bone Goomba"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 29
+    },
+    {
+      "id": "bone_goomba_bounce_fly",
+      "displayName": "Bone Goomba Bounce Fly",
+      "runtimeName": "[Architect] Skullwing",
+      "sourceScenes": [
+        "Weave_05b",
+        "Bone Goomba Bounce Fly (11)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 15
+    },
+    {
+      "id": "bone_goomba_l",
+      "displayName": "Bone Goomba Large",
+      "runtimeName": "[Architect] Skull Brute",
+      "sourceScenes": [
+        "Bone_East_03",
+        "Black Thread States Thread Only Variant/Normal World/Bone Goomba Large"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 13
+    },
+    {
+      "id": "bone_hunter",
+      "displayName": "Bone Hunter",
+      "runtimeName": "[Architect] Skarr Stalker",
+      "sourceScenes": [
+        "Ant_04",
+        "Black Thread States Thread Only Variant/Normal World/Bone Hunter"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 17
+    },
+    {
+      "id": "bone_hunter_buzzer",
+      "displayName": "Bone Hunter Buzzer",
+      "runtimeName": "[Architect] Skarrwing",
+      "sourceScenes": [
+        "Ant_04",
+        "Black Thread States Thread Only Variant/Normal World/Bone Hunter Buzzer"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 4
+    },
+    {
+      "id": "bone_hunter_child",
+      "displayName": "Bone Hunter Child",
+      "runtimeName": "[Architect] Skarr Scout",
+      "sourceScenes": [
+        "Ant_04",
+        "Black Thread States Thread Only Variant/Normal World/Bone Hunter Child"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 9
+    },
+    {
+      "id": "bone_hunter_fly",
+      "displayName": "Bone Hunter Fly",
+      "runtimeName": "[Architect] Spear Skarr",
+      "sourceScenes": [
+        "Ant_21",
+        "Enemy Control/Ant Merchant Killed/Big Guard Dead/Bone Hunter Fly"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 10
+    },
+    {
+      "id": "bone_hunter_throw",
+      "displayName": "Bone Hunter Throw",
+      "runtimeName": "[Architect] Skarrgard",
+      "sourceScenes": [
+        "Ant_21",
+        "Enemy Control/Normal/Bone Hunter Throw"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 6
+    },
+    {
+      "id": "bone_hunter_tiny",
+      "displayName": "Bone Hunter Tiny",
+      "runtimeName": "[Architect] Skarrlid",
+      "sourceScenes": [
+        "Ant_04",
+        "Black Thread States Thread Only Variant/Normal World/Bone Hunter Tiny"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 4
+    },
+    {
+      "id": "bone_roller",
+      "displayName": "Bone Roller",
+      "runtimeName": "[Architect] Mawling",
+      "sourceScenes": [
+        "Arborium_03",
+        "Bone Roller"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "bone_thumper",
+      "displayName": "Bone Thumper",
+      "runtimeName": "[Architect] Marrowmaw",
+      "sourceScenes": [
+        "Arborium_04",
+        "Enemy Respawner/Source Folder/Bone Thumper"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 12
+    },
+    {
+      "id": "choristor",
+      "displayName": "Song Pilgrim 03",
+      "runtimeName": "[Architect] Choristor",
+      "sourceScenes": [
+        "localpoolprefabs_assets_areasong.bundle",
+        "Assets/Prefabs/Hornet Enemies/Song Pilgrim 03.prefab"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 57
+    },
+    {
+      "id": "clawmaiden",
+      "displayName": "Song Handmaiden",
+      "runtimeName": "[Architect] Clawmaiden",
+      "sourceScenes": [
+        "localpoolprefabs_assets_areahangareasong.bundle",
+        "Assets/Prefabs/Hornet Enemies/Song Handmaiden.prefab"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 38
+    },
+    {
+      "id": "cloverstag",
+      "displayName": "Cloverstag",
+      "runtimeName": "[Architect] Cloverstag",
+      "sourceScenes": [
+        "Clover_06",
+        "Cloverstag (2)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "cogwork_defender",
+      "displayName": "Song Automaton Shield",
+      "runtimeName": "[Architect] Cogwork Defender",
+      "sourceScenes": [
+        "Cog_06",
+        "Song Automaton Shield"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 6
+    },
+    {
+      "id": "coral_big_jellyfish",
+      "displayName": "Coral Big Jellyfish",
+      "runtimeName": "[Architect] Yumama",
+      "sourceScenes": [
+        "Memory_Coral_Tower",
+        "Battle Scenes/Battle Scene Chamber 3/Wave 15b - double jellyfish/Coral Big Jellyfish"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "coral_conch_driller",
+      "displayName": "Coral Conch Driller",
+      "runtimeName": "[Architect] Conchfly",
+      "sourceScenes": [
+        "Memory_Coral_Tower",
+        "Battle Scenes/Battle Scene Chamber 2/Wave 9/Coral Conch Driller"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 14
+    },
+    {
+      "id": "coral_conch_shooter",
+      "displayName": "Coral Conch Shooter",
+      "runtimeName": "[Architect] Driznit",
+      "sourceScenes": [
+        "Coral_32",
+        "Coral Conch Shooter (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 24
+    },
+    {
+      "id": "coral_conch_shooter_heavy",
+      "displayName": "Coral Conch Shooter Heavy",
+      "runtimeName": "[Architect] Driznarga",
+      "sourceScenes": [
+        "Coral_24",
+        "Coral Conch Shooter Heavy (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 14
+    },
+    {
+      "id": "coral_flyer",
+      "displayName": "Coral Flyer",
+      "runtimeName": "[Architect] Kakri",
+      "sourceScenes": [
+        "Memory_Coral_Tower",
+        "Battle Scenes/Battle Scene Chamber 1/Wave 5/Coral Flyer"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 2
+    },
+    {
+      "id": "coral_flyer_throw",
+      "displayName": "Coral Flyer Throw",
+      "runtimeName": "[Architect] Yago",
+      "sourceScenes": [
+        "Memory_Coral_Tower",
+        "Battle Scenes/Battle Scene Chamber 3/Wave 2b/Coral Flyer Throw"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 8
+    },
+    {
+      "id": "coral_goomba_l",
+      "displayName": "Coral Goomba L",
+      "runtimeName": "[Architect] Crustcrawler B",
+      "sourceScenes": [
+        "Memory_Coral_Tower",
+        "Enemy Activator Groups/Enemy Activator Low/Enemy Folder/Coral Goomba L"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "coral_goomba_m",
+      "displayName": "Coral Goomba M",
+      "runtimeName": "[Architect] Crustcrawler A",
+      "sourceScenes": [
+        "Memory_Coral_Tower",
+        "Enemy Activator Groups/Enemy Activator Low/Enemy Folder/Coral Goomba M (2)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "coral_poke_swimmer",
+      "displayName": "Coral Poke Swimmer",
+      "runtimeName": "[Architect] Spinebeak Kai",
+      "sourceScenes": [
+        "Memory_Coral_Tower",
+        "Battle Scenes/Battle Scene Chamber 3/Wave 5 - fish1/Coral Poke Swimmer"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "coral_spike_goomba",
+      "displayName": "Coral Spike Goomba",
+      "runtimeName": "[Architect] Coral Furm",
+      "sourceScenes": [
+        "Coral_24",
+        "Coral Spike Goomba"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 10
+    },
+    {
+      "id": "coral_swimmer_fat",
+      "displayName": "Coral Swimmer Fat",
+      "runtimeName": "[Architect] Kai",
+      "sourceScenes": [
+        "Memory_Coral_Tower",
+        "Battle Scenes/Battle Scene Chamber 3/Wave 5 - fish1/Coral Swimmer Fat (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "coral_warrior",
+      "displayName": "Coral Warrior",
+      "runtimeName": "[Architect] Karaka",
+      "sourceScenes": [
+        "Memory_Coral_Tower",
+        "Battle Scenes/Battle Scene Chamber 2/Wave 2/Coral Warrior (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 2
+    },
+    {
+      "id": "corrcrust_karaka",
+      "displayName": "Coral Bubble Brute",
+      "runtimeName": "[Architect] Corrcrust Karaka",
+      "sourceScenes": [
+        "Memory_Coral_Tower",
+        "Battle Scenes/Battle Scene Chamber 4/Wave 3/Coral Bubble Brute"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "covetous_pilgrim",
+      "displayName": "Rosary Pilgrim",
+      "runtimeName": "[Architect] Covetous Pilgrim",
+      "sourceScenes": [
+        "Bonegrave",
+        "Pilgrim Groups/Rosary Pilgrim Scene/Rosary Pilgrim"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 6
+    },
+    {
+      "id": "craggler",
+      "displayName": "Roof Crab",
+      "runtimeName": "[Architect] Craggler",
+      "sourceScenes": [
+        "Crawl_04",
+        "Roof Crab"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 2
+    },
+    {
+      "id": "cragglite",
+      "displayName": "Small Crab",
+      "runtimeName": "[Architect] Cragglite",
+      "sourceScenes": [
+        "Crawl_04",
+        "Little Crabs/Crabs/Small Crab"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 2
+    },
+    {
+      "id": "craw_juror",
+      "displayName": "Crowman Juror Tiny",
+      "runtimeName": "[Architect] Craw Juror",
+      "sourceScenes": [
+        "Room_CrowCourt_02",
+        "Battle Scene/Wave 2/Crowman Juror Tiny"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 21
+    },
+    {
+      "id": "crawfather",
+      "displayName": "Crawfather",
+      "runtimeName": "[Architect] Crawfather",
+      "sourceScenes": [
+        "Room_CrowCourt_02",
+        "Battle Scene/Wave 6/Crawfather"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 7
+    },
+    {
+      "id": "crow",
+      "displayName": "Crow",
+      "runtimeName": "[Architect] Craw",
+      "sourceScenes": [
+        "localpoolprefabs_assets_areagreymoor",
+        "Assets/Prefabs/Hornet Enemies/Crow.prefab"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 42
+    },
+    {
+      "id": "crowman",
+      "displayName": "Crowman",
+      "runtimeName": "[Architect] Tallcraw",
+      "sourceScenes": [
+        "Greymoor_15b",
+        "Crowman"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 32
+    },
+    {
+      "id": "crowman_dagger",
+      "displayName": "Crowman Dagger",
+      "runtimeName": "[Architect] Squatcraw",
+      "sourceScenes": [
+        "Greymoor_15b",
+        "Crowman Dagger (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 33
+    },
+    {
+      "id": "crystal_drifter_giant",
+      "displayName": "Crystal Drifter Giant",
+      "runtimeName": "[Architect] Mnemonord",
+      "sourceScenes": [
+        "Peak_06",
+        "Crystal Drifter Giant"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "dock_bomber",
+      "displayName": "Dock Bomber",
+      "runtimeName": "[Architect] Flintflame Flyer",
+      "sourceScenes": [
+        "Dock_02",
+        "Dock Bomber"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 15
+    },
+    {
+      "id": "dock_charger",
+      "displayName": "Dock Charger",
+      "runtimeName": "[Architect] Deep Diver",
+      "sourceScenes": [
+        "Dock_02b",
+        "Dock Charger"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 23
+    },
+    {
+      "id": "dock_flyer",
+      "displayName": "Dock Flyer",
+      "runtimeName": "[Architect] Flintstone Flyer",
+      "sourceScenes": [
+        "Bone_East_01",
+        "Black Thread States Thread Only Variant/Normal World/Dock Flyer"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 42
+    },
+    {
+      "id": "dock_worker",
+      "displayName": "Dock Worker",
+      "runtimeName": "[Architect] Smelt Shoveller",
+      "sourceScenes": [
+        "Bone_East_03",
+        "Dock Worker"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 22
+    },
+    {
+      "id": "drapefly",
+      "displayName": "Citadel Bat",
+      "runtimeName": "[Architect] Drapefly",
+      "sourceScenes": [
+        "Hang_10",
+        "Citadel Bat"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 10
+    },
+    {
+      "id": "drapelord",
+      "displayName": "Citadel Bat Large",
+      "runtimeName": "[Architect] Drapelord",
+      "sourceScenes": [
+        "Arborium_11",
+        "Merchant Quest Parent/Quest Active/Battle Scene/Wave 1/Citadel Bat Large"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 2
+    },
+    {
+      "id": "drapemite",
+      "displayName": "Mite Heavy",
+      "runtimeName": "[Architect] Drapemite",
+      "sourceScenes": [
+        "Slab_15",
+        "Mite Heavy (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 12
+    },
+    {
+      "id": "dreg_catcher",
+      "displayName": "Farmer Catcher",
+      "runtimeName": "[Architect] Dreg Catcher",
+      "sourceScenes": [
+        "Greymoor_05",
+        "Scene Control/Farmer Enemies/Roosting Enemies/Farmer Catcher (2)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 34
+    },
+    {
+      "id": "dustroach",
+      "displayName": "Dustroach",
+      "runtimeName": "[Architect] Muckroach",
+      "sourceScenes": [
+        "Dust_05",
+        "Dustroach"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 68
+    },
+    {
+      "id": "elder_pilgrim",
+      "displayName": "Act3 Pilgrim 05",
+      "runtimeName": "[Architect] Elder Pilgrim",
+      "sourceScenes": [
+        "Bonegrave",
+        "Pilgrim Groups/Group 1/Act3 Pilgrim 05"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 5
+    },
+    {
+      "id": "envoy",
+      "displayName": "Song Pilgrim 01",
+      "runtimeName": "[Architect] Envoy",
+      "sourceScenes": [
+        "Song_17",
+        "March Group Control/March Group R/Song Pilgrim 01"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 25
+    },
+    {
+      "id": "escalion",
+      "displayName": "Grasshopper Fly",
+      "runtimeName": "[Architect] Escalion",
+      "sourceScenes": [
+        "Clover_04b",
+        "Grasshopper Fly"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 2
+    },
+    {
+      "id": "farmer_wisp",
+      "displayName": "Farmer Wisp",
+      "runtimeName": "[Architect] Burning Bug",
+      "sourceScenes": [
+        "Wisp_02",
+        "Wisp Farmers/Farmer Wisp"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 9
+    },
+    {
+      "id": "fertid",
+      "displayName": "Fields Goomba",
+      "runtimeName": "[Architect] Fertid",
+      "sourceScenes": [
+        "Bone_East_15",
+        "Fields Goomba"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 2
+    },
+    {
+      "id": "first_sinner",
+      "displayName": "First Weaver",
+      "runtimeName": "[Architect] First Sinner",
+      "sourceScenes": [
+        "Slab_10b",
+        "Boss Scene/First Weaver"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 14
+    },
+    {
+      "id": "flapping_fertid",
+      "displayName": "Fields Flyer",
+      "runtimeName": "[Architect] Flapping Fertid",
+      "sourceScenes": [
+        "Bone_East_15",
+        "Fields Flyer"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 4
+    },
+    {
+      "id": "flintbeetle",
+      "displayName": "Rock Roller",
+      "runtimeName": "[Architect] Flintbeetle",
+      "sourceScenes": [
+        "Bone_06",
+        "Rock Roller Scene/Rock Roller"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 8
+    },
+    {
+      "id": "flower_drifter",
+      "displayName": "Flower Drifter",
+      "runtimeName": "[Architect] Phacia",
+      "sourceScenes": [
+        "Shellwood_10",
+        "Flower Drifter"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 27
+    },
+    {
+      "id": "forebrother_gron",
+      "displayName": "Dock Guard Thrower",
+      "runtimeName": "[Architect] Forebrother Gron",
+      "sourceScenes": [
+        "Dock_09",
+        "Boss Scene/Dock Guard Thrower"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "forebrother_signis",
+      "displayName": "Dock Guard Slasher",
+      "runtimeName": "[Architect] Forebrother Signis",
+      "sourceScenes": [
+        "Dock_09",
+        "Boss Scene/Dock Guard Slasher"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 3
+    },
+    {
+      "id": "fourth_chorus",
+      "displayName": "Boss Scene",
+      "runtimeName": "[Architect] Fourth Chorus",
+      "sourceScenes": [
+        "Bone_East_08_boss_golem",
+        "Boss Scene"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "freshfly",
+      "displayName": "Slab Fly Small Fresh",
+      "runtimeName": "[Architect] Freshfly",
+      "sourceScenes": [
+        "Slab_16b",
+        "Broodmother Scene Control/Broodmother Scene/Battle Scene Broodmother/Spawner Flies/Slab Fly Small Fresh"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 6
+    },
+    {
+      "id": "furm",
+      "displayName": "Bell Goomba",
+      "runtimeName": "[Architect] Furm",
+      "sourceScenes": [
+        "Belltown_basement_03",
+        "Bell Goomba"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 28
+    },
+    {
+      "id": "gargant_gloom",
+      "displayName": "Gloom Beast",
+      "runtimeName": "[Architect] Gargant Gloom",
+      "sourceScenes": [
+        "Abyss_02b",
+        "Gloom Beast"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "garmond_zaza_boss",
+      "displayName": "Garmond Fighter",
+      "runtimeName": "[Architect] Garmond and Zaza (Boss)",
+      "sourceScenes": [
+        "Library_09",
+        "Black Thread States/Normal World/Scene Control/Garmond Scene/Garmond Fighter"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "giant_drapemite",
+      "displayName": "Understore Mite Giant",
+      "runtimeName": "[Architect] Giant Drapemite",
+      "sourceScenes": [
+        "Hang_10",
+        "Understore Mite Giant"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 3
+    },
+    {
+      "id": "gloomsac",
+      "displayName": "Gloomfly",
+      "runtimeName": "[Architect] Gloomsac",
+      "sourceScenes": [
+        "localpoolprefabs_assets_areaabyss.bundle",
+        "Assets/Prefabs/Hornet Enemies/Gloomfly.prefab"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 11
+    },
+    {
+      "id": "groal",
+      "displayName": "Swamp Shaman",
+      "runtimeName": "[Architect] Groal the Great",
+      "sourceScenes": [
+        "Shadow_18",
+        "Battle Scene/Wave 6 - Boss/Swamp Shaman"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "grom",
+      "displayName": "Bone Worm",
+      "runtimeName": "[Architect] Grom",
+      "sourceScenes": [
+        "Crawl_01",
+        "Bone Worm Nests/Worm Pool/Bone Worm (2)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 42
+    },
+    {
+      "id": "gromling",
+      "displayName": "Crypt Worm",
+      "runtimeName": "[Architect] Gromling",
+      "sourceScenes": [
+        "Crawl_01",
+        "Crypt Worms/GameObject/Crypt Worm (9)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "grove_pilgrim",
+      "displayName": "Grove Pilgrim Fly",
+      "runtimeName": "[Architect] Aknid Mother",
+      "sourceScenes": [
+        "localpoolprefabs_assets_areadust.bundle",
+        "Assets/Prefabs/Hornet Enemies/Grove Pilgrim Fly.prefab"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "grove_pilgrim_hatchling",
+      "displayName": "Aspid Hatchling",
+      "runtimeName": "[Architect] Aknid Hatchling",
+      "sourceScenes": [
+        "localpoolprefabs_assets_areaclover.bundle",
+        "Assets/Prefabs/Hornet Enemies/Aspid Hatchling.prefab"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "guardfly",
+      "displayName": "Slab Fly Mid",
+      "runtimeName": "[Architect] Guardfly",
+      "sourceScenes": [
+        "Slab_04",
+        "Slab Fly Mid (2)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 9
+    },
+    {
+      "id": "hardbone_elder",
+      "displayName": "Bone Hopper Giant",
+      "runtimeName": "[Architect] Hardbone Elder",
+      "sourceScenes": [
+        "Bone_East_24",
+        "Bone Hopper Group/Bone Hopper Giant"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 2
+    },
+    {
+      "id": "hardbone_hopper",
+      "displayName": "Bone Hopper Simple",
+      "runtimeName": "[Architect] Hardbone Hopper",
+      "sourceScenes": [
+        "Bone_East_24",
+        "Bone Hopper Group/Bone Hopper Simple"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 3
+    },
+    {
+      "id": "heavy_sentry",
+      "displayName": "Song Heavy Sentry",
+      "runtimeName": "[Architect] Choir Clapper",
+      "sourceScenes": [
+        "Hang_04_boss",
+        "Battle Scene/Wave 8 - Heavy Sentry/Song Heavy Sentry"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 2
+    },
+    {
+      "id": "judge",
+      "displayName": "Coral Judge",
+      "runtimeName": "[Architect] Judge",
+      "sourceScenes": [
+        "Coral_32",
+        "Black Thread States/Normal World/Coral Judge (3)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 41
+    },
+    {
+      "id": "karak_gor",
+      "displayName": "Coral Brawler",
+      "runtimeName": "[Architect] Karak Gor",
+      "sourceScenes": [
+        "Memory_Coral_Tower",
+        "Battle Scenes/Battle Scene Chamber 2/Wave 10/Coral Brawler (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "karmelita",
+      "displayName": "Hunter Queen Boss",
+      "runtimeName": "[Architect] Skarrsinger Karmelita",
+      "sourceScenes": [
+        "Memory_Ant_Queen",
+        "Boss Scene/Hunter Queen Boss"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 2
+    },
+    {
+      "id": "kindanir",
+      "displayName": "Grasshopper Child",
+      "runtimeName": "[Architect] Kindanir",
+      "sourceScenes": [
+        "Clover_04b",
+        "Battle Scene/Wave 3/Grasshopper Child (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 3
+    },
+    {
+      "id": "lampbearer",
+      "displayName": "Lightbearer",
+      "runtimeName": "[Architect] Lampbearer",
+      "sourceScenes": [
+        "Library_04",
+        "Black Thread States/Normal World/Lightbearer (3)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 4
+    },
+    {
+      "id": "last_claw",
+      "displayName": "Bone Hunter Fly Chief",
+      "runtimeName": "[Architect] Last Claw",
+      "sourceScenes": [
+        "Memory_Ant_Queen",
+        "Boss Scene/Battle Scene/Wave 4/Bone Hunter Fly Chief"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 4
+    },
+    {
+      "id": "last_judge",
+      "displayName": "Last Judge",
+      "runtimeName": "[Architect] Last Judge",
+      "sourceScenes": [
+        "Coral_Judge_Arena",
+        "Boss Scene/Last Judge"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 6
+    },
+    {
+      "id": "leaf_roller",
+      "displayName": "Grass Goomba",
+      "runtimeName": "[Architect] Leaf Roller",
+      "sourceScenes": [
+        "Clover_02c",
+        "Grass Goomba"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 2
+    },
+    {
+      "id": "lilypad",
+      "displayName": "Lilypad Plat/Enemy",
+      "runtimeName": "[Architect] Lily Pad / Nuphar",
+      "sourceScenes": [],
+      "reusesNativeType": false,
+      "composite": true,
+      "placementCount": 3
+    },
+    {
+      "id": "memoria",
+      "displayName": "Arborium Keeper",
+      "runtimeName": "[Architect] Memoria",
+      "sourceScenes": [
+        "Arborium_03",
+        "Arborium Keeper"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 30
+    },
+    {
+      "id": "mite",
+      "displayName": "Mite",
+      "runtimeName": "[Architect] Mite",
+      "sourceScenes": [
+        "Greymoor_06",
+        "Mite"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 47
+    },
+    {
+      "id": "mitefly",
+      "displayName": "Mitefly",
+      "runtimeName": "[Architect] Fluttermite",
+      "sourceScenes": [
+        "Greymoor_03",
+        "Mitefly (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 23
+    },
+    {
+      "id": "mitemother",
+      "displayName": "Gnat Giant",
+      "runtimeName": "[Architect] Mitemother",
+      "sourceScenes": [
+        "Greymoor_16",
+        "Gnat Giant"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 8
+    },
+    {
+      "id": "moorwing",
+      "displayName": "Vampire Gnat",
+      "runtimeName": "[Architect] Moorwing",
+      "sourceScenes": [
+        "Greymoor_05_boss",
+        "Vampire Gnat Boss Scene/Vampire Gnat"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 4
+    },
+    {
+      "id": "mortician",
+      "displayName": "Song Creeper",
+      "runtimeName": "[Architect] Mortician",
+      "sourceScenes": [
+        "Ward_03",
+        "Song Creeper (2)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "moss_mother",
+      "displayName": "Mossbone Mother",
+      "runtimeName": "[Architect] Moss Mother",
+      "sourceScenes": [
+        "Tut_03",
+        "Black Thread States/Normal World/Battle Scene/Wave 1/Mossbone Mother"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "mossbone_crawler",
+      "displayName": "MossBone Crawler",
+      "runtimeName": "[Architect] Mossgrub",
+      "sourceScenes": [
+        "Arborium_09",
+        "MossBone Crawler (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 7
+    },
+    {
+      "id": "mossbone_crawler_fat",
+      "displayName": "MossBone Crawler Fat",
+      "runtimeName": "[Architect] Massive Mossgrub",
+      "sourceScenes": [
+        "Arborium_09",
+        "MossBone Crawler Fat"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 3
+    },
+    {
+      "id": "mossbone_crawler_summon",
+      "displayName": "MossBone Crawler Summon",
+      "runtimeName": "[Architect] Falling Mossgrub",
+      "sourceScenes": [
+        "Weave_03",
+        "Boss Scene/MossBone Crawler Summon"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 3
+    },
+    {
+      "id": "mossbone_fly",
+      "displayName": "MossBone Fly",
+      "runtimeName": "[Architect] Mossmir",
+      "sourceScenes": [
+        "Arborium_04",
+        "MossBone Fly (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 2
+    },
+    {
+      "id": "pendra",
+      "displayName": "Hornet Dragonfly",
+      "runtimeName": "[Architect] Pendra",
+      "sourceScenes": [
+        "Clover_05c",
+        "Hornet Dragonfly"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "penitent",
+      "displayName": "Slab Prisoner Leaper New",
+      "runtimeName": "[Architect] Penitent",
+      "sourceScenes": [
+        "Slab_15",
+        "Slab Prisoner Leaper New"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 3
+    },
+    {
+      "id": "phantom",
+      "displayName": "Phantom",
+      "runtimeName": "[Architect] Phantom",
+      "sourceScenes": [
+        "Organ_01",
+        "Boss Scene/Phantom"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 2
+    },
+    {
+      "id": "pharlid",
+      "displayName": "Blade Spider",
+      "runtimeName": "[Architect] Pharlid",
+      "sourceScenes": [
+        "Cradle_Destroyed_Challenge_02",
+        "Blade Spider"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 23
+    },
+    {
+      "id": "pharlid_diver",
+      "displayName": "Blade Spider Hang",
+      "runtimeName": "[Architect] Pharlid Diver",
+      "sourceScenes": [
+        "Cradle_Destroyed_Challenge_02",
+        "Blade Spider Hang"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 13
+    },
+    {
+      "id": "pilgrim_01",
+      "displayName": "Pilgrim 01",
+      "runtimeName": "[Architect] Pilgrim Pouncer",
+      "sourceScenes": [
+        "Mosstown_01",
+        "Pilgrim 01"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 10
+    },
+    {
+      "id": "pilgrim_01_song",
+      "displayName": "Pilgrim 01 Song",
+      "runtimeName": "[Architect] Choir Pouncer",
+      "sourceScenes": [
+        "Song_11",
+        "Black Thread States Thread Only Variant/Normal World/Pilgrim 01 Song"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "pilgrim_03",
+      "displayName": "Pilgrim 03",
+      "runtimeName": "[Architect] Pilgrim Groveller",
+      "sourceScenes": [
+        "Mosstown_01",
+        "Pilgrim 03 (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 13
+    },
+    {
+      "id": "pilgrim_03_song",
+      "displayName": "Pilgrim 03 Song",
+      "runtimeName": "[Architect] Choir Bellbearer",
+      "sourceScenes": [
+        "Hang_04_boss",
+        "Battle Scene/Wave 3/Pilgrim 03 Song"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 35
+    },
+    {
+      "id": "pilgrim_bell",
+      "displayName": "Pilgrim BellThrower",
+      "runtimeName": "[Architect] Pilgrim Bellbearer",
+      "sourceScenes": [
+        "Greymoor_13",
+        "Black Thread States Thread Only Variant/Normal World/Pilgrim BellThrower"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 22
+    },
+    {
+      "id": "pilgrim_fisher",
+      "displayName": "Pilgrim Fisher Enemy",
+      "runtimeName": "[Architect] Pondcatcher",
+      "sourceScenes": [
+        "Shellwood_01",
+        "Black Thread States/Normal World/Pilgrim Fisher Enemy (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 18
+    },
+    {
+      "id": "pilgrim_fly",
+      "displayName": "Pilgrim Fly",
+      "runtimeName": "[Architect] Winged Pilgrim",
+      "sourceScenes": [
+        "Coral_32",
+        "Black Thread States/Black Thread World/Black_Thread_Core/Enemy Group/Pilgrim Fly"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 14
+    },
+    {
+      "id": "pilgrim_guide",
+      "displayName": "Pilgrim StaffWielder",
+      "runtimeName": "[Architect] Pilgrim Guide",
+      "sourceScenes": [
+        "Bonegrave",
+        "Pilgrim Groups/Group 2/Pilgrim StaffWielder"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 20
+    },
+    {
+      "id": "pilgrim_hiker",
+      "displayName": "Pilgrim Hiker",
+      "runtimeName": "[Architect] Pilgrim Hiker",
+      "sourceScenes": [
+        "Coral_32",
+        "Black Thread States/Black Thread World/Black_Thread_Core/Enemy Group/Pilgrim Hiker"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 12
+    },
+    {
+      "id": "pilgrim_hornfly",
+      "displayName": "Pilgrim 04",
+      "runtimeName": "[Architect] Pilgrim Hornfly",
+      "sourceScenes": [
+        "Bone_East_14b",
+        "Pilgrim 04"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 7
+    },
+    {
+      "id": "pilgrim_hulk",
+      "displayName": "Pilgrim 02",
+      "runtimeName": "[Architect] Pilgrim Hulk",
+      "sourceScenes": [
+        "Bone_East_14b",
+        "Pilgrim 02 (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 14
+    },
+    {
+      "id": "pilgrim_moss_spitter",
+      "displayName": "Pilgrim Moss Spitter",
+      "runtimeName": "[Architect] Overgrown Pilgrim",
+      "sourceScenes": [
+        "Mosstown_01",
+        "Black Thread States Thread Only Variant/Normal World/Pilgrim Moss Spitter"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 75
+    },
+    {
+      "id": "pilgrim_wingbell",
+      "displayName": "Pilgrim Bellthrower Fly",
+      "runtimeName": "[Architect] Winged Pilgrim Bellbearer",
+      "sourceScenes": [
+        "Greymoor_13",
+        "Black Thread States Thread Only Variant/Black Thread World/Pilgrim Bellthrower Fly"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 28
+    },
+    {
+      "id": "plasmid",
+      "displayName": "Bone Worm BlueBlood",
+      "runtimeName": "[Architect] Plasmid",
+      "sourceScenes": [
+        "Crawl_03",
+        "Area_States/Infected/Bone Worm BlueBlood (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 3
+    },
+    {
+      "id": "plasmidas",
+      "displayName": "Bone Worm BlueTurret",
+      "runtimeName": "[Architect] Plasmidas",
+      "sourceScenes": [
+        "Crawl_03",
+        "Area_States/Infected/Bone Worm BlueTurret"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 3
+    },
+    {
+      "id": "pokenabbin",
+      "displayName": "Coral Conch Stabber",
+      "runtimeName": "[Architect] Pokenabbin",
+      "sourceScenes": [
+        "Coral_24",
+        "Coral Conch Stabber (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 10
+    },
+    {
+      "id": "pond_skater",
+      "displayName": "Pond Skater",
+      "runtimeName": "[Architect] Pond Skipper",
+      "sourceScenes": [
+        "Arborium_05",
+        "Pond Skater"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 8
+    },
+    {
+      "id": "puny_penitent",
+      "displayName": "Slab Prisoner Fly New",
+      "runtimeName": "[Architect] Puny Penitent",
+      "sourceScenes": [
+        "Slab_15",
+        "Slab Prisoner Fly New"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "rhino",
+      "displayName": "Rhino",
+      "runtimeName": "[Architect] Rhinogrund",
+      "sourceScenes": [
+        "Bone_East_10_Church",
+        "Rhino Scene/Rhino"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 3
+    },
+    {
+      "id": "roachcatcher",
+      "displayName": "Roachfeeder Short",
+      "runtimeName": "[Architect] Roachcatcher",
+      "sourceScenes": [
+        "Dust_02",
+        "Roachfeeder Short"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 99
+    },
+    {
+      "id": "roachfeeder",
+      "displayName": "Roachfeeder Tall",
+      "runtimeName": "[Architect] Roachfeeder",
+      "sourceScenes": [
+        "Dust_02",
+        "Black Thread States Thread Only Variant/Normal World/Roachfeeder Tall"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 54
+    },
+    {
+      "id": "roachkeeper",
+      "displayName": "Roachkeeper",
+      "runtimeName": "[Architect] Roachkeeper",
+      "sourceScenes": [
+        "Dust_05",
+        "Roachkeeper"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 29
+    },
+    {
+      "id": "roachserver",
+      "displayName": "Roachkeeper Chef Tiny",
+      "runtimeName": "[Architect] Roachserver",
+      "sourceScenes": [
+        "Dust_Chef",
+        "Battle Parent/Battle Scene/Wave 1/Roachkeeper Chef Tiny"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 17
+    },
+    {
+      "id": "savage_beastfly",
+      "displayName": "Bone Flyer Giant",
+      "runtimeName": "[Architect] Savage Beastfly",
+      "sourceScenes": [
+        "Ant_19",
+        "Boss Control/Boss Scene/Bone Flyer Giant"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 4
+    },
+    {
+      "id": "scabfly",
+      "displayName": "Slab Fly Small",
+      "runtimeName": "[Architect] Scabfly",
+      "sourceScenes": [
+        "Slab_05",
+        "Slab Fly Small"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 6
+    },
+    {
+      "id": "scrollreader",
+      "displayName": "Scrollkeeper",
+      "runtimeName": "[Architect] Scrollreader",
+      "sourceScenes": [
+        "Library_04",
+        "Black Thread States/Normal World/Scrollkeeper"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 4
+    },
+    {
+      "id": "second_sentinel_boss",
+      "displayName": "Song Knight",
+      "runtimeName": "[Architect] Second Sentinel (Boss)",
+      "sourceScenes": [
+        "Hang_17b",
+        "Boss Scene - To Additive Load/Song Knight"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "servitor_large",
+      "displayName": "Weaver Servitor Large",
+      "runtimeName": "[Architect] Servitor Boran",
+      "sourceScenes": [
+        "Peak_04d",
+        "Weaver Servitor Large"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 49
+    },
+    {
+      "id": "servitor_small",
+      "displayName": "Weaver Servitor",
+      "runtimeName": "[Architect] Servitor Ignim",
+      "sourceScenes": [
+        "Weave_04",
+        "Weaver Servitor (2)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 251
+    },
+    {
+      "id": "shadow_charger",
+      "displayName": "Abyss Crawler Large",
+      "runtimeName": "[Architect] Shadow Charger",
+      "sourceScenes": [
+        "Abyss_05",
+        "Abyss Crawler Large (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 2
+    },
+    {
+      "id": "shadow_creeper",
+      "displayName": "Abyss Crawler",
+      "runtimeName": "[Architect] Shadow Creeper",
+      "sourceScenes": [
+        "Abyss_05",
+        "Abyss Crawler (2)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 4
+    },
+    {
+      "id": "shakra_boss",
+      "displayName": "Mapper Spar NPC",
+      "runtimeName": "[Architect] Shakra (Boss)",
+      "sourceScenes": [
+        "Greymoor_08_mapper",
+        "Mapper Spar NPC"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "shardillard",
+      "displayName": "Shell Fossil Mimic AppearVariant",
+      "runtimeName": "[Architect] Shardillard",
+      "sourceScenes": [
+        "Bone_06",
+        "Shell Fossil Mimic AppearVariant"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 40
+    },
+    {
+      "id": "shellwood_gnat",
+      "displayName": "Shellwood Goomba",
+      "runtimeName": "[Architect] Crawling Shellwood Gnat",
+      "sourceScenes": [
+        "Shellwood_01",
+        "Shellwood Goomba"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 7
+    },
+    {
+      "id": "shellwood_gnat_core",
+      "displayName": "Shellwood Gnat",
+      "runtimeName": "[Architect] Shellwood Gnat Core",
+      "sourceScenes": [
+        "localpoolprefabs_assets_areashellwood.bundle",
+        "Assets/Prefabs/Hornet Enemies/Shellwood Gnat.prefab"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 8
+    },
+    {
+      "id": "shellwood_gnat_fly",
+      "displayName": "Shellwood Goomba Flyer",
+      "runtimeName": "[Architect] Flying Shellwood Gnat",
+      "sourceScenes": [
+        "Shellwood_01",
+        "Shellwood Goomba Flyer (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 25
+    },
+    {
+      "id": "shield_dockworker",
+      "displayName": "Shield Dockworker",
+      "runtimeName": "[Architect] Smokerock Sifter",
+      "sourceScenes": [
+        "Dock_02",
+        "Shield Dockworker Spawn/Shield Dockworker (2)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 11
+    },
+    {
+      "id": "silk_snipper",
+      "displayName": "Farmer Scissors",
+      "runtimeName": "[Architect] Silk Snipper",
+      "sourceScenes": [
+        "Greymoor_06",
+        "Farmer Scissors"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 48
+    },
+    {
+      "id": "skull_tyrant",
+      "displayName": "Skull King",
+      "runtimeName": "[Architect] Skull Tyrant",
+      "sourceScenes": [
+        "Bonetown_boss",
+        "Boss Scene/Skull King"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 5
+    },
+    {
+      "id": "slab_jailer",
+      "displayName": "Slab Fly Large Cage",
+      "runtimeName": "[Architect] Wardenfly Jailer",
+      "sourceScenes": [
+        "Bone_East_04c",
+        "Scene Control/Slab Jailer Scene/Slab Fly Large Cage"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 3
+    },
+    {
+      "id": "slammer",
+      "displayName": "Slammer 1",
+      "runtimeName": "[Architect] Dregwheel",
+      "sourceScenes": [
+        "Ward_02",
+        "Boss Scene Parent/Respawn Scene/Husks/Slammer 1"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 21
+    },
+    {
+      "id": "slasher",
+      "displayName": "Slasher 1",
+      "runtimeName": "[Architect] Dreg Husk",
+      "sourceScenes": [
+        "Ward_02",
+        "Boss Scene Parent/Respawn Scene/Husks/Slasher 1"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 19
+    },
+    {
+      "id": "snitchfly",
+      "displayName": "Rosary Thief",
+      "runtimeName": "[Architect] Snitchfly",
+      "sourceScenes": [
+        "Bonetown",
+        "Black Thread States/Black Thread World/Thief Scene/Rosary Thief Group/Rosary Thief"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 10
+    },
+    {
+      "id": "song_admin",
+      "displayName": "Song Administrator",
+      "runtimeName": "[Architect] Minister",
+      "sourceScenes": [
+        "Hang_04_boss",
+        "Battle Scene/Wave 5 - Song Admins/Song Administrator"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 14
+    },
+    {
+      "id": "song_auto_1",
+      "displayName": "Song Automaton 01",
+      "runtimeName": "[Architect] Cogwork Choirbug",
+      "sourceScenes": [
+        "Cog_04",
+        "Black Thread States Thread Only Variant/Normal World/Song Automaton 01"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "song_auto_2",
+      "displayName": "Song Automaton 02",
+      "runtimeName": "[Architect] Cogwork Cleanser",
+      "sourceScenes": [
+        "Cog_04",
+        "Black Thread States Thread Only Variant/Black Thread World/Group (1)/Song Automaton 02"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "song_maestro",
+      "displayName": "Song Pilgrim Maestro",
+      "runtimeName": "[Architect] Maestro",
+      "sourceScenes": [
+        "Hang_04_boss",
+        "Battle Scene/Wave 13 - Maestro/Song Pilgrim Maestro"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 24
+    },
+    {
+      "id": "song_reed",
+      "displayName": "Song Reed",
+      "runtimeName": "[Architect] Reed",
+      "sourceScenes": [
+        "Hang_04_boss",
+        "Battle Scene/Wave 1/Song Reed"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 83
+    },
+    {
+      "id": "song_reed_grand",
+      "displayName": "Song Reed Grand",
+      "runtimeName": "[Architect] Grand Reed",
+      "sourceScenes": [
+        "Hang_07",
+        "Black Thread States/Normal World/Unscaler/Song Reed Grand (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 9
+    },
+    {
+      "id": "spine_floater",
+      "displayName": "Spine Floater",
+      "runtimeName": "[Architect] Hoker",
+      "sourceScenes": [
+        "Bone_East_14",
+        "Spine Floater (9)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 8
+    },
+    {
+      "id": "splinter",
+      "displayName": "Stick Insect",
+      "runtimeName": "[Architect] Splinter",
+      "sourceScenes": [
+        "Shellwood_02",
+        "Stick Insect"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 11
+    },
+    {
+      "id": "splinterbark",
+      "displayName": "Stick Insect Flyer",
+      "runtimeName": "[Architect] Splinterbark",
+      "sourceScenes": [
+        "Shellwood_26",
+        "Black Thread States/Normal World/Stick Insect Flyer (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 31
+    },
+    {
+      "id": "splinterhorn",
+      "displayName": "Stick Insect Charger",
+      "runtimeName": "[Architect] Splinterhorn",
+      "sourceScenes": [
+        "Shellwood_02",
+        "Stick Insect Charger"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 14
+    },
+    {
+      "id": "squatcraw_juror",
+      "displayName": "Crowman Dagger Juror",
+      "runtimeName": "[Architect] Squatcraw Juror",
+      "sourceScenes": [
+        "Room_CrowCourt_02",
+        "Battle Scene/Wave 1/Crowman Dagger Juror"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 19
+    },
+    {
+      "id": "stilkin",
+      "displayName": "Swamp Muckman",
+      "runtimeName": "[Architect] Stilkin",
+      "sourceScenes": [
+        "Shadow_12",
+        "Swamp Muckman All Control/Swamp Muckman (4)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 28
+    },
+    {
+      "id": "stilkin_trapper",
+      "displayName": "Swamp Muckman Tall",
+      "runtimeName": "[Architect] Stilkin Trapper",
+      "sourceScenes": [
+        "Shadow_12",
+        "Swamp Muckman All Control/Swamp Muckman Tall Control/Activation Folder/Swamp Muckman Tall"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 22
+    },
+    {
+      "id": "summoned_saviour",
+      "displayName": "Abyss Mass",
+      "runtimeName": "[Architect] Summoned Saviour",
+      "sourceScenes": [
+        "Bone_Steel_Servant",
+        "Steel Servant Scene/Battle Scene/Wave 1/Abyss Mass"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 3
+    },
+    {
+      "id": "surgeon",
+      "displayName": "Song Pilgrim 02",
+      "runtimeName": "[Architect] Surgeon",
+      "sourceScenes": [
+        "Ward_09",
+        "Sherma Rescue Scene/Activation Folder/Battle Scene/Wave 1/Song Pilgrim 02"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "swamp_barnacle",
+      "displayName": "Swamp Barnacle",
+      "runtimeName": "[Architect] Barnak",
+      "sourceScenes": [
+        "Aqueduct_03",
+        "Swamp Barnacle (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 1
+    },
+    {
+      "id": "swamp_ductsucker",
+      "displayName": "Swamp Ductsucker",
+      "runtimeName": "[Architect] Ductsucker",
+      "sourceScenes": [
+        "Aqueduct_03",
+        "Swamp Ductsucker"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 2
+    },
+    {
+      "id": "swamp_mosquito",
+      "displayName": "Swamp Mosquito",
+      "runtimeName": "[Architect] Swamp Squit",
+      "sourceScenes": [
+        "Shadow_04",
+        "Swamp Mosquito (3)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 2
+    },
+    {
+      "id": "swamp_mosquito_skinny",
+      "displayName": "Swamp Mosquito Skinny",
+      "runtimeName": "[Architect] Spit Squit",
+      "sourceScenes": [
+        "Aqueduct_03",
+        "Swamp Mosquito Skinny"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 4
+    },
+    {
+      "id": "tallcraw_juror",
+      "displayName": "Crowman Juror",
+      "runtimeName": "[Architect] Tallcraw Juror",
+      "sourceScenes": [
+        "Room_CrowCourt_02",
+        "Battle Scene/Wave 1/Crowman Juror"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 27
+    },
+    {
+      "id": "tar_slug",
+      "displayName": "Tar Slug",
+      "runtimeName": "[Architect] Lavalug",
+      "sourceScenes": [
+        "Dock_02",
+        "Tar Slug"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 3
+    },
+    {
+      "id": "tar_slug_huge",
+      "displayName": "Tar Slug Huge",
+      "runtimeName": "[Architect] Lavalarga",
+      "sourceScenes": [
+        "Dock_11",
+        "Tar Slug Huge (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 9
+    },
+    {
+      "id": "tarmite",
+      "displayName": "Bone Spitter",
+      "runtimeName": "[Architect] Tarmite",
+      "sourceScenes": [
+        "Bone_East_LavaChallenge",
+        "Bone Spitter"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 11
+    },
+    {
+      "id": "thread_raker",
+      "displayName": "Farmer Centipede",
+      "runtimeName": "[Architect] Thread Raker",
+      "sourceScenes": [
+        "Greymoor_05",
+        "Scene Control/Farmer Enemies/Farmer Centipede (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 18
+    },
+    {
+      "id": "undercrank",
+      "displayName": "Understore Thrower",
+      "runtimeName": "[Architect] Underloft",
+      "sourceScenes": [
+        "Under_19b",
+        "Understore Thrower"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 21
+    },
+    {
+      "id": "underpoke",
+      "displayName": "Understore Poker",
+      "runtimeName": "[Architect] Underpoke",
+      "sourceScenes": [
+        "Under_10",
+        "Battle Scene/Wave 2/Understore Poker"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 14
+    },
+    {
+      "id": "underscrub",
+      "displayName": "Pilgrim 03 Understore",
+      "runtimeName": "[Architect] Underscrub",
+      "sourceScenes": [
+        "Under_19",
+        "Pilgrim 03 Understore (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 4
+    },
+    {
+      "id": "understore_auto_ex",
+      "displayName": "Understore Automaton EX",
+      "runtimeName": "[Architect] Cogwork Hauler",
+      "sourceScenes": [
+        "Under_19",
+        "Understore Automaton EX (9)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 8
+    },
+    {
+      "id": "understore_heavy",
+      "displayName": "Understore Heavy",
+      "runtimeName": "[Architect] Undercrank",
+      "sourceScenes": [
+        "Under_10",
+        "Battle Scene/Wave 6/Understore Heavy (1)"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 5
+    },
+    {
+      "id": "undersweep",
+      "displayName": "Pilgrim Staff Understore",
+      "runtimeName": "[Architect] Undersweep",
+      "sourceScenes": [
+        "Under_19",
+        "Pilgrim Staff Understore"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 4
+    },
+    {
+      "id": "underworker",
+      "displayName": "Understore Small",
+      "runtimeName": "[Architect] Underworker",
+      "sourceScenes": [
+        "Under_10",
+        "Battle Scene/Wave 1/Understore Small"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 13
+    },
+    {
+      "id": "vaultborn",
+      "displayName": "Song Scholar Acolyte",
+      "runtimeName": "[Architect] Vaultborn",
+      "sourceScenes": [
+        "Library_04",
+        "Acolyte Control/Song Scholar Acolyte"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 2
+    },
+    {
+      "id": "vaultkeeper",
+      "displayName": "Scholar",
+      "runtimeName": "[Architect] Vaultkeeper",
+      "sourceScenes": [
+        "Library_04",
+        "Scholar"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 2
+    },
+    {
+      "id": "verdanir",
+      "displayName": "Grasshopper Slasher",
+      "runtimeName": "[Architect] Verdanir",
+      "sourceScenes": [
+        "Clover_04b",
+        "Battle Scene/Return Scene/Grasshopper Slasher"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 3
+    },
+    {
+      "id": "wardenfly",
+      "displayName": "Slab Fly Large",
+      "runtimeName": "[Architect] Wardenfly",
+      "sourceScenes": [
+        "Slab_22",
+        "Slab Fly Large"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 6
+    },
+    {
+      "id": "watcher",
+      "displayName": "Coral Warrior Grey",
+      "runtimeName": "[Architect] Watcher at the Edge",
+      "sourceScenes": [
+        "Coral_39",
+        "Coral Warrior Grey"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 4
+    },
+    {
+      "id": "winged_furm",
+      "displayName": "Bell Fly",
+      "runtimeName": "[Architect] Winged Furm",
+      "sourceScenes": [
+        "Belltown_basement_03",
+        "Bell Fly"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 13
+    },
+    {
+      "id": "wood_wasp",
+      "displayName": "Shellwood Wasp",
+      "runtimeName": "[Architect] Wood Wasp",
+      "sourceScenes": [
+        "Shellwood_02",
+        "Shellwood Wasp"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 47
+    },
+    {
+      "id": "wraith",
+      "displayName": "Wraith",
+      "runtimeName": "[Architect] Wraith",
+      "sourceScenes": [
+        "Dust_Maze_01",
+        "Wraith"
+      ],
+      "reusesNativeType": true,
+      "composite": false,
+      "placementCount": 33
+    }
+  ]
+}

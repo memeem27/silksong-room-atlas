@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "repository": "memeem27/silksong-room-atlas",
-  "assetCount": 2101,
-  "releaseCount": 9,
+  "assetCount": 2115,
+  "releaseCount": 10,
   "assets": {
     "artwork/00d10de1fa0d1dbcd96a755ad4bad91f57189cd9347fb2b1cef076dfad276ae2.webp": {
       "tag": "silksong-atlas-data-v2-001",
@@ -7645,7 +7645,7 @@
       "name": "manifest.json.gz"
     },
     "maps/navigation.json.gz": {
-      "tag": "silksong-atlas-data-v2-011",
+      "tag": "silksong-atlas-data-v2-013",
       "name": "navigation.json.gz"
     },
     "rooms/abyss_08.json.gz": {
@@ -8389,7 +8389,7 @@
       "name": "wisp_07.json.gz"
     },
     "maps/gauntlet-song.json.gz": {
-      "tag": "silksong-atlas-data-v2-011",
+      "tag": "silksong-atlas-data-v2-013",
       "name": "gauntlet-song.json.gz"
     },
     "artwork/3f1f9c66444936ecca453df0cbe27972aa1751b9e426a5e103963f4b57ccb49d.webp": {
@@ -8407,6 +8407,62 @@
     "artwork/c418020a82d8e6aca9dd6a7fabc4916bf059b5afe374ad631c74027548fbdb3d.webp": {
       "tag": "silksong-atlas-data-v2-011",
       "name": "c418020a82d8e6aca9dd6a7fabc4916bf059b5afe374ad631c74027548fbdb3d.webp"
+    },
+    "maps/gauntlet-scenes/ghbonus.json.gz": {
+      "tag": "silksong-atlas-data-v2-013",
+      "name": "ghbonus.json.gz"
+    },
+    "maps/gauntlet-scenes/ghcara.json.gz": {
+      "tag": "silksong-atlas-data-v2-013",
+      "name": "ghcara.json.gz"
+    },
+    "maps/gauntlet-scenes/ghchapel.json.gz": {
+      "tag": "silksong-atlas-data-v2-013",
+      "name": "ghchapel.json.gz"
+    },
+    "maps/gauntlet-scenes/ghdocks.json.gz": {
+      "tag": "silksong-atlas-data-v2-013",
+      "name": "ghdocks.json.gz"
+    },
+    "maps/gauntlet-scenes/ghfar.json.gz": {
+      "tag": "silksong-atlas-data-v2-013",
+      "name": "ghfar.json.gz"
+    },
+    "maps/gauntlet-scenes/ghmarch.json.gz": {
+      "tag": "silksong-atlas-data-v2-013",
+      "name": "ghmarch.json.gz"
+    },
+    "maps/gauntlet-scenes/ghmarrow.json.gz": {
+      "tag": "silksong-atlas-data-v2-013",
+      "name": "ghmarrow.json.gz"
+    },
+    "maps/gauntlet-scenes/ghmist.json.gz": {
+      "tag": "silksong-atlas-data-v2-013",
+      "name": "ghmist.json.gz"
+    },
+    "maps/gauntlet-scenes/ghmoss.json.gz": {
+      "tag": "silksong-atlas-data-v2-013",
+      "name": "ghmoss.json.gz"
+    },
+    "maps/gauntlet-scenes/ghmosshome.json.gz": {
+      "tag": "silksong-atlas-data-v2-013",
+      "name": "ghmosshome.json.gz"
+    },
+    "maps/gauntlet-scenes/ghraid1.json.gz": {
+      "tag": "silksong-atlas-data-v2-013",
+      "name": "ghraid1.json.gz"
+    },
+    "maps/gauntlet-scenes/ghsuperbossact1.json.gz": {
+      "tag": "silksong-atlas-data-v2-013",
+      "name": "ghsuperbossact1.json.gz"
+    },
+    "maps/gauntlet-scenes/ghverdoutpost.json.gz": {
+      "tag": "silksong-atlas-data-v2-013",
+      "name": "ghverdoutpost.json.gz"
+    },
+    "maps/gauntlet-scenes/ghwormways.json.gz": {
+      "tag": "silksong-atlas-data-v2-013",
+      "name": "ghwormways.json.gz"
     }
   }
 }

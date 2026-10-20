@@ -6,9 +6,10 @@ const ARTWORK_EXTENSION = String(window.SILKSONG_ATLAS_ARTWORK_EXTENSION || 'png
 const GZIP_JSON = Boolean(window.SILKSONG_ATLAS_GZIP_JSON);
 const DATA_VERSION = String(window.SILKSONG_ATLAS_DATA_VERSION || '').trim();
 const MAX_MAP_ZOOM = 64;
-const state = { manifest: null, navigation: null, gauntletCatalog: null, roomMetaCache: new Map(), mode: 'world', area: null, room: null, roomMeta: null,
+const state = { manifest: null, navigation: null, gauntletCatalog: null, roomMetaCache: new Map(), arenaDataCache: new Map(), mode: 'world', area: null, room: null, roomMeta: null,
   roomImage: null, roomViewImage: null, wideImage: null, detailImage: null, imageCache: new Map(), atlasCache: new Map(),
   selectedGauntlet: null, selectedWave: 'all', visiblePlacements: new Map(), selectedAreaName: null, selectedGauntletMapKey: null, hoverAreaKey: null, hoverGauntletKey: null,
+  selectedArenaKey: null, arenaData: null, selectedArenaChoiceId: '', hiddenArenaPlacementKeys: new Set(), selectedArenaPlacementKey: null, hoverArenaPlacementKey: null,
   roomReturnMode: null,
   cameraSections: [], roomViewKey: 'whole', mapBackdropVisible: false, mapBackdropAuto: false,
   viewport: { key: '', zoom: 1, offsetX: 0, offsetY: 0 }, hoverRoomName: null, mapSpriteTintCache: new Map(), mapRoomCache: new Map(), mapArtworkLinkCache: new Map(),
@@ -124,7 +125,7 @@ function loadRoomMetadata(name){
 function renderNavigation() {
   const query = $('search').value.trim().toLowerCase();
   const isRoom = state.mode === 'room';
-  const isGauntletMap = state.mode === 'gauntlet-map';
+  const isGauntletMap = state.mode === 'gauntlet-map' || state.mode === 'gauntlet-arena';
   $('worldButton').hidden = state.mode === 'world' || (isRoom && Boolean(state.area));
   $('worldButton').textContent = isRoom && !state.area ? 'All rooms' : 'World map';
   $('areaButton').hidden = !isRoom || !state.area;
@@ -133,7 +134,7 @@ function renderNavigation() {
   if (isGauntletMap) {
     const gauntlets = state.gauntletCatalog?.gauntlets || [];
     $('navDescription').textContent = state.gauntletCatalog
-      ? `${gauntlets.length} Architect portals · choose a marker to inspect linked room scenes and event data.`
+      ? state.mode === 'gauntlet-arena' ? `${gauntlets.length} Architect portals · selected arena: ${fileBase(state.arenaData?.scene||'loading')}. Choose another portal or return to the layout.` : `${gauntlets.length} Architect portals · choose a marker to inspect linked room scenes and event data.`
       : 'GauntletSong catalog is not available in this dataset build.';
     $('search').placeholder = 'Find a gauntlet…';
     const filtered = gauntlets.filter(item => !query || item.name.toLowerCase().includes(query) || item.scene.toLowerCase().includes(query));
@@ -185,7 +186,7 @@ function showWorld() {
   $('exportPngButton').hidden=true; $('toggleWorldMapStyle').hidden=false; updateWorldMapStyleButton();
   $('toggleMapBackdrop').hidden=true;
   $('roomSummary').innerHTML='<div class="empty">Choose a region on the Silksong map or from the list.</div>';
-  $('mapLayers').hidden=false; $('gauntletMapPanel').hidden=true; $('roomSectionPanel').hidden=true; $('objectLayers').hidden=true; $('roomStatePanel').hidden=true; $('architectPanel').hidden=true; $('metadataPanel').hidden=true; $('closeRoomButton').hidden=true;
+  $('mapLayers').hidden=false; $('gauntletMapPanel').hidden=true; $('gauntletArenaPanel').hidden=true; $('roomSectionPanel').hidden=true; $('objectLayers').hidden=true; $('roomStatePanel').hidden=true; $('architectPanel').hidden=true; $('metadataPanel').hidden=true; $('closeRoomButton').hidden=true;
   $('toggleAreaLabels').checked=state.showAreaLabels; $('toggleAreaConnectionLines').checked=state.showAreaConnectionLines;
   renderNavigation(); $('navList').scrollTop=0; const selectedAreaButton=document.querySelector('[data-area].active'); selectedAreaButton?.scrollIntoView({block:'nearest'}); draw();
 }
@@ -197,7 +198,7 @@ function showAllRooms() {
   $('stageKind').textContent='ALL PREPARED ROOMS'; $('stageTitle').textContent='Browse every scene'; $('viewFoot').textContent='ALL SCENES · SCROLL OR PINCH TO ZOOM · DRAG TO PAN'; $('imageDimensions').textContent='';
   $('exportPngButton').hidden=true; $('toggleWorldMapStyle').hidden=false; updateWorldMapStyleButton(); $('roomSummary').innerHTML='<div class="empty">Choose any prepared scene, including scenes without an authored map position.</div>';
   $('toggleMapBackdrop').hidden=true;
-  $('mapLayers').hidden=true; $('gauntletMapPanel').hidden=true; $('roomSectionPanel').hidden=true; $('objectLayers').hidden=true; $('roomStatePanel').hidden=true; $('architectPanel').hidden=true; $('metadataPanel').hidden=true; $('closeRoomButton').hidden=true;
+  $('mapLayers').hidden=true; $('gauntletMapPanel').hidden=true; $('gauntletArenaPanel').hidden=true; $('roomSectionPanel').hidden=true; $('objectLayers').hidden=true; $('roomStatePanel').hidden=true; $('architectPanel').hidden=true; $('metadataPanel').hidden=true; $('closeRoomButton').hidden=true;
   renderNavigation(); $('navList').scrollTop=0; draw();
 }
 function showGauntletMap(options={}) {
@@ -211,7 +212,7 @@ function showGauntletMap(options={}) {
   $('inspectorEyebrow').textContent='GAUNTLETSONG'; $('inspectorTitle').textContent='Portal details';
   $('exportPngButton').hidden=true; $('toggleWorldMapStyle').hidden=true; $('toggleMapBackdrop').hidden=true;
   $('roomSummary').innerHTML='<div class="empty">Select a GauntletSong portal from the map or index.</div>';
-  $('mapLayers').hidden=true; $('gauntletMapPanel').hidden=false; $('roomSectionPanel').hidden=true; $('objectLayers').hidden=true;
+  $('mapLayers').hidden=true; $('gauntletMapPanel').hidden=false; $('gauntletArenaPanel').hidden=true; $('roomSectionPanel').hidden=true; $('objectLayers').hidden=true;
   $('roomStatePanel').hidden=true; $('architectPanel').hidden=true; $('metadataPanel').hidden=true; $('closeRoomButton').hidden=true;
   renderNavigation(); $('navList').scrollTop=0; renderGauntletMapDetails();
   const selected=(state.gauntletCatalog?.gauntlets||[]).find(item=>item.key===state.selectedGauntletMapKey);
@@ -220,13 +221,13 @@ function showGauntletMap(options={}) {
 }
 function selectGauntletMap(key) {
   const gauntlet=(state.gauntletCatalog?.gauntlets||[]).find(item=>item.key===key);if(!gauntlet)return;
-  state.mode='gauntlet-map';state.selectedGauntletMapKey=gauntlet.key;state.hoverGauntletKey=null;
-  focusGauntletPortal(gauntlet);
-  renderNavigation();renderGauntletMapDetails();setPanelOpen('inspector',true);draw();
+  showGauntletMap({selectedKey:gauntlet.key});
 }
 function renderGauntletMapDetails() {
   const gauntlet=(state.gauntletCatalog?.gauntlets||[]).find(item=>item.key===state.selectedGauntletMapKey)||null;
+  $('gauntletMapPanel').hidden=false;$('gauntletArenaPanel').hidden=true;
   $('gauntletMapSummary').hidden=false;$('openGauntletGuide').hidden=!gauntlet;$('gauntletGuidePage').hidden=true;$('gauntletRouteHeading').hidden=false;$('gauntletMapRoutes').hidden=false;
+  $('openGauntletArena').hidden=!gauntlet?.arenaData;
   if(!gauntlet){$('gauntletMapSummary').innerHTML='<div class="hint">Choose one of the portal markers to see the linked rooms and scene data.</div>';$('gauntletRouteCount').textContent='0';$('gauntletMapRoutes').innerHTML='<div class="hint">No portal selected.</div>';return;}
   $('inspectorTitle').textContent=gauntlet.name;
   const position=gauntlet.hubPosition||{},routes=gauntlet.routes||[];
@@ -240,6 +241,111 @@ function renderGauntletMapDetails() {
     return `<button class="gauntlet-route-row" type="button" data-gauntlet-route="${esc(route.roomScene||route.targetScene)}"><span class="gauntlet-glyph">${String(index+1).padStart(2,'0')}</span><span class="gauntlet-route-copy">${esc(fileBase(route.roomScene||route.targetScene))}<small>${esc(detail)}</small></span><span class="nav-arrow">›</span></button>`;
   }).join('')||'<div class="hint">No external room exits are recorded for this portal in the Architect export.</div>';
   document.querySelectorAll('[data-gauntlet-route]').forEach(button=>button.addEventListener('click',()=>openGauntletRoute(button.dataset.gauntletRoute)));
+}
+function loadGauntletArena(gauntlet){
+  if(!gauntlet?.arenaData||!/^maps\/gauntlet-scenes\/[a-z0-9]+\.json$/.test(gauntlet.arenaData))return Promise.reject(new Error('This portal has no safe Architect arena-data route.'));
+  if(state.arenaDataCache.has(gauntlet.key))return state.arenaDataCache.get(gauntlet.key);
+  const pending=loadJson(gauntlet.arenaData).then(data=>{
+    if(data?.format!=='silksong-architect-arena-layout'||data.formatVersion!==1||data.key!==gauntlet.key||data.scene!==gauntlet.scene||
+      !Array.isArray(data.tileCells)||!Array.isArray(data.placements)||data.rendering?.terrainWasFabricated!==false)
+      throw new Error(`The Architect arena data for ${gauntlet.scene} failed validation.`);
+    return data;
+  }).catch(error=>{state.arenaDataCache.delete(gauntlet.key);throw error;});
+  state.arenaDataCache.set(gauntlet.key,pending);return pending;
+}
+async function openGauntletArena(key=state.selectedGauntletMapKey){
+  const gauntlet=(state.gauntletCatalog?.gauntlets||[]).find(item=>item.key===key);if(!gauntlet)return;
+  state.mode='gauntlet-arena';state.selectedArenaKey=gauntlet.key;state.selectedGauntletMapKey=gauntlet.key;
+  state.roomReturnMode=null;
+  state.arenaData=null;state.selectedArenaChoiceId='';state.hiddenArenaPlacementKeys=new Set();state.selectedArenaPlacementKey=null;state.hoverArenaPlacementKey=null;
+  $('stageKind').textContent='GAUNTLETSONG ARENA LAYOUT';$('stageTitle').textContent=gauntlet.name;
+  $('viewFoot').textContent='ARCHITECT TILE OCCUPANCY + AUTHORED PLACEMENTS · SCROLL TO ZOOM · DRAG TO PAN';$('imageDimensions').textContent='';
+  $('inspectorEyebrow').textContent='ARCHITECT ARENA';$('inspectorTitle').textContent=gauntlet.name;
+  $('exportPngButton').hidden=true;$('toggleWorldMapStyle').hidden=true;$('toggleMapBackdrop').hidden=true;
+  $('roomSummary').innerHTML='<div class="empty">Arena geometry is loaded from source Architect tile cells.</div>';
+  $('mapLayers').hidden=true;$('gauntletMapPanel').hidden=true;$('gauntletArenaPanel').hidden=false;$('roomSectionPanel').hidden=true;
+  $('objectLayers').hidden=true;$('roomStatePanel').hidden=true;$('architectPanel').hidden=true;$('metadataPanel').hidden=true;$('closeRoomButton').hidden=true;
+  $('gauntletArenaSummary').innerHTML='<div class="hint">Loading the serialized arena footprint and placements…</div>';
+  $('arenaEnemyPlacements').innerHTML='<div class="hint">Enemy placement data is loading.</div>';$('arenaPlacementDetails').innerHTML='<div class="hint">Select an enemy marker or list entry to inspect its source coordinates.</div>';
+  $('toggleArenaTileCells').checked=true;$('toggleArenaEnemyPlacements').checked=true;$('toggleArenaOtherPlacements').checked=false;
+  renderNavigation();setPanelOpen('inspector',true);
+  const view=currentViewport();view.zoom=1;view.offsetX=0;view.offsetY=0;draw();
+  try{
+    const data=await loadGauntletArena(gauntlet);
+    if(state.mode!=='gauntlet-arena'||state.selectedArenaKey!==gauntlet.key)return;
+    state.arenaData=data;renderGauntletArenaDetails(gauntlet,data);renderNavigation();draw();
+  }catch(error){
+    if(state.mode!=='gauntlet-arena'||state.selectedArenaKey!==gauntlet.key)return;
+    $('gauntletArenaSummary').innerHTML=`<div class="empty">Could not load this arena’s Architect data: ${esc(error.message||error)}</div>`;
+  }
+}
+function visibleArenaPlacements(data=state.arenaData){
+  if(!data)return[];
+  const choiceLinkedKeys=arenaChoicePlacementKeys(data);
+  return(data.placements||[]).filter(record=>{
+    if(choiceLinkedKeys&&!choiceLinkedKeys.has(record.key))return false;
+    if(record.enemyCandidate)return $('toggleArenaEnemyPlacements').checked&&!state.hiddenArenaPlacementKeys.has(record.key);
+    return $('toggleArenaOtherPlacements').checked;
+  });
+}
+function arenaChoicePlacementKeys(data=state.arenaData){
+  const choice=(data?.scriptChoices||[]).find(item=>item.blockId===state.selectedArenaChoiceId),events=new Set(choice?.triggerEvents||[]);
+  if(!events.size)return null;
+  const matching=(data?.placements||[]).filter(record=>(record.listeners||[]).some(listener=>events.has(listener.event)));
+  return matching.length?new Set(matching.map(record=>record.key)):null;
+}
+function renderGauntletArenaDetails(gauntlet,data){
+  $('gauntletArenaCount').textContent=`${Number(data.tileCellCount||0).toLocaleString()} cells · ${Number(data.enemyCount||0)} enemies`;
+  $('gauntletArenaSummary').innerHTML=`<div class="summary-name">${esc(gauntlet.name)}</div><div class="summary-kind">${esc(data.scene)} · ${esc(data.source?.mod||'Architect scene')}</div><div class="summary-stat"><span>Source tile cells</span><strong>${Number(data.tileCellCount||0).toLocaleString()}</strong></div><div class="summary-stat"><span>Enemy placements</span><strong>${Number(data.enemyCount||0)}</strong></div><div class="summary-stat"><span>Verified enemy sprite types</span><strong>${Object.keys(data.enemyArtwork||{}).length}</strong></div><p class="hint">Scene coordinates are taken directly from the Architect export. Terrain textures are not included.</p>`;
+  $('arenaEnemyCount').textContent=String(data.enemyCount||0);$('arenaObjectCount').textContent=String(Math.max(0,(data.placementCount||0)-(data.enemyCount||0)));
+  const choices=data.scriptChoices||[];
+  $('arenaChoiceSelect').innerHTML=`<option value="">No challenge selected</option>${choices.map(choice=>`<option value="${esc(choice.blockId)}">${esc(choice.label)}</option>`).join('')}`;
+  $('arenaChoiceSelect').disabled=!choices.length;$('arenaChoiceSelect').value='';renderArenaChoiceDetails();renderArenaEnemyPlacements();
+  const events=data.eventGroups||[];
+  if(events.length){$('arenaPlacementDetails').insertAdjacentHTML('beforeend',`<div class="arena-placement-details"><strong>Serialized placement events:</strong><br>${events.slice(0,20).map(event=>`${esc(event.name)} · ${Number(event.placementCount||0)} linked · ${esc(event.actions||'')}`).join('<br>')}</div>`);}
+  const routes=gauntlet.routes||[];$('arenaRouteCount').textContent=String(routes.length);
+  $('arenaRouteList').innerHTML=routes.map((route,index)=>{
+    const target=route.roomScene||route.targetScene,area=route.roomArea?.name||'No authored map position';
+    const detail=route.targetType==='architect-arena'?'Architect scene transition':`${area}${route.roomHasSidecar?' · room event data ready':''}`;
+    return`<button class="gauntlet-route-row" type="button" data-arena-route="${index}"><span class="gauntlet-glyph">${route.targetType==='architect-arena'?'G':'↗'}</span><span class="gauntlet-route-copy">${esc(fileBase(target))}<small>${esc(detail)}</small></span><span class="nav-arrow">›</span></button>`;
+  }).join('')||'<div class="hint">No scene transitions are recorded for this arena.</div>';
+  document.querySelectorAll('[data-arena-route]').forEach(button=>button.addEventListener('click',()=>openArenaRoute(Number(button.dataset.arenaRoute))));
+}
+function renderArenaChoiceDetails(){
+  const data=state.arenaData,choice=(data?.scriptChoices||[]).find(item=>item.blockId===state.selectedArenaChoiceId);
+  if(!choice){$('arenaChoiceDetails').textContent=data?.scriptChoices?.length?`${data.scriptChoices.length} actual Architect Choice Display option(s) are available. Selecting one reveals its serialized script outputs.`:'No Choice Display options are recorded in this arena scene.';return;}
+  const triggerEvents=choice.triggerEvents||[],matching=(data.placements||[]).filter(record=>(record.listeners||[]).some(listener=>triggerEvents.includes(listener.event)));
+  const requirement=choice.requirement&&choice.requirement!=='0'?` · requirement ${choice.requirement}`:'',cost=choice.cost&&choice.cost!=='0'?` · cost ${choice.cost}`:'';
+  const eventText=triggerEvents.length?`Script output: ${triggerEvents.join(', ')}.`:'This choice has no direct object-event output in the export.';
+  const placementText=matching.length?`${matching.length} placement(s) have a matching saved event listener.`:'No placement records in this arena are linked to this choice’s outputs, so it does not filter or invent a wave-specific enemy set.';
+  $('arenaChoiceDetails').innerHTML=`<strong>${esc(choice.label)}</strong>${esc(requirement+cost)}<br><span class="arena-choice-events">${esc(eventText)}</span> ${esc(placementText)}`;
+}
+function renderArenaEnemyPlacements(){
+  const choiceLinkedKeys=arenaChoicePlacementKeys(),allRecords=(state.arenaData?.placements||[]).filter(record=>record.enemyCandidate&&!record.controllerMarker),matchingRecords=allRecords.filter(record=>!choiceLinkedKeys||choiceLinkedKeys.has(record.key)),records=matchingRecords.slice(0,300);
+  $('arenaEnemyPlacements').innerHTML=records.length?records.map(record=>{
+    const point=record.worldPosition||{},name=esc(record.label||record.placement?.id||'Enemy'),sprite=enemyArtworkForRecord(record)?.sprite;
+    const stateText=record.activeByDefault?'active at source start':'inactive at source start',spriteText=sprite?`verified sprite · ${sprite.name||'game frame'}`:'no verified frame · E marker';
+    return`<div class="placement-row arena-enemy-row"><input type="checkbox" data-arena-placement="${esc(record.key)}" aria-label="Show ${name}" ${state.hiddenArenaPlacementKeys.has(record.key)?'':'checked'}><span class="placement-copy"><button class="enemy-article-link" type="button" data-arena-select="${esc(record.key)}">${name}</button> · ${Number(point.x||0).toFixed(2)}, ${Number(point.y||0).toFixed(2)}<span class="${record.activeByDefault?'':'arena-inactive'}">${esc(stateText)} · ${esc(spriteText)}</span></span></div>`;
+  }).join(''):choiceLinkedKeys?'<div class="hint">This selected script output links no enemy placements. Enable other scene objects to inspect linked non-enemy changes.</div>':'<div class="hint">No enemy spawn placements are classified in this Architect scene. Other source objects can be enabled above.</div>';
+  if(matchingRecords.length>300)$('arenaEnemyPlacements').insertAdjacentHTML('beforeend','<div class="hint">Showing the first 300 matching source enemy placements.</div>');
+  document.querySelectorAll('[data-arena-placement]').forEach(input=>input.addEventListener('change',()=>{if(input.checked)state.hiddenArenaPlacementKeys.delete(input.dataset.arenaPlacement);else state.hiddenArenaPlacementKeys.add(input.dataset.arenaPlacement);draw();}));
+  document.querySelectorAll('[data-arena-select]').forEach(button=>button.addEventListener('click',()=>selectArenaPlacement(button.dataset.arenaSelect)));
+}
+function selectArenaPlacement(key){
+  const record=(state.arenaData?.placements||[]).find(item=>item.key===key);if(!record)return;
+  state.selectedArenaPlacementKey=record.key;const point=record.worldPosition||{},sprite=record.enemyCandidate?enemySpriteForRecord(record):null;
+  const label=record.label||record.placement?.id||'Architect object',listeners=(record.listeners||[]).map(listener=>`${esc(listener.event)} · ${esc(listener.action)}`).join('<br>')||'No placement-specific event listeners are serialized for this object.';
+  const spriteInfo=sprite?`Verified game sprite: ${esc(sprite.name||'source frame')} · ${esc(sprite.textureSha256.slice(0,12))}…`:'No verified enemy texture is mapped; this placement uses a neutral marker.';
+  $('arenaPlacementDetails').innerHTML=`<div class="arena-placement-details"><strong>${esc(label)}</strong><br>Architect ID: ${esc(record.placement?.id||'unknown')}<br>Position: ${Number(point.x||0).toFixed(3)}, ${Number(point.y||0).toFixed(3)}${Number.isFinite(Number(point.z))?`, ${Number(point.z).toFixed(3)}`:''}<br>Source state: ${record.activeByDefault?'active':'inactive'} at scene start<br>${record.enemyCandidate?`${spriteInfo}<br>`:''}Events: ${listeners}${record.enemyCandidate?sprite?'<canvas id="arenaDetailSpriteCanvas" class="enemy-article-sprite" width="112" height="112" aria-label="Verified enemy game sprite"></canvas>':'' :''}</div>`;
+  if(sprite)drawEnemyArticleSprite(record,'arenaDetailSpriteCanvas');draw();
+}
+function openArenaRoute(index){
+  const gauntlet=(state.gauntletCatalog?.gauntlets||[]).find(item=>item.key===state.selectedArenaKey),route=gauntlet?.routes?.[index];if(!route)return;
+  if(route.targetType==='architect-arena'){
+    const target=(state.gauntletCatalog?.gauntlets||[]).find(item=>item.scene.toLowerCase()===String(route.targetScene||'').toLowerCase());
+    if(target)void openGauntletArena(target.key);return;
+  }
+  openRoom(route.roomScene||route.targetScene,{returnToGauntletArena:true});
 }
 function closeGauntletGuide(){
   $('gauntletMapSummary').hidden=false;$('openGauntletGuide').hidden=false;$('gauntletGuidePage').hidden=true;
@@ -326,7 +432,7 @@ function showArea(key, options = {}) {
   $('mapStateCount').textContent=`${conditionalRows.reduce((count,object)=>count+(object.mapSprites?.length||0),0)} sprites`;
   $('architectMapCount').textContent=`${area.rooms.filter(room=>room.architect?.markerCount).length} rooms`;
   $('toggleArchitectMapMarkers').checked=state.showArchitectMapMarkers;
-  $('mapLayers').hidden=false; $('gauntletMapPanel').hidden=true; $('roomSectionPanel').hidden=true; $('objectLayers').hidden=true; $('roomStatePanel').hidden=true; $('architectPanel').hidden=true; $('metadataPanel').hidden=true; $('closeRoomButton').hidden=true;
+  $('mapLayers').hidden=false; $('gauntletMapPanel').hidden=true; $('gauntletArenaPanel').hidden=true; $('roomSectionPanel').hidden=true; $('objectLayers').hidden=true; $('roomStatePanel').hidden=true; $('architectPanel').hidden=true; $('metadataPanel').hidden=true; $('closeRoomButton').hidden=true;
   renderNavigation(); $('navList').scrollTop=0;
   if(options.focusRoom) focusAreaRoom(area,options.focusRoom);
   attachTransitionButtons(); draw();
@@ -358,7 +464,7 @@ function focusAreaRoom(area,roomName){
 async function openRoom(name, options = {}) {
   const room = findRoom(name); if (!room) return;
   setPanelOpen('inspector', true);
-  state.roomReturnMode=options.returnToGauntletMap?'gauntlet-map':null;
+  state.roomReturnMode=options.returnToGauntletArena?'gauntlet-arena':options.returnToGauntletMap?'gauntlet-map':null;
   const mappedArea=(state.navigation?.areas||[]).find(area=>area.rooms.some(item=>item.name.toLowerCase()===room.name.toLowerCase()))||null;
   const areaForRoom=state.area?.rooms?.some(item=>item.name.toLowerCase()===room.name.toLowerCase())?state.area:mappedArea;
   state.area=areaForRoom;
@@ -369,12 +475,13 @@ async function openRoom(name, options = {}) {
   state.cameraSections=[]; state.roomViewKey='whole';
   $('stageKind').textContent=room.kind?.toUpperCase() || 'ROOM'; $('stageTitle').textContent=fileBase(room.name); $('viewFoot').textContent='CLEAN SILKSONG ROOM IMAGE · SCROLL OR PINCH TO ZOOM · DRAG TO PAN';
   $('canvasLoading').hidden=false; $('canvasNotice').hidden=true; $('closeRoomButton').hidden=false;
-  $('closeRoomButton').title=options.returnToGauntletMap?'Return to GauntletSong portal map':'Return to area map';
-  $('closeRoomButton').setAttribute('aria-label',options.returnToGauntletMap?'Return to GauntletSong portal map':'Return to area map');
+  const returnLabel=options.returnToGauntletArena?'Return to Architect arena':options.returnToGauntletMap?'Return to GauntletSong portal map':'Return to area map';
+  $('closeRoomButton').title=returnLabel;
+  $('closeRoomButton').setAttribute('aria-label',returnLabel);
   $('exportPngButton').hidden=true;
   $('toggleMapBackdrop').hidden=true; $('mapLayers').hidden=true; $('toggleWorldMapStyle').hidden=true;
   $('roomSummary').innerHTML='<div class="empty">Loading the selected room sidecar…</div>';
-  $('gauntletMapPanel').hidden=true; $('roomSectionPanel').hidden=true; $('objectLayers').hidden=true; $('roomStatePanel').hidden=true; $('architectPanel').hidden=true; $('metadataPanel').hidden=true;
+  $('gauntletMapPanel').hidden=true; $('gauntletArenaPanel').hidden=true; $('roomSectionPanel').hidden=true; $('objectLayers').hidden=true; $('roomStatePanel').hidden=true; $('architectPanel').hidden=true; $('metadataPanel').hidden=true;
   // Keep the user's room-overlay choice as they move between rooms. The HTML
   // default enables authentic enemy sprites/markers; users can turn them off.
   $('toggleSpawns').checked=false; $('toggleChecks').checked=false;
@@ -768,11 +875,11 @@ function showEnemyArticle(key){
   $('enemyArticle').scrollIntoView({block:'nearest'});
   if(sprite)drawEnemyArticleSprite(record);
 }
-function drawEnemyArticleSprite(record){
-  const target=$('enemyArticleSpriteCanvas'),sprite=enemySpriteForRecord(record);if(!target||!sprite)return;
+function drawEnemyArticleSprite(record,targetId='enemyArticleSpriteCanvas'){
+  const target=$(targetId),sprite=enemySpriteForRecord(record);if(!target||!sprite)return;
   let image=state.atlasCache.get(sprite.textureSha256);
-  if(!image){image=new Image();state.atlasCache.set(sprite.textureSha256,image);image.onload=()=>{draw();drawEnemyArticleSprite(record);};image.onerror=()=>{};image.src=`${ARTWORK_BASE}${sprite.textureSha256}.${ARTWORK_EXTENSION}`;return;}
-  if(!image.complete||!image.naturalWidth){image.addEventListener('load',()=>drawEnemyArticleSprite(record),{once:true});return;}
+  if(!image){image=new Image();state.atlasCache.set(sprite.textureSha256,image);image.onload=()=>{draw();drawEnemyArticleSprite(record,targetId);};image.onerror=()=>{};image.src=`${ARTWORK_BASE}${sprite.textureSha256}.${ARTWORK_EXTENSION}`;return;}
+  if(!image.complete||!image.naturalWidth){image.addEventListener('load',()=>drawEnemyArticleSprite(record,targetId),{once:true});return;}
   const context=target.getContext('2d');if(!context)return;
   const geometry=spriteGeometry(sprite),scale=Math.min((target.width-12)/Math.max(.01,geometry.width),(target.height-12)/Math.max(.01,geometry.height)),placement=record.placement||{};
   const sourceY=Number(sprite.textureHeight)-Number(sprite.rectY)-Number(sprite.rectHeight);
@@ -823,6 +930,7 @@ function fitTransform(bounds,width,height,padding=26){
 function viewportKey(){
   if(state.mode==='world'||state.mode==='all-rooms')return `world-map:${state.worldMapStyle}`;
   if(state.mode==='gauntlet-map')return 'gauntlet-song-hub';
+  if(state.mode==='gauntlet-arena')return `gauntlet-arena:${state.selectedArenaKey||''}`;
   if(state.mode==='area')return `area:${state.area?.key||''}:${state.mapBackdropVisible?'all-regions':'region'}`;
   if(state.mode==='room')return `room:${state.room?.name||''}:${state.roomViewKey}`;
   return state.mode;
@@ -865,6 +973,14 @@ function mapBoundsForMode(){
     if(portals.length)return{minX:Math.min(...portals.map(point=>point.x))-2,maxX:Math.max(...portals.map(point=>point.x))+2,minY:Math.min(...portals.map(point=>point.y))-2,maxY:Math.max(...portals.map(point=>point.y))+2};
     return null;
   }
+  if(state.mode==='gauntlet-arena'){
+    const source=state.arenaData?.tileBounds,points=(state.arenaData?.placements||[]).map(record=>record.worldPosition).filter(Boolean);
+    if(!source&&!points.length)return null;
+    return{minX:Math.min(source?.minX??Infinity,...points.map(point=>point.x))-1,
+      maxX:Math.max((source?.maxX??-Infinity)+1,...points.map(point=>point.x))+1,
+      minY:Math.min(source?.minY??Infinity,...points.map(point=>point.y))-1,
+      maxY:Math.max((source?.maxY??-Infinity)+1,...points.map(point=>point.y))+1};
+  }
   if(state.mode==='area')return state.mapBackdropVisible?(areaContextBounds(state.area)||visibleAreaDetailBounds(state.area)||state.area?.wideBounds):(visibleAreaDetailBounds(state.area)||state.area?.wideBounds);
   return null;
 }
@@ -887,6 +1003,7 @@ function draw() {
   ctx.clearRect(0,0,width,height);ctx.fillStyle='#080a08';ctx.fillRect(0,0,width,height);
   if(state.mode==='room'){drawRoom(width,height);scheduleEnemyAnimationFrame();return;}
   if(state.mode==='gauntlet-map'){drawGauntletMap(width,height,mapTransform(mapBoundsForMode(),width,height,54));return;}
+  if(state.mode==='gauntlet-arena'){drawGauntletArena(width,height,mapTransform(mapBoundsForMode(),width,height,54));scheduleEnemyAnimationFrame();return;}
   const mapType=state.mode==='area'&&state.area?.detailBounds?'detail':state.worldMapStyle==='sketch'?'detail':'wide';
   const imageRecord=state.navigation?.maps?.[mapType];
   const image=state.mode==='area'||((state.mode==='world'||state.mode==='all-rooms')&&state.worldMapStyle==='sketch')?null:worldMapImage(mapType);
@@ -954,6 +1071,44 @@ function drawGauntletMap(width,height,transform){
     ctx.restore();
   }
   ctx.save();ctx.fillStyle='rgba(224,231,222,.74)';ctx.font='9px Consolas,monospace';ctx.textAlign='left';ctx.textBaseline='bottom';ctx.fillText('Architect tile occupancy + portal coordinates · no hub texture included',12,height-12);ctx.restore();
+}
+function drawGauntletArena(width,height,transform){
+  const data=state.arenaData;
+  if(!data){drawFallbackNotice(width,height,'Loading the source Architect arena layout…');return;}
+  if($('toggleArenaTileCells').checked){
+    ctx.save();ctx.fillStyle='rgba(112,126,111,.12)';ctx.strokeStyle='rgba(173,190,168,.32)';ctx.lineWidth=.7;
+    for(const cell of data.tileCells||[]){
+      const x=Number(cell[0]),y=Number(cell[1]);if(!Number.isFinite(x)||!Number.isFinite(y))continue;
+      const topLeft=screenPoint({x,y:y+1},transform),bottomRight=screenPoint({x:x+1,y},transform);
+      if(bottomRight.x<-2||topLeft.x>width+2||bottomRight.y<-2||topLeft.y>height+2)continue;
+      ctx.fillRect(topLeft.x,topLeft.y,bottomRight.x-topLeft.x,bottomRight.y-topLeft.y);
+      ctx.strokeRect(topLeft.x,topLeft.y,bottomRight.x-topLeft.x,bottomRight.y-topLeft.y);
+    }
+    ctx.restore();
+  }
+  const placements=visibleArenaPlacements();
+  for(const record of placements){
+    const world=record.worldPosition;if(!world)continue;
+    const point=screenPoint(world,transform),{x,y}=point;if(x<-24||y<-24||x>width+24||y>height+24)continue;
+    const selected=state.selectedArenaPlacementKey===record.key,hovered=state.hoverArenaPlacementKey===record.key;
+    const textured=record.enemyCandidate&&drawEnemyTexture(record,x,y,transform.scale,1,ctx);
+    if(!textured){
+      ctx.save();ctx.fillStyle=record.enemyCandidate?'#e69b35':record.npcCandidate?'#74b8a5':'#b8c0b1';
+      ctx.strokeStyle=record.activeByDefault?'#111611':'#c6bd95';ctx.lineWidth=1.5;
+      if(record.activeByDefault===false)ctx.setLineDash([2,2]);
+      ctx.beginPath();ctx.arc(x,y,record.enemyCandidate?6.5:5.5,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.setLineDash([]);ctx.fillStyle='#111611';ctx.font='bold 7px Consolas,monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(record.enemyCandidate?'E':record.npcCandidate?'N':String(record.placement?.id||'O').toLowerCase()==='transition_gate'?'T':'O',x,y+.25);ctx.restore();
+    }
+    if(selected||hovered){ctx.save();ctx.strokeStyle=selected?'#fff4c8':'#d7eacb';ctx.lineWidth=selected?2:1.4;ctx.fillStyle=selected?'rgba(249,234,183,.15)':'rgba(215,234,203,.1)';ctx.beginPath();ctx.arc(x,y,selected?11:9,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();}
+  }
+  ctx.save();ctx.fillStyle='rgba(224,231,222,.8)';ctx.font='9px Consolas,monospace';ctx.textAlign='left';ctx.textBaseline='bottom';
+  ctx.fillText(`${Number(data.tileCellCount||0).toLocaleString()} authored cells · ${Number(data.enemyCount||0)} source enemy placements · no terrain texture exported`,12,height-12);ctx.restore();
+}
+function arenaPlacementAt(point){
+  const{width,height}=canvasSize(),transform=mapTransform(mapBoundsForMode(),width,height,54);
+  return visibleArenaPlacements().map(record=>({record,distance:Math.hypot(point.x-screenPoint(record.worldPosition,transform).x,point.y-screenPoint(record.worldPosition,transform).y)}))
+    .filter(item=>item.distance<=15).sort((a,b)=>a.distance-b.distance)[0]?.record||null;
 }
 function drawSketchOverview(width,height,transform){
   const areas=state.navigation?.areas||[];
@@ -1571,9 +1726,9 @@ function drawArchitect(width,height,frame,meta){
 }
 function spriteGeometry(sprite){const ppu=Math.max(1,Number(sprite.pixelsPerUnit)||100),rotated=Number(sprite.packingRotation)===4,w=(rotated?sprite.rectHeight:sprite.rectWidth)/ppu,h=(rotated?sprite.rectWidth:sprite.rectHeight)/ppu,ow=(sprite.originalWidth||sprite.rectWidth)/ppu,oh=(sprite.originalHeight||sprite.rectHeight)/ppu;return{width:w,height:h,left:(sprite.trimOffsetX||0)/ppu-(sprite.pivotX??.5)*ow,bottom:(sprite.trimOffsetY||0)/ppu-(sprite.pivotY??.5)*oh,rotated};}
 function enemyArtworkForRecord(record){
-  const id=String(record.placement?.id||'').replace(/^prefab_/i,'').toLowerCase().replace(/[^a-z0-9]/g,''),label=String(record.label||'').toLowerCase().replace(/[^a-z0-9]/g,''),artwork=state.roomMeta?.architect?.enemyArtwork||{},shared=state.gauntletCatalog?.enemyArtworkAliases||{},facts=state.gauntletCatalog?.enemyFacts||{},candidates=[id,...(id.startsWith('g')?[id.slice(1)]:[]),label,...(label.startsWith('g')?[label.slice(1)]:[])],names=new Set(candidates);
+  const id=String(record.placement?.id||'').replace(/^prefab_/i,'').toLowerCase().replace(/[^a-z0-9]/g,''),label=String(record.label||'').toLowerCase().replace(/[^a-z0-9]/g,''),arena=state.arenaData?.enemyArtwork||{},artwork=state.roomMeta?.architect?.enemyArtwork||{},shared=state.gauntletCatalog?.enemyArtworkAliases||{},facts=state.gauntletCatalog?.enemyFacts||{},candidates=[String(record.artworkKey||''),id,...(id.startsWith('g')?[id.slice(1)]:[]),label,...(label.startsWith('g')?[label.slice(1)]:[])].filter(Boolean),names=new Set(candidates);
   for(const [key,item] of Object.entries(facts))if([item.displayName,item.internalName].some(value=>names.has(String(value||'').toLowerCase().replace(/[^a-z0-9]/g,''))))candidates.push(key);
-  return candidates.map(key=>artwork[key]||shared[key]).find(item=>/^[a-f0-9]{64}$/i.test(item?.sprite?.textureSha256||''))||null;
+  return candidates.map(key=>artwork[key]||arena[key]||shared[key]).find(item=>/^[a-f0-9]{64}$/i.test(item?.sprite?.textureSha256||''))||null;
 }
 function enemyFactsForRecord(record){
   const id=String(record.placement?.id||'').replace(/^prefab_/i,'').toLowerCase().replace(/[^a-z0-9]/g,''),label=String(record.label||'').toLowerCase().replace(/[^a-z0-9]/g,''),facts=state.gauntletCatalog?.enemyFacts||{},candidates=[id,...(id.startsWith('g')?[id.slice(1)]:[]),label,...(label.startsWith('g')?[label.slice(1)]:[])];
@@ -1737,6 +1892,7 @@ canvas.addEventListener('pointermove',event=>{
   const rect=canvas.getBoundingClientRect(),point={x:event.clientX-rect.left,y:event.clientY-rect.top};
   if(state.mode==='world'||state.mode==='all-rooms'){const area=worldAreaAt(point),key=area?.key||null;if(key!==state.hoverAreaKey){state.hoverAreaKey=key;canvas.style.cursor=key?'pointer':'grab';draw();}return;}
   if(state.mode==='gauntlet-map'){const portal=gauntletPortalAt(point),key=portal?.item.key||null;if(key!==state.hoverGauntletKey){state.hoverGauntletKey=key;canvas.style.cursor=key?'pointer':'grab';draw();}return;}
+  if(state.mode==='gauntlet-arena'){const record=arenaPlacementAt(point),key=record?.key||null;if(key!==state.hoverArenaPlacementKey){state.hoverArenaPlacementKey=key;canvas.style.cursor=key?'pointer':'grab';draw();}return;}
   if(state.mode==='area'){const room=areaRoomAt(point),name=room?.name||null;if(name!==state.hoverRoomName){state.hoverRoomName=name;canvas.style.cursor=name?'pointer':'grab';draw();}return;}
   canvas.style.cursor='grab';
 });
@@ -1760,11 +1916,12 @@ function endCanvasPan(event){
   const drag=state.drag;if(!drag||drag.pointerId!==event.pointerId)return;state.drag=null;canvas.classList.remove('is-panning');if(canvas.hasPointerCapture(event.pointerId))canvas.releasePointerCapture(event.pointerId);if(drag.moved){state.suppressClickUntil=performance.now()+250;state.hoverAreaKey=null;state.hoverRoomName=null;draw();}canvas.style.cursor='grab';
 }
 canvas.addEventListener('pointerup',endCanvasPan);canvas.addEventListener('pointercancel',endCanvasPan);canvas.addEventListener('lostpointercapture',endCanvasPan);
-canvas.addEventListener('pointerleave',()=>{if(state.drag)return;let changed=false;if(state.hoverAreaKey){state.hoverAreaKey=null;changed=true;}if(state.hoverRoomName){state.hoverRoomName=null;changed=true;}if(state.hoverGauntletKey){state.hoverGauntletKey=null;changed=true;}canvas.style.cursor='grab';if(changed)draw();});
+canvas.addEventListener('pointerleave',()=>{if(state.drag)return;let changed=false;if(state.hoverAreaKey){state.hoverAreaKey=null;changed=true;}if(state.hoverRoomName){state.hoverRoomName=null;changed=true;}if(state.hoverGauntletKey){state.hoverGauntletKey=null;changed=true;}if(state.hoverArenaPlacementKey){state.hoverArenaPlacementKey=null;changed=true;}canvas.style.cursor='grab';if(changed)draw();});
 canvas.addEventListener('click',event=>{
   if(performance.now()<state.suppressClickUntil){state.suppressClickUntil=0;event.preventDefault();return;}
   const rect=canvas.getBoundingClientRect(),point={x:event.clientX-rect.left,y:event.clientY-rect.top};
   if(state.mode==='gauntlet-map'){const portal=gauntletPortalAt(point);if(portal)selectGauntletMap(portal.item.key);}
+  else if(state.mode==='gauntlet-arena'){const record=arenaPlacementAt(point);if(record)selectArenaPlacement(record.key);}
   else if(state.mode==='world'||state.mode==='all-rooms')selectWorldAt(point);
   else if(state.mode==='area'){const architectRoom=architectRoomAt(point),anchorRoom=architectRoom?null:mapAnchorAt(point);if(architectRoom)openRoom(architectRoom.name,{architectMarkerIndex:0});else if(anchorRoom)openRoom(anchorRoom.name);else selectRoomAt(point);}
   else if($('toggleGauntlets').checked){
@@ -1835,8 +1992,12 @@ async function exportCleanPng() {
     $('canvasNotice').textContent=error.message||String(error);$('canvasNotice').hidden=false;
   } finally {button.disabled=false;button.textContent=originalText;}
 }
-$('search').addEventListener('input',renderNavigation);$('worldButton').addEventListener('click',()=>state.mode==='room'&&!state.area?showAllRooms():showWorld());$('areaButton').addEventListener('click',()=>state.area?showArea(state.area.key):showAllRooms());$('allRoomsButton').addEventListener('click',showAllRooms);$('closeRoomButton').addEventListener('click',()=>state.roomReturnMode==='gauntlet-map'?showGauntletMap({selectedKey:state.selectedGauntletMapKey}):state.area?showArea(state.area.key):showAllRooms());
+ $('search').addEventListener('input',renderNavigation);$('worldButton').addEventListener('click',()=>state.mode==='room'&&!state.area?showAllRooms():showWorld());$('areaButton').addEventListener('click',()=>state.area?showArea(state.area.key):showAllRooms());$('allRoomsButton').addEventListener('click',showAllRooms);$('closeRoomButton').addEventListener('click',()=>state.roomReturnMode==='gauntlet-arena'?void openGauntletArena(state.selectedArenaKey):state.roomReturnMode==='gauntlet-map'?showGauntletMap({selectedKey:state.selectedGauntletMapKey}):state.area?showArea(state.area.key):showAllRooms());
 $('gauntletMapButton').addEventListener('click',()=>showGauntletMap());
+$('openGauntletArena').addEventListener('click',()=>void openGauntletArena());
+$('backToGauntletMap').addEventListener('click',()=>showGauntletMap({selectedKey:state.selectedArenaKey}));
+$('arenaChoiceSelect').addEventListener('change',event=>{state.selectedArenaChoiceId=event.target.value;renderArenaChoiceDetails();renderArenaEnemyPlacements();draw();});
+for(const id of ['toggleArenaTileCells','toggleArenaEnemyPlacements','toggleArenaOtherPlacements'])$(id).addEventListener('change',()=>draw());
 $('openGauntletGuide').addEventListener('click',()=>void openGauntletGuide());
 $('toggleNavigatorButton').addEventListener('click',()=>togglePanel('navigator'));$('toggleInspectorButton').addEventListener('click',()=>togglePanel('inspector'));
 $('closeNavigatorButton').addEventListener('click',()=>closePanel('navigator'));$('closeInspectorButton').addEventListener('click',()=>closePanel('inspector'));

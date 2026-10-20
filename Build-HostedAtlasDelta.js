@@ -26,6 +26,34 @@ const enemyTextureHashes = new Set();
 const gauntletCatalogPath = path.join(root, 'workspace', 'gauntlet-song', 'export', 'gauntlet-catalog.json');
 if (!fs.existsSync(gauntletCatalogPath)) throw new Error('GauntletSong catalog is missing. Run Build-GauntletSongCatalog.js first.');
 const gauntletCatalog = readJson(gauntletCatalogPath);
+const gauntletArenaExportRoot = path.resolve(root, 'workspace', 'gauntlet-song', 'export', 'arenas');
+const arenaSidecarPackages = [];
+for (const gauntlet of gauntletCatalog.gauntlets || []) {
+  if (!gauntlet.arenaData) continue;
+  const expectedRelative = `maps/gauntlet-scenes/${String(gauntlet.key || '').toLowerCase()}.json`;
+  if (!/^[a-z0-9]+$/.test(String(gauntlet.key || '')) || gauntlet.arenaData !== expectedRelative)
+    throw new Error(`Unsafe Architect arena sidecar route: ${gauntlet.arenaData}`);
+  const sourcePath = path.resolve(gauntletArenaExportRoot, `${gauntlet.key}.json`);
+  if (!sourcePath.startsWith(`${gauntletArenaExportRoot}${path.sep}`) || !fs.existsSync(sourcePath))
+    throw new Error(`Missing or unsafe Architect arena sidecar: ${sourcePath}`);
+  const arenaData = readJson(sourcePath);
+  if (arenaData.format !== 'silksong-architect-arena-layout' || arenaData.formatVersion !== 1 ||
+      arenaData.key !== gauntlet.key || arenaData.scene !== gauntlet.scene ||
+      !Array.isArray(arenaData.tileCells) || arenaData.tileCellCount !== arenaData.tileCells.length ||
+      !Array.isArray(arenaData.placements) || arenaData.placementCount !== arenaData.placements.length ||
+      arenaData.rendering?.terrainWasFabricated !== false)
+    throw new Error(`Architect arena sidecar failed source-data validation: ${gauntlet.key}`);
+  for (const cell of arenaData.tileCells) if (!Array.isArray(cell) || cell.length < 2 || !cell.slice(0, 2).every(Number.isFinite))
+    throw new Error(`Architect arena ${gauntlet.key} contains an invalid source tile cell.`);
+  for (const artwork of Object.values(arenaData.enemyArtwork || {})) {
+    const hashes = [artwork.sprite?.textureSha256, ...(artwork.idleAnimation?.frames || []).map(frame => frame.textureSha256)];
+    for (const value of hashes) {
+      const hash = String(value || '').toLowerCase();
+      if (/^[a-f0-9]{64}$/.test(hash)) enemyTextureHashes.add(hash);
+    }
+  }
+  arenaSidecarPackages.push({ relative: `${expectedRelative}.gz`, data: arenaData });
+}
 let oversizedNames = new Set((hostedManifest.rooms || [])
   .filter(room => /\.png$/i.test(room.image || ''))
   .map(room => path.basename(room.image, '.png').toLowerCase()));
@@ -258,6 +286,13 @@ if (!gauntletCatalogDestination.startsWith(`${path.resolve(dataRoot)}${path.sep}
 fs.mkdirSync(path.dirname(gauntletCatalogDestination), { recursive: true });
 fs.writeFileSync(gauntletCatalogDestination, zlib.gzipSync(Buffer.from(JSON.stringify(gauntletCatalog)), { level: 9 }));
 changedFiles.push(gauntletCatalogRelative);
+for (const item of arenaSidecarPackages) {
+  const destination = path.resolve(dataRoot, item.relative);
+  if (!destination.startsWith(`${path.resolve(dataRoot)}${path.sep}`)) throw new Error(`Unsafe hosted arena output: ${item.relative}`);
+  fs.mkdirSync(path.dirname(destination), { recursive: true });
+  fs.writeFileSync(destination, zlib.gzipSync(Buffer.from(JSON.stringify(item.data)), { level: 9 }));
+  changedFiles.push(item.relative);
+}
 const unique = [...new Set(changedFiles)].sort();
 const versionTags = Object.values(releaseIndex.assets || {}).map(asset => String(asset.tag || '')).map(tag => /^silksong-atlas-data-v2-(\d{3})$/.exec(tag)).filter(Boolean);
 const nextVersion = Math.max(0, ...versionTags.map(match => Number(match[1]))) + 1;

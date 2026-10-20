@@ -8,7 +8,7 @@ const hostedIndex = fs.readFileSync(path.join(root, 'HostedAtlas', 'site', 'inde
 const hostedReader = fs.readFileSync(path.join(root, 'HostedAtlas', 'site', 'reader.js'), 'utf8');
 assert.match(hostedIndex, /id="toggleEnemies"[^>]*checked/, 'real enemy sprites and markers should be visible by default in room views');
 assert.doesNotMatch(hostedReader, /\$\('toggleEnemies'\)\.checked\s*=\s*false/, 'opening another room must preserve the enemy layer choice');
-assert.match(hostedIndex, /reader\.js\?v=atlas-35/, 'the hosted site must bust the cached reader after the overlay default changes');
+assert.match(hostedIndex, /reader\.js\?v=atlas-36/, 'the hosted site must bust the cached reader after the arena interactions change');
 
 function extractFunction(source, name) {
   const match = new RegExp(`function\\s+${name}\\s*\\([^)]*\\)\\s*\\{`).exec(source);

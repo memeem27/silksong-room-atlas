@@ -246,6 +246,14 @@ body { min-width: 320px; height: 100vh; overflow: hidden; background: #070909; c
 .gauntlet-map-summary { padding: 2px 0 7px; }
 .gauntlet-route-row { width: 100%; display: flex; align-items: center; gap: 7px; min-height: 34px; padding: 5px 6px; border-color: #d8d2df; background: #fff; color: #222; text-align: left; font: 9px Consolas,monospace; }
 .gauntlet-route-row:hover { border-color: #9b86b0; background: #f5f1f8; }
+.gauntlet-arena-panel { max-height: calc(100vh - 138px); overflow: auto; }
+.arena-placement-details { margin: 7px 0; padding: 7px; border: 1px solid #e2dce7; border-radius: 4px; background: #faf9fb; color: #555; font: 8px/1.45 Consolas,monospace; overflow-wrap: anywhere; }
+.arena-placement-details strong { color: #332b3a; }
+.arena-choice-events { color: #4d3c5c; }
+.arena-inactive { color: #777; }
+.arena-enemy-row { align-items: flex-start; }
+.gauntlet-arena-panel .placement-list { max-height: 230px; }
+.gauntlet-arena-panel .gauntlet-list { max-height: 180px; }
 .gauntlet-route-copy { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px; }
 .gauntlet-route-copy small { color: #666; font: 8px Consolas,monospace; }
 .gauntlet-guide-open { width: 100%; min-height: 29px; margin-top: 6px; border-color: #c9bdd7; background: #f5f1f8; color: #392c48; font-size: 10px; }

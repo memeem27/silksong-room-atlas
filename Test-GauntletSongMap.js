@@ -15,6 +15,7 @@ const html = fs.readFileSync(path.join(root, 'HostedAtlas', 'site', 'index.html'
 const hostedDataRoot = path.join(root, 'HostedAtlas', 'r2-data');
 const readGzipJson = file => JSON.parse(zlib.gunzipSync(fs.readFileSync(file)).toString('utf8'));
 const delta = JSON.parse(fs.readFileSync(path.join(root, 'HostedAtlas', 'delta-assets.json'), 'utf8'));
+const releaseIndex = JSON.parse(fs.readFileSync(path.join(root, 'HostedAtlas', 'site', 'release-assets.json'), 'utf8'));
 
 assert.equal(catalog.format, 'silksong-gauntletsong-catalog');
 assert.equal(catalog.formatVersion, 2);
@@ -23,6 +24,7 @@ assert.equal(catalog.coverage.routeCount, 30, 'hub returns must not be counted a
 assert.equal(catalog.coverage.uniqueBaseRooms, 23);
 assert.equal(catalog.coverage.roomsWithMappedPosition, 23);
 assert.equal(catalog.coverage.roomsWithPreprocessedSidecar, 23);
+assert.equal(catalog.coverage.arenaScenes, 14, 'every portal must have its own lazy-loaded Architect scene sidecar');
 assert.ok(Buffer.byteLength(JSON.stringify(catalog)) < 200_000, 'catalog should stay a compact index');
 assert.ok(Array.isArray(catalog.hub.tileCells) && catalog.hub.tileCells.length === catalog.hub.tileCellCount,
   'hub tile footprint must match Architect source occupancy coordinates');
@@ -58,8 +60,6 @@ assert.deepEqual(packagedCatalog.enemyArtworkAliases?.flintbeetle?.idleAnimation
 assert.deepEqual(packagedCatalog.enemyFacts?.flintbeetle,flintbeetleFacts,
   'the hosted catalog must carry the sourced Flintbeetle facts used by its guide page');
 assert.ok(delta.changedFiles.includes('maps/gauntlet-song.json.gz'), 'delta should publish the portal index');
-assert.ok(delta.changedFiles.includes('asset-index.json.gz'),
-  'a prior verified but unpublished artwork batch must remain included in the next data delta');
 assert.ok(!delta.changedFiles.some(file => file.startsWith('images/')), 'portal-only package must not re-upload or replace room images');
 
 const gauntletKeys = new Set();
@@ -67,6 +67,19 @@ const routeScenes = new Set();
 for (const gauntlet of catalog.gauntlets) {
   assert.ok(gauntlet.hubPosition && Number.isFinite(gauntlet.hubPosition.x) && Number.isFinite(gauntlet.hubPosition.y), `${gauntlet.name} needs its authored hub position`);
   assert.ok(!Object.hasOwn(gauntlet, 'placements') && !Object.hasOwn(gauntlet, 'tilemap'), 'portal index must not inline scene placements or raw tilemaps');
+  const arenaRoute = `maps/gauntlet-scenes/${gauntlet.key}.json`;
+  assert.equal(gauntlet.arenaData, arenaRoute, `${gauntlet.name} must point to its safe lazy arena route`);
+  const arenaPath = path.join(root, 'workspace', 'gauntlet-song', 'export', 'arenas', `${gauntlet.key}.json`);
+  const arenaData = JSON.parse(fs.readFileSync(arenaPath, 'utf8'));
+  assert.equal(arenaData.format, 'silksong-architect-arena-layout');
+  assert.equal(arenaData.scene, gauntlet.scene);
+  assert.equal(arenaData.key, gauntlet.key);
+  assert.equal(arenaData.tileCellCount, arenaData.tileCells.length);
+  assert.equal(arenaData.placementCount, arenaData.placements.length);
+  assert.equal(arenaData.rendering.terrainWasFabricated, false, 'arena sidecars must not contain generated terrain');
+  assert.ok(delta.changedFiles.includes(`${arenaRoute}.gz`), `${gauntlet.name} source layout must be published with the data delta`);
+  const hostedArena = readGzipJson(path.join(hostedDataRoot, arenaRoute.replaceAll('/', path.sep) + '.gz'));
+  assert.deepEqual(hostedArena, arenaData, `${gauntlet.name} hosted arena sidecar must match its Architect source data`);
   assert.ok(!gauntletKeys.has(gauntlet.key), `duplicate portal key ${gauntlet.key}`);gauntletKeys.add(gauntlet.key);
   for (const route of gauntlet.routes) {
     assert.equal(route.targetType, 'base-room', `${gauntlet.name} route ${route.targetScene} must not be guessed as compiled arena data`);
@@ -89,8 +102,12 @@ for (const frame of rockRollerIdle.frames) {
   const png = path.join(root, 'workspace', 'scenes', 'artwork', `${frame.textureSha256}.png`);
   assert.equal(require('node:crypto').createHash('sha256').update(fs.readFileSync(png)).digest('hex'), frame.textureSha256,
     `${frame.name} source pixels must match their extracted frame hash`);
-  assert.ok(artwork.has(`artwork/${frame.textureSha256}.webp`), `${frame.name} must be packaged for the hosted animation`);
-  assert.ok(delta.changedFiles.includes(`artwork/${frame.textureSha256}.webp`), `${frame.name} should be in the GauntletSong delta package`);
+  const relative = `artwork/${frame.textureSha256}.webp`;
+  assert.ok(artwork.has(relative), `${frame.name} must be indexed for the hosted animation`);
+  if (!releaseIndex.assets?.[relative]) {
+    assert.ok(delta.changedFiles.includes('asset-index.json.gz'), 'new authentic enemy artwork must update the hosted asset index');
+    assert.ok(delta.changedFiles.includes(relative), `${frame.name} must be in the unpublished data delta`);
+  }
 }
 assert.ok(artwork.has(`artwork/${catalog.enemyArtworkAliases.flintbeetle.sprite.textureSha256}.webp`),
   'the real Flintbeetle sprite atlas used by the updated catalog must already be available on the host');
@@ -147,12 +164,30 @@ assert.ok(Number.isFinite(viewport.offsetX) && Number.isFinite(viewport.offsetY)
 assert.ok(Math.abs(anchor.x*viewport.zoom+viewport.offsetX-600)<1e-7 && Math.abs(anchor.y*viewport.zoom+viewport.offsetY-350)<1e-7,
   'selected portal should zoom to the map canvas center');
 
-for (const id of ['gauntletMapButton','gauntletMapPanel','gauntletMapSummary','gauntletMapRoutes','gauntletGuidePage','openGauntletGuide']) assert.match(html, new RegExp(`id="${id}"`));
-for (const token of ["'gauntlet-map'", "loadJson('maps/gauntlet-song.json')", 'drawGauntletMap', 'openGauntletRoute', 'openGauntletGuide', 'data-guide-enemy-key', 'returnToGauntletMap', 'data-enemy-article', 'showEnemyArticle', 'drawEnemyArticleSprite', 'enemyFactsForRecord', 'enemy-wiki-stats']) {
+for (const id of ['gauntletMapButton','gauntletMapPanel','gauntletMapSummary','gauntletMapRoutes','gauntletGuidePage','openGauntletGuide',
+  'gauntletArenaPanel','openGauntletArena','backToGauntletMap','arenaChoiceSelect','toggleArenaTileCells','toggleArenaEnemyPlacements',
+  'toggleArenaOtherPlacements','arenaEnemyPlacements','arenaPlacementDetails','arenaRouteList']) assert.match(html, new RegExp(`id="${id}"`));
+for (const token of ["'gauntlet-map'", "'gauntlet-arena'", "loadJson('maps/gauntlet-song.json')", 'loadGauntletArena', 'drawGauntletMap', 'drawGauntletArena', 'arenaPlacementAt', 'openGauntletArena', 'openArenaRoute', 'arenaChoicePlacementKeys', 'openGauntletRoute', 'openGauntletGuide', 'data-guide-enemy-key', 'returnToGauntletMap', 'returnToGauntletArena', 'data-enemy-article', 'showEnemyArticle', 'drawEnemyArticleSprite', 'enemyFactsForRecord', 'enemy-wiki-stats']) {
   assert.ok(reader.includes(token), `reader should include GauntletSong map integration: ${token}`);
 }
 assert.match(reader, /tile occupancy \+ portal coordinates · no hub texture included/i,
   'viewer should disclose that hub artwork is absent');
+const arenaChoiceData = { scriptChoices: [{ blockId: 'choice-yes', triggerEvents: ['arenaEnable'] },
+  { blockId: 'choice-unlinked', triggerEvents: ['notConnected'] }], placements: [
+    { key: 'enemy-linked', enemyCandidate: true, listeners: [{ event: 'arenaEnable', action: 'enable' }] },
+    { key: 'object-linked', enemyCandidate: false, listeners: [{ event: 'arenaEnable', action: 'enable' }] },
+    { key: 'enemy-other-event', enemyCandidate: true, listeners: [{ event: 'otherEvent', action: 'enable' }] },
+    { key: 'enemy-no-listener', enemyCandidate: true, listeners: [] }
+  ] };
+const arenaControls = { toggleArenaEnemyPlacements: { checked: true }, toggleArenaOtherPlacements: { checked: true } };
+const arenaChoiceContext = vm.createContext({ state: { arenaData: arenaChoiceData, selectedArenaChoiceId: 'choice-yes', hiddenArenaPlacementKeys: new Set() }, $: id => arenaControls[id] });
+vm.runInContext(`${extractFunction(reader,'arenaChoicePlacementKeys')};${extractFunction(reader,'visibleArenaPlacements')};globalThis.api={arenaChoicePlacementKeys,visibleArenaPlacements};`, arenaChoiceContext);
+assert.deepEqual(Array.from(arenaChoiceContext.api.visibleArenaPlacements(), record => record.key).sort(), ['enemy-linked','object-linked'],
+  'a challenge choice must show only placements with an exact saved listener for the emitted event');
+arenaChoiceContext.state.selectedArenaChoiceId = 'choice-unlinked';
+assert.deepEqual(Array.from(arenaChoiceContext.api.visibleArenaPlacements(), record => record.key).sort(),
+  ['enemy-linked','enemy-no-listener','enemy-other-event','object-linked'],
+  'a choice without matching placement listeners must preserve the full source layout instead of inventing wave changes');
 const boneSidecar = JSON.parse(fs.readFileSync(path.join(root, 'workspace', 'preprocessed', 'rooms', 'bone_01.json'), 'utf8'));
 const boneRoller = boneSidecar.architect.placements.find(record => record.enemyCandidate && record.placement?.id === 'bone_roller');
 const spriteContext = vm.createContext({ state: { roomMeta: boneSidecar, gauntletCatalog: catalog } });

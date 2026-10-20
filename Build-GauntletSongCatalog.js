@@ -9,8 +9,11 @@ const sceneDirectory = path.join(root, 'workspace', 'gauntlet-song', 'source', '
 const roomDirectory = path.join(root, 'workspace', 'preprocessed', 'rooms');
 const navigationPath = path.join(root, 'workspace', 'preprocessed', 'maps', 'navigation.json');
 const outputPath = path.join(root, 'workspace', 'gauntlet-song', 'export', 'gauntlet-catalog.json');
+const arenaExportDirectory = path.join(root, 'workspace', 'gauntlet-song', 'export', 'arenas');
 const rockRollerIdlePath = path.join(root, 'GauntletSongData', 'rockroller-idle.json');
 const enemyFactsPath = path.join(root, 'GauntletSongData', 'enemy-facts.json');
+const enemyRegistryPath = path.join(root, 'GauntletSongData', 'enemy-registry.json');
+const roomEnemyArtworkAliases = new Map();
 
 function readJson(file) { return JSON.parse(fs.readFileSync(file, 'utf8')); }
 function sceneId(value) { return String(value || '').replace(/\.bundle$/i, '').toLowerCase(); }
@@ -73,6 +76,95 @@ for (const [key, facts] of Object.entries(enemyFacts)) {
     throw new Error(`Enemy fact entry is incomplete or lacks a source: ${key}`);
   }
 }
+if (!fs.existsSync(enemyRegistryPath)) throw new Error(`GauntletSong enemy registry is missing: ${enemyRegistryPath}`);
+const enemyRegistryFile = readJson(enemyRegistryPath);
+if (enemyRegistryFile.format !== 'gauntletsong-enemy-registry' || enemyRegistryFile.formatVersion !== 1 ||
+    !Array.isArray(enemyRegistryFile.entries) || enemyRegistryFile.entries.length < 100) {
+  throw new Error('GauntletSong enemy registry format or coverage is invalid.');
+}
+const enemyRegistry = new Map(enemyRegistryFile.entries.filter(entry => entry.id && !entry.composite)
+  .map(entry => [normalizeId(entry.id), entry]));
+
+function isEnemyPlacement(record) {
+  const id = String(placementOf(record).id || ''), normalized = normalizeId(id), config = configOf(record);
+  if (/enemy[\s_-]?(?:remover|clear)/i.test(id) || /^(?:enemydamager|enemyhook|enemymanager|objecthook)$/.test(normalized)) return false;
+  if (enemyRegistry.has(normalized) || (normalized.startsWith('g') && enemyRegistry.has(normalized.slice(1)))) return true;
+  const hasEnemySettings = Object.keys(config).some(key => /enemy_(?:hp|health|damage|spawn|stay_dead)/i.test(key));
+  return hasEnemySettings || /^prefab_g[A-Z]/.test(id) ||
+    /(?:enemy|boss|spitter|trapper|hunter|hulk|bellbearer|groveller|pouncer|envoy|reed|disciple|watcher|skarr|snipper|ductsucker|charger|gargant|drifter|juror|flintflameflyer|pilgrim_03|goomba|roller|silkfly)/i.test(id);
+}
+function isNpcPlacement(record) {
+  const id = String(placementOf(record).id || '');
+  return !isEnemyPlacement(record) && /(?:^|[_-])(?:npc|caretaker|flick|mask.?maker|shakra|flea|elder|merchant)(?:$|[_-])/i.test(id);
+}
+function normalizedListeners(record) {
+  return (Array.isArray(record?.listeners) ? record.listeners : []).map(listener => ({
+    event: String(listener?.event ?? listener?.Item1 ?? '').trim(),
+    action: String(listener?.action ?? listener?.Item2 ?? '').trim(),
+    order: Number.isFinite(Number(listener?.order ?? listener?.Item3)) ? Number(listener.order ?? listener.Item3) : 0
+  })).filter(listener => listener.event);
+}
+function buildArenaData(sceneName, key, arena, roomArtwork = new Map()) {
+  const cells = (arena.tilemap || []).map(cell => [Number(cell.Item1), Number(cell.Item2)]).filter(pair => pair.every(Number.isFinite));
+  const placements = (arena.placements || []).map((record, index) => {
+    const placement = placementOf(record), id = String(placement.id || 'unknown_object'), normalized = normalizeId(id);
+    const registryEntry = enemyRegistry.get(normalized) || (normalized.startsWith('g') ? enemyRegistry.get(normalized.slice(1)) : null);
+    const listeners = normalizedListeners(record), config = configOf(record), position = point(placement.pos);
+    const visibleConfig = Object.fromEntries(Object.entries(config).filter(([name]) =>
+      /^start_active$|^trans_other_(?:scene|id)$|^enemy_/i.test(name)));
+    const activeValue = String(config.start_active ?? '').trim().toLowerCase();
+    const activeByDefault = !['false', '0', 'off', 'no'].includes(activeValue);
+    const enemyCandidate = isEnemyPlacement(record), npcCandidate = !enemyCandidate && isNpcPlacement(record);
+    return {
+      key: `${key}:${String(placement.pid || index)}`, index,
+      label: registryEntry?.displayName || cleanName(id.replace(/^prefab_/i, '')),
+      placement: { id, pid: String(placement.pid || index), pos: placement.pos || {}, flipped: Boolean(placement.flipped),
+        rotation: Number(placement.rotation) || 0, scale: Number.isFinite(Number(placement.scale)) ? Number(placement.scale) : 1,
+        layer: Number(placement.layer) || 0 },
+      config: visibleConfig, listeners, worldPosition: position,
+      activeByDefault, enemyCandidate, npcCandidate, controllerMarker: false,
+      ...(registryEntry ? { registry: { displayName: registryEntry.displayName, runtimeName: registryEntry.runtimeName,
+        sourceName: registryEntry.sourceName, reusesNativeType: registryEntry.reusesNativeType } } : {})
+    };
+  }).filter(record => record.worldPosition);
+  const eventMap = new Map();
+  for (const record of placements) for (const listener of record.listeners) {
+    const group = eventMap.get(listener.event) || { name: listener.event, placements: new Set(), actions: new Set() };
+    group.placements.add(record.key); if (listener.action) group.actions.add(listener.action); eventMap.set(listener.event, group);
+  }
+  const eventGroups = [...eventMap.values()].map(group => ({ name: group.name, placementCount: group.placements.size,
+    actions: [...group.actions].sort().join(' / ') })).sort((a, b) => a.name.localeCompare(b.name));
+  const scriptBlocks = arena.script || [], scriptById = new Map(scriptBlocks.map(block => [String(block.block_id || ''), block]));
+  const scriptChoices = scriptBlocks.filter(block => /choice\s*display/i.test(block.type || '') && block.config?.choice_text)
+    .map(block => ({ label: String(block.config.choice_text), requirement: String(block.config.choice_requirement || ''),
+      cost: String(block.config.choice_cost || ''), blockId: String(block.block_id || ''),
+      triggerEvents: [...new Set((block.events?.Yes || []).filter(link => scriptById.get(String(link.Item1 || ''))?.type === 'object')
+        .map(link => String(link.Item2 || '').trim()).filter(Boolean))] }));
+  const allArtwork = new Map(roomArtwork);
+  for (const [artKey, artwork] of Object.entries(enemyArtworkAliases)) allArtwork.set(artKey, artwork);
+  const arenaEnemyArtwork = {};
+  for (const record of placements) {
+    if (!record.enemyCandidate) continue;
+    const normalized = normalizeId(record.placement?.id);
+    const artworkKey = [normalized, ...(normalized.startsWith('g') ? [normalized.slice(1)] : [])]
+      .find(candidate => allArtwork.has(candidate));
+    if (artworkKey) {
+      record.artworkKey = artworkKey;
+      arenaEnemyArtwork[artworkKey] = allArtwork.get(artworkKey);
+    }
+  }
+  const bounds = boundsForCells(cells.map(([x, y]) => ({ Item1: x, Item2: y })));
+  return {
+    format: 'silksong-architect-arena-layout', formatVersion: 1, scene: sceneName, key,
+    source: { mod: 'GauntletSong Architect export', file: `Scenes/${sceneName}.architect.json` },
+    coordinateSpace: 'scene-world', rendering: { terrainTextureStatus: 'not-in-export', terrainWasFabricated: false,
+      tileOccupancySource: 'Architect scene tilemap', placementSource: 'Architect scene placement records' },
+    tileCellCount: cells.length, tileBounds: bounds, tileCells: cells,
+    placementCount: placements.length, enemyCount: placements.filter(record => record.enemyCandidate).length,
+    npcCount: placements.filter(record => record.npcCandidate).length, placements, enemyArtwork: arenaEnemyArtwork,
+    eventGroups, scriptBlockCount: (arena.script || []).length, scriptChoices
+  };
+}
 
 // Keep the hosted catalog as an index. Per-instance placement data and textures
 // stay in the already-compressed room sidecars and load only when a room opens.
@@ -80,6 +172,14 @@ function loadRoom(name, areaByRoom) {
   const key = sceneId(name), file = path.join(roomDirectory, `${key}.json`);
   const sidecar = fs.existsSync(file) ? readJson(file) : null;
   const architect = sidecar?.architect || null;
+  for (const [artKey, artwork] of Object.entries(architect?.enemyArtwork || {})) {
+    const normalized = normalizeId(artKey), sprite = artwork?.sprite;
+    if (!normalized || roomEnemyArtworkAliases.has(normalized) ||
+        !/^[a-f0-9]{64}$/i.test(sprite?.textureSha256 || '') ||
+        !(Number(sprite?.rectWidth) > 0) || !(Number(sprite?.rectHeight) > 0) ||
+        (sprite?.meshVertices || []).length < 3 || (sprite?.meshIndices || []).length < 3) continue;
+    roomEnemyArtworkAliases.set(normalized, artwork);
+  }
   const mapped = areaByRoom.get(key) || null;
   const eventGroups = (architect?.eventGroups || []).map(group => ({
     name: String(group.name || ''), action: String(group.actions || ''),
@@ -137,7 +237,51 @@ function main() {
     placement: placementOf(record), config: configOf(record), sourceOrder
   })).filter(record => record.placement.id === 'transition_gate' && /^gh[A-Z]/.test(String(record.config.trans_other_scene || '')));
 
-  const rooms = new Map();
+  const rooms = new Map(), arenaSidecars = [];
+  // Gather verified game sprite frames from the linked room sidecars before
+  // creating arena sidecars. Arena enemy IDs are matched only to exact
+  // normalized enemy keys; unmatched types remain neutral E markers.
+  for (const entrance of entrances) {
+    const scene = String(entrance.config.trans_other_scene), arenaPath = path.join(sceneDirectory, `${scene}.architect.json`);
+    if (!fs.existsSync(arenaPath)) continue;
+    const arena = readJson(arenaPath);
+    for (const record of arena.placements || []) {
+      const placement = placementOf(record), config = configOf(record), target = String(config.trans_other_scene || '');
+      if (placement.id !== 'transition_gate' || !target || sceneId(target) === sceneId(hubScene) || /^gh/i.test(target)) continue;
+      const roomKey = sceneId(target);
+      if (!rooms.has(roomKey)) rooms.set(roomKey, loadRoom(target, areaByRoom));
+    }
+  }
+  const wantedArtworkKeys = new Set();
+  for (const entrance of entrances) {
+    const scene = String(entrance.config.trans_other_scene), arenaPath = path.join(sceneDirectory, `${scene}.architect.json`);
+    if (!fs.existsSync(arenaPath)) continue;
+    const arena = readJson(arenaPath);
+    for (const record of arena.placements || []) {
+      if (!isEnemyPlacement(record)) continue;
+      const id = normalizeId(placementOf(record).id), registryEntry = enemyRegistry.get(id) || (id.startsWith('g') ? enemyRegistry.get(id.slice(1)) : null);
+      for (const value of [id, id.startsWith('g') ? id.slice(1) : '', registryEntry?.displayName,
+        String(registryEntry?.runtimeName || '').replace(/^\[Architect\]\s*/i, '')]) {
+        const candidate = normalizeId(value); if (candidate) wantedArtworkKeys.add(candidate);
+      }
+    }
+  }
+  if (wantedArtworkKeys.size) {
+    const artworkKeyPattern = new RegExp(`\\"(?:${[...wantedArtworkKeys].sort((a, b) => b.length - a.length).join('|')})\\"\\s*:`);
+    for (const filename of fs.readdirSync(roomDirectory).filter(name => name.toLowerCase().endsWith('.json'))) {
+      const file = path.join(roomDirectory, filename), source = fs.readFileSync(file, 'utf8');
+      if (!artworkKeyPattern.test(source)) continue;
+      const sidecar = readJson(file);
+      for (const [artKey, artwork] of Object.entries(sidecar.architect?.enemyArtwork || {})) {
+        const normalized = normalizeId(artKey), sprite = artwork?.sprite;
+        if (!wantedArtworkKeys.has(normalized) || roomEnemyArtworkAliases.has(normalized) ||
+            !/^[a-f0-9]{64}$/i.test(sprite?.textureSha256 || '') ||
+            !(Number(sprite?.rectWidth) > 0) || !(Number(sprite?.rectHeight) > 0) ||
+            (sprite?.meshVertices || []).length < 3 || (sprite?.meshIndices || []).length < 3) continue;
+        roomEnemyArtworkAliases.set(normalized, artwork);
+      }
+    }
+  }
   const gauntlets = entrances.map(entrance => {
     const scene = String(entrance.config.trans_other_scene), key = sceneId(scene);
     const arenaPath = path.join(sceneDirectory, `${scene}.architect.json`);
@@ -172,14 +316,18 @@ function main() {
         roomImage: room?.baseRoomImage || null, roomHasSidecar: Boolean(room?.hasPreprocessedRoomSidecar)
       };
     });
+    const arenaData = buildArenaData(scene, key, arena, roomEnemyArtworkAliases);
+    arenaSidecars.push({ file: `${key}.json`, data: arenaData });
     const cells = (arena.tilemap || []).map(cell => [Number(cell.Item1), Number(cell.Item2)]).filter(pair => pair.every(Number.isFinite));
     const tileBounds = cells.length ? {
       minX: Math.min(...cells.map(pair => pair[0])), maxX: Math.max(...cells.map(pair => pair[0])),
       minY: Math.min(...cells.map(pair => pair[1])), maxY: Math.max(...cells.map(pair => pair[1]))
     } : null;
     return {
-      ...base, status: 'architect-export-only', tileCellCount: cells.length, tileBounds,
+      ...base, status: 'architect-export-only', arenaData: `maps/gauntlet-scenes/${key}.json`,
+      tileCellCount: cells.length, tileBounds,
       placementCount: arena.placements?.length || 0, scriptBlockCount: arena.script?.length || 0,
+      arenaEnemyCount: arenaData.enemyCount, arenaEventCount: arenaData.eventGroups.length,
       internalTransitions, routes
     };
   });
@@ -204,7 +352,8 @@ function main() {
       uniqueBaseRooms: rooms.size,
       roomsWithMappedPosition: [...rooms.values()].filter(room => room.map).length,
       roomsWithPreprocessedSidecar: [...rooms.values()].filter(room => room.hasPreprocessedRoomSidecar).length,
-      enemyTypes: new Set([...rooms.values()].flatMap(room => room.architect?.enemies?.map(enemy => enemy.key) || [])).size
+      enemyTypes: new Set([...rooms.values()].flatMap(room => room.architect?.enemies?.map(enemy => enemy.key) || [])).size,
+      arenaScenes: arenaSidecars.length
     },
     hub: {
       scene: hubScene, coordinateSpace: 'scene-world',
@@ -218,8 +367,13 @@ function main() {
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   const temporary = `${outputPath}.${process.pid}.tmp`;
   fs.writeFileSync(temporary, JSON.stringify(catalog), 'utf8'); fs.renameSync(temporary, outputPath);
+  fs.mkdirSync(arenaExportDirectory, { recursive: true });
+  for (const sidecar of arenaSidecars) {
+    const sidecarPath = path.join(arenaExportDirectory, sidecar.file), sidecarTemporary = `${sidecarPath}.${process.pid}.tmp`;
+    fs.writeFileSync(sidecarTemporary, JSON.stringify(sidecar.data), 'utf8'); fs.renameSync(sidecarTemporary, sidecarPath);
+  }
   console.log(`Built GauntletSong index: ${catalog.coverage.hubEntrances} markers, ${catalog.coverage.routeCount} gates, ${catalog.coverage.uniqueBaseRooms} linked rooms.`);
-  console.log(`Compact catalog ${Buffer.byteLength(JSON.stringify(catalog)).toLocaleString()} bytes; no arena tiles or base images were fabricated or modified.`);
+  console.log(`Compact catalog ${Buffer.byteLength(JSON.stringify(catalog)).toLocaleString()} bytes; ${arenaSidecars.length} lazy arena sidecars contain source tile cells and placements. No terrain image is fabricated or changed.`);
 }
 
 function boundsForCells(cells) {
