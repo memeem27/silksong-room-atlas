@@ -156,12 +156,17 @@ assert.deepEqual(Array.from(placementContext.select(placements), record => recor
 
 const artworkFunction = extractFunction(readerSource, 'enemyArtworkForRecord');
 const spriteFunction = extractFunction(readerSource, 'enemySpriteForRecord');
+const roomArtworkFunction = extractFunction(readerSource, 'enemyArtworkForRoomObject');
+const roomSpriteFunction = extractFunction(readerSource, 'enemySpriteForRoomObject');
+const drawRoomTextureFunction = extractFunction(readerSource, 'drawRoomEnemyTexture');
+const animationFrameFunction = extractFunction(readerSource, 'enemyAnimationFrame');
 const realEnemyHash = 'a'.repeat(64);
 const boneRollerArt = bone01.architect?.enemyArtwork?.boneroller;
 const flintbeetleSceneSprite = bone01.objects.find(object => (object.sprites || []).some(item => item.name === 'RR_antic0003'))
   ?.sprites.find(item => item.name === 'RR_antic0003');
 const flintbeetleArt = { placementId: 'flintbeetle', objectName: 'RR_antic0003',
-  sourceBundle: 'animations_assets_areabone.bundle', sprite: flintbeetleSceneSprite };
+  sourceBundle: 'animations_assets_areabone.bundle', sprite: flintbeetleSceneSprite,
+  idleAnimation: JSON.parse(fs.readFileSync(path.join(root, 'GauntletSongData', 'rockroller-idle.json'), 'utf8')) };
 assert.ok(flintbeetleSceneSprite?.textureSha256 && flintbeetleSceneSprite.meshIndices?.length,
   'Bone 01 must retain the authentic upright Flintbeetle sprite frame and its mesh');
 assert.ok(boneRollerArt?.sprite?.textureSha256 && boneRollerArt?.sprite?.name === 'RR_idle0000',
@@ -181,6 +186,47 @@ assert.equal(spriteContext.matchSprite({ placement: { id: 'prefab_gFlintbeetle' 
   'RR_antic0003', 'Gauntlet Flintbeetles must display the upright matching game sprite through the shared catalog alias');
 assert.equal(spriteContext.matchSprite({ placement: { id: 'unknown_enemy' }, label: 'unknown enemy' }), null,
   'unmatched enemy types must not be assigned invented or unrelated textures');
+const roomEnemyContext = vm.createContext({ state: {
+  animateEnemySprites: false,
+  gauntletCatalog: { enemyArtworkAliases: { flintbeetle: flintbeetleArt }, enemyFacts: {
+    flintbeetle: { displayName: 'Flintbeetle', internalName: 'ROCK_ROLLER' }
+  } },
+  roomMeta: { architect: { enemyArtwork: {} } }
+} });
+vm.runInContext(`${roomArtworkFunction}\n${animationFrameFunction}\n${roomSpriteFunction}\nglobalThis.api={enemyArtworkForRoomObject,enemySpriteForRoomObject};`, roomEnemyContext);
+const rockRollerRoomObject = boneObjects.find(object => object.name === 'Rock Roller');
+assert.ok(rockRollerRoomObject?.classification?.enemy,
+  'Bone 01 must retain the real Rock Roller root as a classified enemy object');
+assert.equal(roomEnemyContext.api.enemyArtworkForRoomObject(rockRollerRoomObject)?.sprite?.name, 'RR_antic0003',
+  'the ordinary Rock Roller scene object must resolve its authentic upright Flintbeetle sprite by game internal name');
+assert.equal(roomEnemyContext.api.enemySpriteForRoomObject(rockRollerRoomObject)?.textureSha256,
+  '35a6422836598c9d829eb9d893bece96e62771d83193d1eccb54e0019565b0c4',
+  'the room overlay must use the same verified game atlas image shown in the user reference');
+roomEnemyContext.state.animateEnemySprites = true;
+assert.equal(roomEnemyContext.api.enemySpriteForRoomObject(rockRollerRoomObject, 0)?.name, 'RR_idle0001',
+  'ordinary room enemy overlays should use the verified idle animation when enabled');
+assert.equal(roomEnemyContext.api.enemyArtworkForRoomObject({ name: 'Unknown Enemy' }), null,
+  'ordinary room overlays must leave unknown enemy art as a marker rather than invent a texture');
+const textureDrawCalls = [];
+const textureImage = { complete: true, naturalWidth: 315, naturalHeight: 308 };
+const textureContext = vm.createContext({
+  state: { animateEnemySprites: false, atlasCache: new Map([[flintbeetleSceneSprite.textureSha256, textureImage]]),
+    gauntletCatalog: { enemyArtworkAliases: { flintbeetle: flintbeetleArt }, enemyFacts: {
+      flintbeetle: { displayName: 'Flintbeetle', internalName: 'ROCK_ROLLER' }
+    } }, roomMeta: { image: { pixelsPerWorldUnit: 64 }, architect: { enemyArtwork: {} } } },
+  spriteGeometry: () => ({ width: 3, height: 3, left: -1.5, bottom: -1.5, rotated: false }),
+  clipSpriteMesh: () => {}, ARTWORK_BASE: '/atlas-data/artwork/', ARTWORK_EXTENSION: 'webp', draw: () => {},
+  Number, Math, Set,
+  target: null
+});
+const textureTarget = { save(){}, restore(){}, translate(){}, rotate(){}, scale(){}, drawImage(...args){ textureDrawCalls.push(args); } };
+vm.runInContext(`${roomArtworkFunction}\n${animationFrameFunction}\n${roomSpriteFunction}\n${drawRoomTextureFunction}\nglobalThis.drawSprite=drawRoomEnemyTexture;`, textureContext);
+assert.equal(textureContext.drawSprite(rockRollerRoomObject, 220, 140, 1, 64, textureTarget), true,
+  'the ordinary Rock Roller enemy layer should draw when its verified game texture is loaded');
+assert.equal(textureDrawCalls[0][0], textureImage);
+assert.equal(textureDrawCalls[0][1], flintbeetleSceneSprite.rectX);
+assert.equal(textureDrawCalls[0][3], flintbeetleSceneSprite.rectWidth);
+assert.equal(textureDrawCalls[0][4], flintbeetleSceneSprite.rectHeight);
 
 console.log(JSON.stringify({
   status: 'passed',
@@ -190,6 +236,7 @@ console.log(JSON.stringify({
     'Bone 01 enemy marker classification repaired', 'disguised silhouette/Rock Roller art omitted and marked',
     'Bone Roller maps to the native RR_idle0000 game frame',
     'Flintbeetle maps to the native RR_antic0003 game sprite frame',
+    'ordinary Rock Roller room objects resolve and draw the verified Flintbeetle/Rock Roller sprite and idle animation',
     'gauntlet wrapper candidates deduplicated',
     'authentic enemy atlas match required', 'unmatched enemy art receives no substitute texture']
 }, null, 2));

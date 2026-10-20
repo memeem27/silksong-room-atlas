@@ -1295,7 +1295,7 @@ function drawRoom(width,height){
     if(classification.spawn&&$('toggleSpawns').checked)visible.push({object,point,color:'#79b9d4',kind:'S'});
     if(classification.check&&$('toggleChecks').checked)visible.push({object,point,color:'#77c7aa',kind:'C'});
   }
-  for(const item of visible){const point=frame.worldPoint(item.point.x,item.point.y),px=point.x,py=point.y;if(px<frame.x||px>frame.x+frame.drawWidth||py<frame.y||py>frame.y+frame.drawHeight)continue;ctx.save();ctx.fillStyle=item.color;ctx.strokeStyle='#0b0d0b';ctx.lineWidth=2;ctx.beginPath();ctx.arc(px,py,5,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#0b0d0b';ctx.font='bold 6px Consolas,monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(item.kind,px,py+.2);ctx.restore();}
+  for(const item of visible){const point=frame.worldPoint(item.point.x,item.point.y),px=point.x,py=point.y;if(px<frame.x||px>frame.x+frame.drawWidth||py<frame.y||py>frame.y+frame.drawHeight)continue;if(item.kind==='E'&&drawRoomEnemyTexture(item.object,px,py,frame.scale,frame.sourcePpuX,ctx))continue;ctx.save();ctx.fillStyle=item.color;ctx.strokeStyle='#0b0d0b';ctx.lineWidth=2;ctx.beginPath();ctx.arc(px,py,5,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#0b0d0b';ctx.font='bold 6px Consolas,monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(item.kind,px,py+.2);ctx.restore();}
   drawArchitect(width,height,frame,meta);
 }
 
@@ -1569,12 +1569,19 @@ function drawArchitect(width,height,frame,meta){
 }
 function spriteGeometry(sprite){const ppu=Math.max(1,Number(sprite.pixelsPerUnit)||100),rotated=Number(sprite.packingRotation)===4,w=(rotated?sprite.rectHeight:sprite.rectWidth)/ppu,h=(rotated?sprite.rectWidth:sprite.rectHeight)/ppu,ow=(sprite.originalWidth||sprite.rectWidth)/ppu,oh=(sprite.originalHeight||sprite.rectHeight)/ppu;return{width:w,height:h,left:(sprite.trimOffsetX||0)/ppu-(sprite.pivotX??.5)*ow,bottom:(sprite.trimOffsetY||0)/ppu-(sprite.pivotY??.5)*oh,rotated};}
 function enemyArtworkForRecord(record){
-  const id=String(record.placement?.id||'').replace(/^prefab_/i,'').toLowerCase().replace(/[^a-z0-9]/g,''),label=String(record.label||'').toLowerCase().replace(/[^a-z0-9]/g,''),artwork=state.roomMeta?.architect?.enemyArtwork||{},shared=state.gauntletCatalog?.enemyArtworkAliases||{},candidates=[id,...(id.startsWith('g')?[id.slice(1)]:[]),label,...(label.startsWith('g')?[label.slice(1)]:[])];
+  const id=String(record.placement?.id||'').replace(/^prefab_/i,'').toLowerCase().replace(/[^a-z0-9]/g,''),label=String(record.label||'').toLowerCase().replace(/[^a-z0-9]/g,''),artwork=state.roomMeta?.architect?.enemyArtwork||{},shared=state.gauntletCatalog?.enemyArtworkAliases||{},facts=state.gauntletCatalog?.enemyFacts||{},candidates=[id,...(id.startsWith('g')?[id.slice(1)]:[]),label,...(label.startsWith('g')?[label.slice(1)]:[])],names=new Set(candidates);
+  for(const [key,item] of Object.entries(facts))if([item.displayName,item.internalName].some(value=>names.has(String(value||'').toLowerCase().replace(/[^a-z0-9]/g,''))))candidates.push(key);
   return candidates.map(key=>artwork[key]||shared[key]).find(item=>/^[a-f0-9]{64}$/i.test(item?.sprite?.textureSha256||''))||null;
 }
 function enemyFactsForRecord(record){
   const id=String(record.placement?.id||'').replace(/^prefab_/i,'').toLowerCase().replace(/[^a-z0-9]/g,''),label=String(record.label||'').toLowerCase().replace(/[^a-z0-9]/g,''),facts=state.gauntletCatalog?.enemyFacts||{},candidates=[id,...(id.startsWith('g')?[id.slice(1)]:[]),label,...(label.startsWith('g')?[label.slice(1)]:[])];
+  for(const [key,item] of Object.entries(facts))if([item.displayName,item.internalName].some(value=>candidates.includes(String(value||'').toLowerCase().replace(/[^a-z0-9]/g,''))))candidates.push(key);
   return candidates.map(key=>facts[key]).find(item=>item?.displayName)||null;
+}
+function enemyArtworkForRoomObject(object){
+  const name=String(object?.name||'').toLowerCase().replace(/[^a-z0-9]/g,''),roomArtwork=state.roomMeta?.architect?.enemyArtwork||{},shared=state.gauntletCatalog?.enemyArtworkAliases||{},facts=state.gauntletCatalog?.enemyFacts||{},candidates=[name];
+  for(const [key,item] of Object.entries(facts))if([item.displayName,item.internalName].some(value=>String(value||'').toLowerCase().replace(/[^a-z0-9]/g,'')===name))candidates.push(key);
+  return [...new Set(candidates)].map(key=>roomArtwork[key]||shared[key]).find(item=>/^[a-f0-9]{64}$/i.test(item?.sprite?.textureSha256||''))||null;
 }
 function enemyAnimationFrame(animation,nowMs){
   const frames=animation?.frames||[],fps=Math.max(0,Number(animation?.framesPerSecond)||0);if(!frames.length||fps<=0)return null;
@@ -1582,14 +1589,22 @@ function enemyAnimationFrame(animation,nowMs){
   const index=frameNumber<frames.length?frameNumber:loopStart+(frameNumber-loopStart)%(frames.length-loopStart);
   return frames[index]||null;
 }
+function enemySpriteForRoomObject(object,nowMs=state.enemyAnimationTime){
+  const artwork=enemyArtworkForRoomObject(object);if(!artwork)return null;
+  return state.animateEnemySprites?enemyAnimationFrame(artwork.idleAnimation,nowMs)||artwork.sprite:artwork.sprite;
+}
 function enemySpriteForRecord(record,nowMs=state.enemyAnimationTime){
   const artwork=enemyArtworkForRecord(record);if(!artwork)return null;
   return state.animateEnemySprites?enemyAnimationFrame(artwork.idleAnimation,nowMs)||artwork.sprite:artwork.sprite;
 }
 function hasVisibleAnimatedEnemy(){
-  if(state.mode!=='room'||!state.selectedGauntlet||!$('toggleGauntlets').checked||!$('toggleArenaChanges').checked||!$('toggleEnemyTextures').checked)return false;
-  return canonicalArchitectPlacements(placementsForWave()).some(record=>record.enemyCandidate&&isPlacementEnabled(record)&&
-    (enemyArtworkForRecord(record)?.idleAnimation?.frames?.length||0)>1);
+  if(state.mode!=='room')return false;
+  const gauntletVisible=Boolean(state.selectedGauntlet&&$('toggleGauntlets').checked&&$('toggleArenaChanges').checked&&$('toggleEnemyTextures').checked&&
+    canonicalArchitectPlacements(placementsForWave()).some(record=>record.enemyCandidate&&isPlacementEnabled(record)&&
+      (enemyArtworkForRecord(record)?.idleAnimation?.frames?.length||0)>1));
+  if(gauntletVisible)return true;
+  return Boolean($('toggleEnemies')?.checked&&(state.roomMeta?.objects||[]).some(object=>object.classification?.enemy&&
+    (enemyArtworkForRoomObject(object)?.idleAnimation?.frames?.length||0)>1));
 }
 function scheduleEnemyAnimationFrame(){
   if(state.enemyAnimationTimer!==null)return;
@@ -1608,6 +1623,15 @@ function drawEnemyTexture(record,px,py,roomScale,roomPpu,target){
   const geo=spriteGeometry(sprite),parentScale=Number(record.placement?.scale)||1,rotation=Number(record.placement?.rotation)||0,ppu=Number(roomPpu)||Number(state.roomMeta.image.pixelsPerWorldUnit)||1,scale=roomScale*ppu*parentScale,sourceY=sprite.textureHeight-sprite.rectY-sprite.rectHeight;
   target.save();target.globalAlpha=Number(sprite.tintA??1)*Number(sprite.materialTintA??1);target.translate(px,py);target.rotate(-rotation*Math.PI/180);target.scale(scale,-scale);
   if(record.placement?.flipped)target.scale(-1,1);target.translate(geo.left+geo.width/2,geo.bottom+geo.height/2);clipSpriteMesh(target,sprite,geo);if(geo.rotated)target.rotate(-Math.PI/2);
+  target.drawImage(image,sprite.rectX,sourceY,sprite.rectWidth,sprite.rectHeight,-geo.width/2,-geo.height/2,geo.width,geo.height);target.restore();return true;
+}
+function drawRoomEnemyTexture(object,px,py,roomScale,roomPpu,target){
+  const sprite=enemySpriteForRoomObject(object);if(!sprite)return false;
+  let image=state.atlasCache.get(sprite.textureSha256);if(!image){image=new Image();image.onload=draw;image.onerror=()=>{};image.src=`${ARTWORK_BASE}${sprite.textureSha256}.${ARTWORK_EXTENSION}`;state.atlasCache.set(sprite.textureSha256,image);}if(!image.complete||!image.naturalWidth)return false;
+  const geo=spriteGeometry(sprite),ppu=Math.max(1,Number(roomPpu)||Number(state.roomMeta?.image?.pixelsPerWorldUnit)||1),scale=roomScale*ppu,
+    rotation=Number(object.worldRotationZ||0),sourceY=sprite.textureHeight-sprite.rectY-sprite.rectHeight;
+  target.save();target.globalAlpha=Number(sprite.tintA??1)*Number(sprite.materialTintA??1);target.translate(px,py);target.rotate(-rotation*Math.PI/180);target.scale(scale,-scale);
+  if(sprite.flipX||sprite.flipY)target.scale(sprite.flipX?-1:1,sprite.flipY?-1:1);target.translate(geo.left+geo.width/2,geo.bottom+geo.height/2);clipSpriteMesh(target,sprite,geo);if(geo.rotated)target.rotate(-Math.PI/2);
   target.drawImage(image,sprite.rectX,sourceY,sprite.rectWidth,sprite.rectHeight,-geo.width/2,-geo.height/2,geo.width,geo.height);target.restore();return true;
 }
 

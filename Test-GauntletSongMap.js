@@ -169,6 +169,11 @@ assert.equal(spriteContext.api.enemyFactsForRecord(flintbeetleRecord)?.displayNa
 assert.equal(flintbeetleArtwork?.sprite?.name, 'RR_antic0003', 'Gauntlet Flintbeetle must resolve through the verified upright game sprite alias');
 assert.equal(spriteContext.api.enemySpriteForRecord(flintbeetleRecord)?.textureSha256,
   '35a6422836598c9d829eb9d893bece96e62771d83193d1eccb54e0019565b0c4');
+const rockRollerRecord = { enemyCandidate:true, placement: { id: 'prefab_gRockRoller' }, label: 'gRockRoller' };
+assert.equal(spriteContext.api.enemyFactsForRecord(rockRollerRecord)?.displayName, 'Flintbeetle',
+  'Gauntlet placements using the game-internal Rock Roller name should resolve to the sourced Flintbeetle entry');
+assert.equal(spriteContext.api.enemyArtworkForRecord(rockRollerRecord)?.sprite?.name, 'RR_antic0003',
+  'Gauntlet Rock Roller names should resolve to the verified upright Rock Roller sprite');
 spriteContext.state.animateEnemySprites = true;
 assert.equal(spriteContext.api.enemySpriteForRecord(flintbeetleRecord,0)?.name,'RR_idle0001');
 assert.equal(spriteContext.api.enemySpriteForRecord(flintbeetleRecord,84)?.name,'RR_idle0002');
