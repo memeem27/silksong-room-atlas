@@ -1,6 +1,7 @@
 param(
     [string]$DeltaPath = (Join-Path $PSScriptRoot 'HostedAtlas\delta-assets.json'),
-    [string]$ReleaseIndexPath = (Join-Path $PSScriptRoot 'HostedAtlas\site\release-assets.json')
+    [string]$ReleaseIndexPath = (Join-Path $PSScriptRoot 'HostedAtlas\site\release-assets.json'),
+    [string]$ReleaseNotes = 'Incremental hosted atlas data update.'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -39,7 +40,7 @@ gh auth status | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'GitHub CLI authentication is unavailable.' }
 $releaseViewExit = Invoke-GhQuietly -Arguments @('release', 'view', $tag, '--repo', $repository)
 if ($releaseViewExit -ne 0) {
-    $createExit = Invoke-GhQuietly -Arguments @('release', 'create', $tag, '--repo', $repository, '--title', $tag, '--notes', 'Incremental clean room renders and metadata for the hosted Silksong room atlas.')
+    $createExit = Invoke-GhQuietly -Arguments @('release', 'create', $tag, '--repo', $repository, '--title', $tag, '--notes', $ReleaseNotes)
     if ($createExit -ne 0) { throw "Could not create GitHub release $tag." }
 }
 

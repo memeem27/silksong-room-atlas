@@ -58,11 +58,19 @@ function loadEnemyArtworkAliases() {
       throw new Error(`Rock Roller idle frame metadata is incomplete: ${frame.name || 'unknown frame'}`);
     }
   }
-  return { flintbeetle: {
+  const flintbeetle = {
     placementId: 'flintbeetle', objectName: sprite.name,
     sourceBundle: 'animations_assets_areabone.bundle', offsetX: 0, offsetY: 0,
     sprite: { ...sprite }, idleAnimation: { ...idleAnimation }, aliasOf: 'rockroller-antic-frame'
-  } };
+  };
+  // Native Bone 01 instances serialize as "Rock Roller", while Architect
+  // gauntlet instances use "Flintbeetle". Keep both exact identifiers linked
+  // directly to the same verified game frame so native room overlays do not
+  // depend on the enemy-facts table being loaded to find this sprite.
+  return {
+    flintbeetle,
+    rockroller: { ...flintbeetle, placementId: 'rockroller', aliasOf: 'flintbeetle' }
+  };
 }
 const enemyArtworkAliases = loadEnemyArtworkAliases();
 if (!fs.existsSync(enemyFactsPath)) throw new Error(`Sourced enemy fact entries are missing: ${enemyFactsPath}`);
