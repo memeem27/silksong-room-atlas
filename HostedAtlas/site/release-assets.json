@@ -7645,7 +7645,7 @@
       "name": "manifest.json.gz"
     },
     "maps/navigation.json.gz": {
-      "tag": "silksong-atlas-data-v2-009",
+      "tag": "silksong-atlas-data-v2-010",
       "name": "navigation.json.gz"
     },
     "rooms/abyss_08.json.gz": {
@@ -8389,7 +8389,7 @@
       "name": "wisp_07.json.gz"
     },
     "maps/gauntlet-song.json.gz": {
-      "tag": "silksong-atlas-data-v2-009",
+      "tag": "silksong-atlas-data-v2-010",
       "name": "gauntlet-song.json.gz"
     }
   }

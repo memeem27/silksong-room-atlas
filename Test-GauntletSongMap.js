@@ -28,11 +28,15 @@ assert.ok(Array.isArray(catalog.hub.tileCells) && catalog.hub.tileCells.length =
   'hub tile footprint must match Architect source occupancy coordinates');
 assert.match(catalog.rendering.customArenaImageStatus, /no game tile textures or compiled scene bundles/i,
   'unavailable custom arena artwork must be stated instead of replaced with synthetic terrain');
-assert.equal(catalog.enemyArtworkAliases.flintbeetle?.sprite?.name, 'RR_idle0000',
-  'Flintbeetle must link to the authentic idle animation from the game bundle');
+assert.equal(catalog.enemyArtworkAliases.flintbeetle?.sprite?.name, 'RR_antic0003',
+  'Flintbeetle must use the upright Rock Roller sprite frame matching the in-game reference');
+assert.equal(catalog.enemyArtworkAliases.flintbeetle?.objectName, 'RR_antic0003');
 assert.equal(catalog.enemyArtworkAliases.flintbeetle?.sourceBundle, 'animations_assets_areabone.bundle');
 assert.equal(catalog.enemyArtworkAliases.flintbeetle?.sprite?.textureSha256,
-  '29d0651e26a837a9cd34318b25b213f7f9a8ea022cbd89556236dd0b1f5d3aab');
+  '35a6422836598c9d829eb9d893bece96e62771d83193d1eccb54e0019565b0c4');
+assert.ok(catalog.enemyArtworkAliases.flintbeetle.sprite.meshVertices.length >= 3 &&
+  catalog.enemyArtworkAliases.flintbeetle.sprite.meshIndices.length >= 3,
+  'Flintbeetle marker must retain the game sprite mesh needed to clip atlas bleed');
 const packagedCatalog = readGzipJson(path.join(hostedDataRoot, 'maps', 'gauntlet-song.json.gz'));
 assert.deepEqual(packagedCatalog.coverage, catalog.coverage, 'hosted gzip catalog must match the generated local index');
 assert.equal(packagedCatalog.enemyArtworkAliases?.flintbeetle?.sprite?.textureSha256,
@@ -63,6 +67,8 @@ const manifest = readGzipJson(path.join(hostedDataRoot, 'manifest.json.gz'));
 const hostedRooms = new Map(manifest.rooms.map(room => [room.name.toLowerCase(), room]));
 const assetIndex = readGzipJson(path.join(hostedDataRoot, 'asset-index.json.gz'));
 const artwork = new Set((assetIndex.images || []).map(item => item.file));
+assert.ok(artwork.has(`artwork/${catalog.enemyArtworkAliases.flintbeetle.sprite.textureSha256}.webp`),
+  'the real Flintbeetle sprite atlas used by the updated catalog must already be available on the host');
 for (const room of catalog.mappedRooms) {
   const exported = hostedRooms.get(room.scene.toLowerCase());
   assert.ok(exported?.image && exported.metadata, `${room.scene} must resolve to hosted game art and metadata`);
@@ -133,13 +139,25 @@ assert.equal(spriteContext.api.enemySpriteForRecord(boneRoller)?.textureSha256, 
 spriteContext.state.roomMeta = { architect: { enemyArtwork: {} } };
 const flintbeetleRecord = { placement: { id: 'prefab_gFlintbeetle' }, label: 'gFlintbeetle' };
 const flintbeetleArtwork = spriteContext.api.enemyArtworkForRecord(flintbeetleRecord);
-assert.equal(flintbeetleArtwork?.sprite?.name, 'RR_idle0000', 'Gauntlet Flintbeetle must resolve through the verified shared sprite alias');
+assert.equal(flintbeetleArtwork?.sprite?.name, 'RR_antic0003', 'Gauntlet Flintbeetle must resolve through the verified upright game sprite alias');
 assert.equal(spriteContext.api.enemySpriteForRecord(flintbeetleRecord)?.textureSha256,
-  '29d0651e26a837a9cd34318b25b213f7f9a8ea022cbd89556236dd0b1f5d3aab');
+  '35a6422836598c9d829eb9d893bece96e62771d83193d1eccb54e0019565b0c4');
 const flintbeetleRooms = catalog.mappedRooms.filter(room => room.architect?.enemies?.some(enemy => /flintbeetle/i.test(enemy.id)));
 assert.ok(flintbeetleRooms.length >= 3, 'Gauntlet catalog should include each routed Flintbeetle room');
 assert.ok(flintbeetleRooms.every(room => room.architect.enemies.filter(enemy => /flintbeetle/i.test(enemy.id)).every(enemy => enemy.sprite?.textureSha256 === flintbeetleArtwork.sprite.textureSha256)),
   'Flintbeetle sprite coverage must be reflected in portal metadata');
+
+const spriteClipContext = vm.createContext({});
+vm.runInContext(`${extractFunction(reader,'spriteGeometry')};${extractFunction(reader,'clipSpriteMesh')};globalThis.api={spriteGeometry,clipSpriteMesh};`, spriteClipContext);
+const clipCalls = [], clipContext = {beginPath:()=>clipCalls.push('begin'),moveTo:()=>clipCalls.push('move'),lineTo:()=>clipCalls.push('line'),closePath:()=>clipCalls.push('close'),clip:()=>clipCalls.push('clip')};
+const flintSprite = catalog.enemyArtworkAliases.flintbeetle.sprite;
+assert.equal(spriteClipContext.api.clipSpriteMesh(clipContext,flintSprite,spriteClipContext.api.spriteGeometry(flintSprite)),true,
+  'enemy sprite renderer must clip the atlas crop to the source SpriteRenderer mesh');
+assert.equal(clipCalls.filter(call=>call==='close').length,flintSprite.meshIndices.length/3,
+  'the clipped texture must preserve every authored triangle in the game sprite mesh');
+assert.equal(clipCalls.at(-1),'clip');
+assert.ok(reader.includes('clipSpriteMesh(context,sprite,geometry)')&&reader.includes('clipSpriteMesh(target,sprite,geo)'),
+  'both gauntlet placements and enemy detail artwork must use the mesh-clipped sprite renderer');
 
 const guideContext = vm.createContext({});
 vm.runInContext(`${extractFunction(reader,'labelCase')};${extractFunction(reader,'waveGroups')};${extractFunction(reader,'eventActionState')};${extractFunction(reader,'canonicalGuidePlacements')};${extractFunction(reader,'placementsForGuidePhase')};${extractFunction(reader,'guidePlacementEnabled')};globalThis.api={waveGroups,canonicalGuidePlacements,placementsForGuidePhase,guidePlacementEnabled};`, guideContext);
@@ -199,7 +217,7 @@ eventContext.api.applySelectedWaveState(bone15Sidecar.architect.markers[0]);
 assert.ok(bone15Flintbeetles.every(record=>eventContext.api.isPlacementEnabled(record)),
   'the boss9 phase must turn on each saved inactive Flintbeetle placement');
 spriteContext.state.roomMeta=bone15Sidecar;
-assert.ok(bone15Flintbeetles.every(record=>spriteContext.api.enemySpriteForRecord(record)?.name==='RR_idle0000'),
-  'all Bone 15 Flintbeetles must resolve to their authentic game sprite');
+assert.ok(bone15Flintbeetles.every(record=>spriteContext.api.enemySpriteForRecord(record)?.name==='RR_antic0003'),
+  'all Bone 15 Flintbeetles must resolve to their authentic upright game sprite');
 
 console.log(`GauntletSong map: ${catalog.coverage.hubEntrances} portals, ${catalog.coverage.routeCount} room routes, ${routeScenes.size} linked rooms, ${catalog.coverage.enemyTypes} enemy types; ${positions.length} independently clickable markers tested.`);

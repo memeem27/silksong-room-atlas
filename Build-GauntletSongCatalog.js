@@ -24,20 +24,26 @@ function point(value) {
 function placementOf(record) { return record?.placement || record || {}; }
 function configOf(record) { return record?.config || {}; }
 
-// The GauntletSong prefab uses the display name Flintbeetle, while the game
-// animation is indexed as Rock Roller. Reuse the verified bundle-derived
-// sprite geometry already present in Bone 01's room sidecar; never synthesize
-// an enemy image or substitute a journal icon.
+// GauntletSong's Flintbeetle corresponds to the upright Rock Roller frame
+// serialized in Bone 01. The first idle frame is side-on and does not match
+// the enemy pose shown in game. Reuse the real bundle-derived sprite metadata;
+// never synthesize an enemy image or substitute a journal icon.
 function loadEnemyArtworkAliases() {
   const sourcePath = path.join(roomDirectory, 'bone_01.json');
   if (!fs.existsSync(sourcePath)) throw new Error('Bone 01 sidecar is required to validate the real Flintbeetle sprite.');
-  const source = readJson(sourcePath).architect?.enemyArtwork?.boneroller;
-  const sprite = source?.sprite;
-  if (source?.objectName !== 'RR_idle0000' || source.sourceBundle !== 'animations_assets_areabone.bundle' ||
-      !/^[a-f0-9]{64}$/i.test(sprite?.textureSha256 || '') || sprite.name !== 'RR_idle0000') {
-    throw new Error('Bone 01 does not contain the expected authentic Flintbeetle/Rock Roller idle sprite.');
+  const room = readJson(sourcePath);
+  const owner = (room.objects || []).find(object => (object.sprites || []).some(sprite => sprite.name === 'RR_antic0003'));
+  const sprite = (owner?.sprites || []).find(item => item.name === 'RR_antic0003');
+  if (!sprite || !/^[a-f0-9]{64}$/i.test(sprite.textureSha256 || '') ||
+      !Array.isArray(sprite.meshVertices) || sprite.meshVertices.length < 3 ||
+      !Array.isArray(sprite.meshIndices) || sprite.meshIndices.length < 3) {
+    throw new Error('Bone 01 does not contain the expected authentic Flintbeetle/Rock Roller sprite frame and mesh.');
   }
-  return { flintbeetle: { ...source, aliasOf: 'boneroller' } };
+  return { flintbeetle: {
+    placementId: 'flintbeetle', objectName: sprite.name,
+    sourceBundle: 'animations_assets_areabone.bundle', offsetX: 0, offsetY: 0,
+    sprite: { ...sprite }, aliasOf: 'rockroller-antic-frame'
+  } };
 }
 const enemyArtworkAliases = loadEnemyArtworkAliases();
 

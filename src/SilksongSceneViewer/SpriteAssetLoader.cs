@@ -29,9 +29,10 @@ internal sealed class SpriteAssetLoader {
             ["pilgrimhulk"] = ["pilgrim02"],
             ["pilgrimguide"] = ["pilgrimstaffweilder"],
             ["pilgrimbell"] = ["pilgrimbellthrower"],
-            // Flintbeetle's Silksong animation prefab is named ROCK_ROLLER in
-            // the game assets; Architect names its gauntlet prefab gFlintbeetle.
-            ["flintbeetle"] = ["rridle0000"],
+            // GauntletSong's Flintbeetle uses the upright Rock Roller sprite
+            // visible in Bone 01. The first idle frame is a different side-on
+            // pose, so use this exact serialized game frame for its marker.
+            ["flintbeetle"] = ["rrantic0003"],
             // The in-game idle sprite is named RR_idle0000 and lives in the
             // area-bone animation bundle, not either journal atlas. Prefer it
             // over the small journal portrait for both Architect spellings.

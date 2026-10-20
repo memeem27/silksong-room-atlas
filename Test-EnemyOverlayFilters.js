@@ -158,11 +158,17 @@ const artworkFunction = extractFunction(readerSource, 'enemyArtworkForRecord');
 const spriteFunction = extractFunction(readerSource, 'enemySpriteForRecord');
 const realEnemyHash = 'a'.repeat(64);
 const boneRollerArt = bone01.architect?.enemyArtwork?.boneroller;
+const flintbeetleSceneSprite = bone01.objects.find(object => (object.sprites || []).some(item => item.name === 'RR_antic0003'))
+  ?.sprites.find(item => item.name === 'RR_antic0003');
+const flintbeetleArt = { placementId: 'flintbeetle', objectName: 'RR_antic0003',
+  sourceBundle: 'animations_assets_areabone.bundle', sprite: flintbeetleSceneSprite };
+assert.ok(flintbeetleSceneSprite?.textureSha256 && flintbeetleSceneSprite.meshIndices?.length,
+  'Bone 01 must retain the authentic upright Flintbeetle sprite frame and its mesh');
 assert.ok(boneRollerArt?.sprite?.textureSha256 && boneRollerArt?.sprite?.name === 'RR_idle0000',
   'Bone Roller must use the real Rock Roller idle frame, not the journal portrait');
 assert.equal(boneRollerArt.sourceBundle, 'animations_assets_areabone.bundle',
   'Bone Roller artwork must come from the game animation bundle');
-const spriteContext = vm.createContext({ state: { gauntletCatalog: { enemyArtworkAliases: { flintbeetle: boneRollerArt } }, roomMeta: { architect: { enemyArtwork: {
+const spriteContext = vm.createContext({ state: { gauntletCatalog: { enemyArtworkAliases: { flintbeetle: flintbeetleArt } }, roomMeta: { architect: { enemyArtwork: {
   gbeastfly: { sprite: { textureSha256: realEnemyHash } },
   boneroller: boneRollerArt
 } } } } });
@@ -172,7 +178,7 @@ assert.equal(spriteContext.matchSprite({ placement: { id: 'prefab_gBeastfly' }, 
 assert.equal(spriteContext.matchSprite({ placement: { id: 'bone_roller' }, label: 'Bone Roller' }).name,
   'RR_idle0000', 'Bone Roller placements must display the real animated Rock Roller frame');
 assert.equal(spriteContext.matchSprite({ placement: { id: 'prefab_gFlintbeetle' }, label: 'gFlintbeetle' }).name,
-  'RR_idle0000', 'Gauntlet Flintbeetles must display the matching game animation through the shared catalog alias');
+  'RR_antic0003', 'Gauntlet Flintbeetles must display the upright matching game sprite through the shared catalog alias');
 assert.equal(spriteContext.matchSprite({ placement: { id: 'unknown_enemy' }, label: 'unknown enemy' }), null,
   'unmatched enemy types must not be assigned invented or unrelated textures');
 
@@ -183,7 +189,7 @@ console.log(JSON.stringify({
     'interactive renderer unchanged', 'unclassified Goomba sprites and effects omitted',
     'Bone 01 enemy marker classification repaired', 'disguised silhouette/Rock Roller art omitted and marked',
     'Bone Roller maps to the native RR_idle0000 game frame',
-    'Flintbeetle maps to the native RR_idle0000 game frame',
+    'Flintbeetle maps to the native RR_antic0003 game sprite frame',
     'gauntlet wrapper candidates deduplicated',
     'authentic enemy atlas match required', 'unmatched enemy art receives no substitute texture']
 }, null, 2));

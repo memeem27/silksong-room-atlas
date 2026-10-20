@@ -771,9 +771,21 @@ function drawEnemyArticleSprite(record){
   const context=target.getContext('2d');if(!context)return;
   const geometry=spriteGeometry(sprite),scale=Math.min((target.width-12)/Math.max(.01,geometry.width),(target.height-12)/Math.max(.01,geometry.height)),placement=record.placement||{};
   const sourceY=Number(sprite.textureHeight)-Number(sprite.rectY)-Number(sprite.rectHeight);
-  context.clearRect(0,0,target.width,target.height);context.save();context.globalAlpha=Number(sprite.tintA??1);context.translate(target.width/2,target.height/2);context.rotate(-Number(placement.rotation||0)*Math.PI/180);context.scale(scale,-scale);context.translate(geometry.left+geometry.width/2,geometry.bottom+geometry.height/2);
-  if(placement.flipped)context.scale(-1,1);if(geometry.rotated)context.rotate(-Math.PI/2);
+  context.clearRect(0,0,target.width,target.height);context.save();context.globalAlpha=Number(sprite.tintA??1)*Number(sprite.materialTintA??1);context.translate(target.width/2,target.height/2);context.rotate(-Number(placement.rotation||0)*Math.PI/180);context.scale(scale,-scale);
+  if(placement.flipped)context.scale(-1,1);context.translate(geometry.left+geometry.width/2,geometry.bottom+geometry.height/2);clipSpriteMesh(context,sprite,geometry);if(geometry.rotated)context.rotate(-Math.PI/2);
   context.drawImage(image,sprite.rectX,sourceY,sprite.rectWidth,sprite.rectHeight,-geometry.width/2,-geometry.height/2,geometry.width,geometry.height);context.restore();
+}
+function clipSpriteMesh(target,sprite,geometry){
+  const vertices=sprite.meshVertices||[],indices=sprite.meshIndices||[];
+  if(vertices.length<3||indices.length<3)return false;
+  const centerX=geometry.left+geometry.width/2,centerY=geometry.bottom+geometry.height/2;
+  target.beginPath();
+  for(let index=0;index+2<indices.length;index+=3){
+    const a=vertices[indices[index]],b=vertices[indices[index+1]],c=vertices[indices[index+2]];
+    if(!a||!b||!c)continue;
+    target.moveTo(a.x-centerX,a.y-centerY);target.lineTo(b.x-centerX,b.y-centerY);target.lineTo(c.x-centerX,c.y-centerY);target.closePath();
+  }
+  target.clip();return true;
 }
 function selectGauntlet(index) {
   if(!$('toggleGauntlets').checked){$('toggleGauntlets').checked=true;}
@@ -1562,8 +1574,8 @@ function drawEnemyTexture(record,px,py,roomScale,roomPpu,target){
   const sprite=enemySpriteForRecord(record);if(!sprite)return false;
   let image=state.atlasCache.get(sprite.textureSha256);if(!image){image=new Image();image.onload=draw;image.onerror=()=>{};image.src=`${ARTWORK_BASE}${sprite.textureSha256}.${ARTWORK_EXTENSION}`;state.atlasCache.set(sprite.textureSha256,image);}if(!image.complete||!image.naturalWidth)return false;
   const geo=spriteGeometry(sprite),parentScale=Number(record.placement?.scale)||1,rotation=Number(record.placement?.rotation)||0,ppu=Number(roomPpu)||Number(state.roomMeta.image.pixelsPerWorldUnit)||1,scale=roomScale*ppu*parentScale,sourceY=sprite.textureHeight-sprite.rectY-sprite.rectHeight;
-  target.save();target.globalAlpha=Number(sprite.tintA??1);target.translate(px,py);target.rotate(-rotation*Math.PI/180);target.scale(scale,-scale);target.translate(geo.left+geo.width/2,geo.bottom+geo.height/2);
-  if(record.placement?.flipped)target.scale(-1,1);if(geo.rotated)target.rotate(-Math.PI/2);
+  target.save();target.globalAlpha=Number(sprite.tintA??1)*Number(sprite.materialTintA??1);target.translate(px,py);target.rotate(-rotation*Math.PI/180);target.scale(scale,-scale);
+  if(record.placement?.flipped)target.scale(-1,1);target.translate(geo.left+geo.width/2,geo.bottom+geo.height/2);clipSpriteMesh(target,sprite,geo);if(geo.rotated)target.rotate(-Math.PI/2);
   target.drawImage(image,sprite.rectX,sourceY,sprite.rectWidth,sprite.rectHeight,-geo.width/2,-geo.height/2,geo.width,geo.height);target.restore();return true;
 }
 
