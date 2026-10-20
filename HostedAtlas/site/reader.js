@@ -375,7 +375,9 @@ async function openRoom(name, options = {}) {
   $('toggleMapBackdrop').hidden=true; $('mapLayers').hidden=true; $('toggleWorldMapStyle').hidden=true;
   $('roomSummary').innerHTML='<div class="empty">Loading the selected room sidecar…</div>';
   $('gauntletMapPanel').hidden=true; $('roomSectionPanel').hidden=true; $('objectLayers').hidden=true; $('roomStatePanel').hidden=true; $('architectPanel').hidden=true; $('metadataPanel').hidden=true;
-  $('toggleEnemies').checked=false; $('toggleSpawns').checked=false; $('toggleChecks').checked=false;
+  // Keep the user's room-overlay choice as they move between rooms. The HTML
+  // default enables authentic enemy sprites/markers; users can turn them off.
+  $('toggleSpawns').checked=false; $('toggleChecks').checked=false;
   $('toggleAllInactiveArtwork').checked=false; $('toggleDisabledStateArtwork').checked=false; $('roomStateSearch').value='';
   $('toggleGauntlets').checked=false; $('toggleArenaChanges').checked=true; $('toggleEnemyTextures').checked=true;
   $('gauntletDetails').hidden=true; $('enemyArticle').hidden=true;
