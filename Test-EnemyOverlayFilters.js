@@ -81,6 +81,18 @@ assert.equal(context.filters.spritePassesFilters(boneDecoration, sprite, false, 
   'enemy-themed bone scenery must remain in clean room images');
 assert.equal(context.filters.classifyObject(missedBoneGoomba).enemy, true,
   'known enemy actors must receive enemy marker classification even without enemy components');
+const silhouetteParent = { id: 'silhouettes-parent', name: 'Silhouettes Parent', parentId: null,
+  classification: { enemy: false } };
+const silhouettedRockRoller = { id: 'silhouetted-rock-roller', name: 'Silhoutte (1)', parentId: silhouetteParent.id,
+  classification: { enemy: false }, sprites: [{ name: 'RR_idle0003' }] };
+state.objectById = new Map([[silhouetteParent.id, silhouetteParent], [silhouettedRockRoller.id, silhouettedRockRoller]]);
+assert.equal(context.filters.spritePassesFilters(silhouettedRockRoller, sprite, false, true), false,
+  'silhouette actor sprites must not be baked into clean room images');
+assert.equal(context.filters.classifyObject(silhouettedRockRoller).enemy, true,
+  'Silhoutte actor objects must receive an enemy marker classification');
+assert.equal(context.filters.isEnemyArtworkObject({ id: 'rr-frame', name: 'Animation Frame', parentId: null,
+  classification: { enemy: false }, sprites: [{ name: 'RR_idle0003' }] }), true,
+  'Rock Roller animation frames must be excluded even when their object names are generic');
 state.batchRendering = false;
 assert.equal(context.filters.spritePassesFilters(enemyChild, sprite, false, true), true,
   'the filter must not alter the interactive scene renderer');
@@ -114,6 +126,14 @@ assert.equal(context.filters.spritePassesFilters(missedBoneGoombaFixture, missed
   'the real Bone 01 Rock Roller enemy sprite must not be baked into the clean image');
 assert.equal(context.filters.classifyObject(missedBoneGoombaFixture).enemy, true,
   'the real Bone 01 Rock Roller enemy must have an enemy marker classification');
+const missedSilhouetteFixture = boneObjects.find(object => object.name === 'Silhoutte (1)' &&
+  object.sprites?.some(sprite => sprite.name === 'RR_idle0003'));
+assert.ok(missedSilhouetteFixture,
+  'Bone 01 fixture must contain the missed disguised Rock Roller sprite from Silhouettes Parent');
+assert.equal(context.filters.spritePassesFilters(missedSilhouetteFixture, missedSilhouetteFixture.sprites[0], false, true), false,
+  'the real Bone 01 disguised Rock Roller sprite must not be baked into the clean image');
+assert.equal(context.filters.classifyObject(missedSilhouetteFixture).enemy, true,
+  'the real Bone 01 disguised Rock Roller must have an enemy marker classification');
 
 const readerPath = path.join(root, 'HostedAtlas', 'site', 'reader.js');
 const readerSource = fs.readFileSync(readerPath, 'utf8');
@@ -147,6 +167,7 @@ console.log(JSON.stringify({
   bone01EnemyRendererObjects: bakedEnemyRenderers.length,
   verified: ['batch enemy sprites omitted', 'batch enemy meshes omitted', 'room props retained',
     'interactive renderer unchanged', 'unclassified Goomba sprites and effects omitted',
-    'Bone 01 enemy marker classification repaired', 'gauntlet wrapper candidates deduplicated',
+    'Bone 01 enemy marker classification repaired', 'disguised silhouette/Rock Roller art omitted and marked',
+    'gauntlet wrapper candidates deduplicated',
     'authentic enemy atlas match required', 'unmatched enemy art receives no substitute texture']
 }, null, 2));

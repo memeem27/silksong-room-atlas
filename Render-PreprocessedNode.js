@@ -30,7 +30,7 @@ const artworkRoot = path.join(projectRoot, 'workspace', 'scenes', 'artwork');
 const defaultManifest = path.join(workspaceRoot, 'manifest.json');
 
 function parseArguments(argv) {
-  const options = { manifest: defaultManifest, outputRoot: workspaceRoot, suffix: 'native', manifestName: 'manifest-retry-native.json', scenes: [], limit: 0, resume: true, inactive: true, colors: false, disabledRenderers: false };
+  const options = { manifest: defaultManifest, outputRoot: workspaceRoot, suffix: 'native', manifestName: 'manifest-retry-native.json', scenes: [], limit: 0, resume: true, inactive: true, colors: false, disabledRenderers: false, boundedPreview: false };
   for (let index = 0; index < argv.length; index++) {
     const value = argv[index];
     const next = () => {
@@ -46,6 +46,7 @@ function parseArguments(argv) {
     else if (value === '--no-resume') options.resume = false;
     else if (value === '--active-only') options.inactive = false;
     else if (value === '--include-disabled-renderers') options.disabledRenderers = true;
+    else if (value === '--bounded-preview') options.boundedPreview = true;
     else if (value === '--renderer-colors') options.colors = true;
     else if (value === '--no-renderer-colors') options.colors = false;
     else if (value === '--help' || value === '-h') options.help = true;
@@ -68,6 +69,7 @@ function printHelp() {
     `  --no-resume           Re-render rooms even when a valid checkpoint exists\n` +
     `  --active-only         Do not include progression-hidden renderers\n` +
     `  --renderer-colors    Apply serialized SpriteRenderer tint (default: ignored)\n` +
+    `  --bounded-preview     Cap output at 25 megapixels instead of writing oversized native intermediates\n` +
     `  --include-disabled-renderers  Include renderers disabled in the Unity scene (default: excluded)\n`);
 }
 
@@ -305,12 +307,16 @@ async function atomicJson(filePath, value) {
   await fsp.rename(temporary, filePath);
 }
 
+async function readJson(filePath) {
+  return JSON.parse((await fsp.readFile(filePath, 'utf8')).replace(/^\uFEFF/, ''));
+}
+
 async function main() {
   const options = parseArguments(process.argv.slice(2));
   if (options.help) { printHelp(); return; }
   const appCode = await fsp.readFile(sceneSource, 'utf8');
   const appHash = crypto.createHash('sha256').update(appCode).digest('hex');
-  const baseManifest = JSON.parse(await fsp.readFile(options.manifest, 'utf8'));
+  const baseManifest = await readJson(options.manifest);
   if (!baseManifest.complete || !Array.isArray(baseManifest.rooms) || !baseManifest.rooms.length)
     throw new Error('The base preprocessed manifest must be complete and contain room entries.');
   let selected = baseManifest.rooms;
@@ -326,7 +332,7 @@ async function main() {
   const checkpointPath = path.join(options.outputRoot, options.manifestName);
   let previous = null;
   if (options.resume && fs.existsSync(checkpointPath)) {
-    previous = JSON.parse(await fsp.readFile(checkpointPath, 'utf8'));
+    previous = await readJson(checkpointPath);
     if (previous.rendererSourceSha256 !== appHash || previous.outputSuffix !== options.suffix) {
       process.stdout.write('Existing checkpoint uses a different renderer version; starting a fresh pass.\n');
       previous = null;
@@ -412,7 +418,7 @@ async function main() {
     let metadata = null, render = null, scene = null;
     try {
       const existingMetadataPath = path.join(options.outputRoot, sourceRoom.metadata || `rooms/${simpleBaseName(sceneName)}.json`);
-      metadata = JSON.parse(await fsp.readFile(existingMetadataPath, 'utf8'));
+      metadata = await readJson(existingMetadataPath);
       if (metadata.format !== 'silksong-room-atlas-room' || !Array.isArray(metadata.objects))
         throw new Error('Room sidecar is missing or has an unsupported format.');
       scene = sceneForRenderer(metadata);
@@ -423,7 +429,8 @@ async function main() {
         const image = await getTexture(hash);
         if (image) state.images.set(textureUrl(hash), image);
       }
-      render = await renderer.helpers.renderBatchScene(scene.objects, false);
+      const outputLimits = options.boundedPreview ? { maxEdge: 32760, maxPixels: 25_000_000 } : null;
+      render = await renderer.helpers.renderBatchScene(scene.objects, false, null, null, outputLimits);
       missingTextures = render.missingTextures || [];
       if (missingTextures.length) throw new Error(`Missing game texture atlases: ${missingTextures.join(', ')}`);
       if (render.blob) {

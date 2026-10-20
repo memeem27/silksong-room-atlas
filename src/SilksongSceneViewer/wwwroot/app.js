@@ -630,14 +630,16 @@ function isKnownEnemyActorName(value) {
   // Some scene-bundle enemy prefabs expose only a Transform and SpriteRenderer
   // (for example Rock Roller Scene's Bone_Goomba_Large0013), so component
   // classification alone misses them.
-  return /(?:^|_)bone_goomba(?:_large\d*)?(?:_\d+)?$/.test(name);
+  return /(?:^|_)bone_goomba(?:_large\d*)?(?:_\d+)?$/.test(name) ||
+    /^(?:silhoutte|silhouette)(?:_\d+)?$/.test(name);
 }
 
 function isKnownEnemyArtworkName(value) {
   const name = normalizeSceneArtworkName(value);
   return /(?:^|_)bone_goomba(?:_|$)/.test(name) ||
     /(?:^|_)goomba_mask_chunk(?:_|$)/.test(name) ||
-    /^(?:bgl|bg)_appear_burst\d*$/.test(name);
+    /^(?:bgl|bg)_appear_burst\d*$/.test(name) ||
+    /^rr_(?:antic|idle|roll|sing|turn|wall_butt)\d*$/.test(name);
 }
 
 function isGameBundleTexture(url) {
