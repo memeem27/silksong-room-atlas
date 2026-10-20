@@ -8,6 +8,7 @@ const { isDeepStrictEqual } = require('node:util');
 const root = __dirname;
 const sourceRoot = path.join(root, 'workspace', 'preprocessed');
 const dataRoot = path.join(root, 'HostedAtlas', 'r2-data');
+const gauntletMapOnly = process.argv.includes('--gauntlet-map-only');
 function parseJsonText(text) {
   if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
   return JSON.parse(text);
@@ -108,7 +109,7 @@ function rewrite(value, key, sourceBase) {
   return result;
 }
 
-for (const room of manifest.rooms || []) {
+if (!gauntletMapOnly) for (const room of manifest.rooms || []) {
   if (!room.metadata) continue;
   const sourcePath = path.resolve(sourceRoot, room.metadata);
   const source = readJson(sourcePath);
@@ -176,7 +177,7 @@ if (imageUpdates.length) {
 }
 
 const newArtworkFiles = [];
-for (const hash of enemyTextureHashes) {
+if (!gauntletMapOnly) for (const hash of enemyTextureHashes) {
   const relative = `artwork/${hash}.webp`;
   if (indexedAssets.has(relative)) continue;
   const sourcePng = path.join(root, 'workspace', 'scenes', 'artwork', `${hash}.png`);
@@ -208,7 +209,7 @@ for (const hash of enemyTextureHashes) {
   indexedAssets.add(relative);
   newArtworkFiles.push(relative);
 }
-if (newArtworkFiles.length) {
+if (!gauntletMapOnly && newArtworkFiles.length) {
   assetIndex.images.sort((a, b) => a.file.localeCompare(b.file));
   assetIndex.imageCount = assetIndex.images.length;
   fs.writeFileSync(assetIndexPath, zlib.gzipSync(Buffer.from(JSON.stringify(assetIndex)), { level: 9 }));
@@ -220,6 +221,21 @@ const navigationPath = path.join(dataRoot, 'maps', 'navigation.json.gz');
 if (!fs.existsSync(navigationPath)) throw new Error('Hosted navigation output is missing. Run Build-HostedNavigation.js first.');
 readGzipJson(navigationPath);
 changedFiles.push(navigationFile);
+
+// The portal map is a small index. Keep per-instance enemy placement and
+// sprite geometry in room sidecars so the initial map request stays lightweight.
+const gauntletCatalogPath = path.join(root, 'workspace', 'gauntlet-song', 'export', 'gauntlet-catalog.json');
+if (!fs.existsSync(gauntletCatalogPath)) throw new Error('GauntletSong catalog is missing. Run Build-GauntletSongCatalog.js first.');
+const gauntletCatalog = readJson(gauntletCatalogPath);
+if (gauntletCatalog.format !== 'silksong-gauntletsong-catalog' || gauntletCatalog.formatVersion !== 2) {
+  throw new Error('GauntletSong catalog format is not the compact hosted format.');
+}
+const gauntletCatalogRelative = 'maps/gauntlet-song.json.gz';
+const gauntletCatalogDestination = path.resolve(dataRoot, gauntletCatalogRelative);
+if (!gauntletCatalogDestination.startsWith(`${path.resolve(dataRoot)}${path.sep}`)) throw new Error('Unsafe hosted GauntletSong catalog path.');
+fs.mkdirSync(path.dirname(gauntletCatalogDestination), { recursive: true });
+fs.writeFileSync(gauntletCatalogDestination, zlib.gzipSync(Buffer.from(JSON.stringify(gauntletCatalog)), { level: 9 }));
+changedFiles.push(gauntletCatalogRelative);
 const unique = [...new Set(changedFiles)].sort();
 const releaseIndexPath = path.join(root, 'HostedAtlas', 'site', 'release-assets.json');
 const releaseIndex = readJson(releaseIndexPath);
@@ -232,6 +248,9 @@ fs.writeFileSync(deltaPath, `${JSON.stringify(delta, null, 2)}\n`);
 process.stdout.write(`${JSON.stringify({ status: 'ready', releaseTag: delta.releaseTag, changedFiles: unique.length,
   changedRoomMetadata: changedRoomMetadata.length, changedRooms: changedRoomMetadata.length,
   refreshedRoomImages: refreshedImages,
+  gauntletCatalog: { file: gauntletCatalogRelative, gauntlets: gauntletCatalog.coverage.hubEntrances,
+    routes: gauntletCatalog.coverage.routeCount, rooms: gauntletCatalog.coverage.uniqueBaseRooms,
+    bytes: fs.statSync(gauntletCatalogDestination).size },
   boneBottom: changedRoomMetadata.find(room => room.name.toLowerCase() === 'bone_01b') || null,
   newAuthenticEnemyAtlasFiles: newArtworkFiles, enemyTextureTypes: enemyTextureHashes.size,
   files: unique, output: path.relative(root, deltaPath) }, null, 2)}\n`);

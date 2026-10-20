@@ -185,6 +185,7 @@ body { min-width: 320px; height: 100vh; overflow: hidden; background: #070909; c
 .rail-button { width: 54px; min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 2px; border: 1px solid transparent; border-radius: 5px; background: transparent; color: #e5eae2; font-size: 8px; }
 .rail-button:hover, .rail-button[aria-expanded="true"] { border-color: #73836e; background: #303a31; color: #fff; }
 .rail-glyph { color: #bdd2ac; font: 21px/1 "Segoe UI Symbol","Segoe UI",sans-serif; }
+.gauntlet-rail-glyph { width: 19px; height: 19px; display: grid; place-items: center; border: 1px solid #bca6d9; border-radius: 50%; color: #eadfff; font: bold 10px Consolas,monospace; }
 .rail-divider { height: 1px; margin: 2px 4px; background: #ffffff2b; }
 .rail-icon-only { min-height: 39px; }
 .rail-icon-only .rail-glyph { font-size: 18px; }
@@ -216,6 +217,11 @@ body { min-width: 320px; height: 100vh; overflow: hidden; background: #070909; c
 .toggle input { accent-color: #657e59; }
 .room-state-panel .toggle input { accent-color: #657e59; }
 .architect .toggle input, .sub-toggle input, .placement-row input { accent-color: var(--gauntlet); }
+.gauntlet-map-summary { padding: 2px 0 7px; }
+.gauntlet-route-row { width: 100%; display: flex; align-items: center; gap: 7px; min-height: 34px; padding: 5px 6px; border-color: #d8d2df; background: #fff; color: #222; text-align: left; font: 9px Consolas,monospace; }
+.gauntlet-route-row:hover { border-color: #9b86b0; background: #f5f1f8; }
+.gauntlet-route-copy { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.gauntlet-route-copy small { color: #666; font: 8px Consolas,monospace; }
 .inspector-foot { padding-top: 8px; color: #747d75; }
 .canvas-notice, .canvas-loading { border-color: #d4dbd2; border-radius: 7px; box-shadow: 0 5px 20px #0006; }
 .canvas-loading { top: 64px; }

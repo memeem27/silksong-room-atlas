@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#161a18" />
   <title>Silksong Room Atlas</title>
-  <link rel="stylesheet" href="./reader.css?v=atlas-9" />
-  <script src="./host-config.js?v=silksong-atlas-data-v2-007"></script>
-  <script src="./reader.js?v=atlas-25" defer></script>
+  <link rel="stylesheet" href="./reader.css?v=atlas-10" />
+  <script src="./host-config.js?v=silksong-atlas-data-v2-008"></script>
+  <script src="./reader.js?v=atlas-26" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -20,6 +20,7 @@
     <nav class="map-rail" aria-label="Map controls">
       <button id="toggleNavigatorButton" class="rail-button" type="button" aria-controls="navigator" aria-expanded="false" title="Browse areas and rooms"><span class="rail-glyph" aria-hidden="true">⌖</span><span>Browse</span></button>
       <button id="toggleInspectorButton" class="rail-button" type="button" aria-controls="inspector" aria-expanded="false" title="Open map and room layers"><span class="rail-glyph" aria-hidden="true">☷</span><span>Layers</span></button>
+      <button id="gauntletMapButton" class="rail-button" type="button" title="Open the separate GauntletSong portal map"><span class="rail-glyph gauntlet-rail-glyph" aria-hidden="true">G</span><span>Gauntlets</span></button>
       <span class="rail-divider" aria-hidden="true"></span>
       <button id="fullscreenButton" class="rail-button rail-icon-only" type="button" aria-label="Toggle fullscreen" title="Toggle fullscreen"><span class="rail-glyph" aria-hidden="true">⛶</span></button>
     </nav>
@@ -65,6 +66,14 @@
     <aside id="inspector" class="inspector" aria-label="Room controls and details" aria-hidden="true">
       <div class="inspector-head"><div><span class="eyebrow" id="inspectorEyebrow">LAYERS</span><h2 id="inspectorTitle">Room information</h2></div><div class="inspector-head-actions"><button id="closeRoomButton" type="button" title="Return to area map" aria-label="Return to area map" hidden>↩</button><button id="closeInspectorButton" class="panel-close" type="button" aria-label="Close room details" title="Close">×</button></div></div>
       <div id="roomSummary" class="summary"><div class="empty">Select a region, then choose a room.</div></div>
+
+      <section id="gauntletMapPanel" class="control-section architect" hidden>
+        <div class="section-title">GAUNTLETSONG INDEX <span id="gauntletMapCount">0 portals</span></div>
+        <div id="gauntletMapSummary" class="gauntlet-map-summary"><div class="hint">Choose a portal to inspect its linked room scenes.</div></div>
+        <div class="section-title small-title">LINKED ROOMS &amp; EVENTS <span id="gauntletRouteCount">0</span></div>
+        <div id="gauntletMapRoutes" class="gauntlet-list"><div class="hint">No portal selected.</div></div>
+        <p class="hint">Portal positions come from the Architect hub scene. Its tile coordinates are available, but the export contains no authentic hub or arena tile textures. Room buttons open the real pre-rendered Silksong room and load that room’s event and placement data.</p>
+      </section>
 
       <section id="mapLayers" class="control-section" hidden>
         <div class="section-title">MAP ARTWORK <span>REAL GAME SPRITES</span></div>

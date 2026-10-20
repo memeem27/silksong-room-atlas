@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "repository": "memeem27/silksong-room-atlas",
-  "assetCount": 2096,
-  "releaseCount": 7,
+  "assetCount": 2097,
+  "releaseCount": 8,
   "assets": {
     "artwork/00d10de1fa0d1dbcd96a755ad4bad91f57189cd9347fb2b1cef076dfad276ae2.webp": {
       "tag": "silksong-atlas-data-v2-001",
@@ -7645,7 +7645,7 @@
       "name": "manifest.json.gz"
     },
     "maps/navigation.json.gz": {
-      "tag": "silksong-atlas-data-v2-007",
+      "tag": "silksong-atlas-data-v2-008",
       "name": "navigation.json.gz"
     },
     "rooms/abyss_08.json.gz": {
@@ -8387,6 +8387,10 @@
     "rooms/wisp_07.json.gz": {
       "tag": "silksong-atlas-data-v2-004",
       "name": "wisp_07.json.gz"
+    },
+    "maps/gauntlet-song.json.gz": {
+      "tag": "silksong-atlas-data-v2-008",
+      "name": "gauntlet-song.json.gz"
     }
   }
 }
