@@ -24,6 +24,23 @@ function point(value) {
 function placementOf(record) { return record?.placement || record || {}; }
 function configOf(record) { return record?.config || {}; }
 
+// The GauntletSong prefab uses the display name Flintbeetle, while the game
+// animation is indexed as Rock Roller. Reuse the verified bundle-derived
+// sprite geometry already present in Bone 01's room sidecar; never synthesize
+// an enemy image or substitute a journal icon.
+function loadEnemyArtworkAliases() {
+  const sourcePath = path.join(roomDirectory, 'bone_01.json');
+  if (!fs.existsSync(sourcePath)) throw new Error('Bone 01 sidecar is required to validate the real Flintbeetle sprite.');
+  const source = readJson(sourcePath).architect?.enemyArtwork?.boneroller;
+  const sprite = source?.sprite;
+  if (source?.objectName !== 'RR_idle0000' || source.sourceBundle !== 'animations_assets_areabone.bundle' ||
+      !/^[a-f0-9]{64}$/i.test(sprite?.textureSha256 || '') || sprite.name !== 'RR_idle0000') {
+    throw new Error('Bone 01 does not contain the expected authentic Flintbeetle/Rock Roller idle sprite.');
+  }
+  return { flintbeetle: { ...source, aliasOf: 'boneroller' } };
+}
+const enemyArtworkAliases = loadEnemyArtworkAliases();
+
 // Keep the hosted catalog as an index. Per-instance placement data and textures
 // stay in the already-compressed room sidecars and load only when a room opens.
 function loadRoom(name, areaByRoom) {
@@ -42,7 +59,8 @@ function loadRoom(name, areaByRoom) {
     const group = enemyGroups.get(enemyKey) || { id, key: enemyKey, count: 0, activeByDefault: 0, sprite: null };
     group.count++;
     if (record.activeByDefault) group.activeByDefault++;
-    const artwork = architect.enemyArtwork?.[enemyKey];
+    const artwork = architect.enemyArtwork?.[enemyKey] || enemyArtworkAliases[enemyKey] ||
+      (enemyKey.startsWith('g') ? enemyArtworkAliases[enemyKey.slice(1)] : null);
     if (!group.sprite && artwork?.sprite?.textureSha256) group.sprite = {
       name: artwork.objectName || artwork.sprite.name || null,
       sourceBundle: artwork.sourceBundle || null,
@@ -142,6 +160,7 @@ function main() {
       perRoomPlacementsLoadFromRoomSidecars: true,
       customArenaImageStatus: 'Architect exports contain tile coordinates but no game tile textures or compiled scene bundles; no arena background is fabricated.'
     },
+    enemyArtworkAliases,
     coverage: {
       hubEntrances: gauntlets.length,
       routeCount: gauntlets.reduce((sum, gauntlet) => sum + gauntlet.routes.length, 0),

@@ -233,6 +233,27 @@ body { min-width: 320px; height: 100vh; overflow: hidden; background: #070909; c
 .gauntlet-route-row:hover { border-color: #9b86b0; background: #f5f1f8; }
 .gauntlet-route-copy { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px; }
 .gauntlet-route-copy small { color: #666; font: 8px Consolas,monospace; }
+.gauntlet-guide-open { width: 100%; min-height: 29px; margin-top: 6px; border-color: #c9bdd7; background: #f5f1f8; color: #392c48; font-size: 10px; }
+.gauntlet-guide-open:hover { border-color: #9077a9; background: #eee7f4; }
+.gauntlet-guide-page { max-height: min(66vh,680px); overflow: auto; margin-top: 7px; border: 1px solid #d8d2df; border-radius: 4px; background: #fff; }
+.gauntlet-guide-toolbar { position: sticky; z-index: 1; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 6px; border-bottom: 1px solid #e2dee6; background: #f9f8fa; }
+.gauntlet-guide-toolbar button { min-height: 24px; padding: 3px 6px; font-size: 9px; }
+.gauntlet-guide-toolbar span { color: #68616f; font: 8px Consolas,monospace; }
+.gauntlet-wiki-page { padding: 9px; color: #29252d; font: 10px/1.5 Georgia,"Times New Roman",serif; }
+.gauntlet-wiki-title { margin: 0 0 6px; padding-bottom: 5px; border-bottom: 2px solid #7b668c; color: #211a27; font: 600 17px Georgia,"Times New Roman",serif; }
+.gauntlet-wiki-lead { margin: 6px 0 8px; color: #504955; }
+.gauntlet-wiki-infobox { float: right; width: 42%; margin: 0 0 8px 8px; padding: 6px; border: 1px solid #d9d1e0; background: #faf8fc; font: 8px/1.5 Consolas,monospace; }
+.gauntlet-wiki-infobox strong { color: #352941; }
+.gauntlet-wiki-page h3 { clear: both; margin: 12px 0 5px; padding-bottom: 3px; border-bottom: 1px solid #ded8e3; color: #31253b; font: 600 13px Georgia,"Times New Roman",serif; }
+.gauntlet-wiki-page h4 { margin: 8px 0 3px; color: #44354f; font: 600 11px Georgia,"Times New Roman",serif; }
+.gauntlet-guide-route { padding: 6px 0; border-top: 1px solid #eeeaf0; }
+.gauntlet-guide-route:first-of-type { border-top: 0; }
+.gauntlet-guide-events { margin: 3px 0 6px; color: #625c67; font: 8px/1.4 Consolas,monospace; }
+.gauntlet-guide-placements { margin: 4px 0 5px; padding-left: 16px; }
+.gauntlet-guide-placements li { margin: 3px 0; }
+.gauntlet-guide-link { display: inline; min-height: 0; padding: 0; border: 0; background: transparent; color: #3d2e70; font: inherit; text-align: left; text-decoration: underline; text-underline-offset: 2px; }
+.gauntlet-guide-link:hover { border: 0; background: transparent; color: #825da0; }
+.gauntlet-guide-footnote { padding: 6px; border-left: 2px solid #aa95bf; background: #faf8fc; color: #635b68; font: 8px/1.45 Consolas,monospace; }
 .inspector-foot { padding-top: 8px; color: #747d75; }
 .canvas-notice, .canvas-loading { border-color: #d4dbd2; border-radius: 7px; box-shadow: 0 5px 20px #0006; }
 .canvas-loading { top: 64px; }

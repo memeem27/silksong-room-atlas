@@ -6,7 +6,7 @@ const ARTWORK_EXTENSION = String(window.SILKSONG_ATLAS_ARTWORK_EXTENSION || 'png
 const GZIP_JSON = Boolean(window.SILKSONG_ATLAS_GZIP_JSON);
 const DATA_VERSION = String(window.SILKSONG_ATLAS_DATA_VERSION || '').trim();
 const MAX_MAP_ZOOM = 64;
-const state = { manifest: null, navigation: null, gauntletCatalog: null, mode: 'world', area: null, room: null, roomMeta: null,
+const state = { manifest: null, navigation: null, gauntletCatalog: null, roomMetaCache: new Map(), mode: 'world', area: null, room: null, roomMeta: null,
   roomImage: null, roomViewImage: null, wideImage: null, detailImage: null, imageCache: new Map(), atlasCache: new Map(),
   selectedGauntlet: null, selectedWave: 'all', visiblePlacements: new Map(), selectedAreaName: null, selectedGauntletMapKey: null, hoverAreaKey: null, hoverGauntletKey: null,
   roomReturnMode: null,
@@ -113,6 +113,12 @@ async function loadDataset() {
 function allRooms() { return state.manifest?.rooms || []; }
 function findRoom(name) { return allRooms().find(entry => entry.name.toLowerCase() === String(name).toLowerCase()) || null; }
 function findArea(key) { return (state.navigation?.areas || []).find(area => area.key === key) || null; }
+function loadRoomMetadata(name){
+  const room=findRoom(name);if(!room?.metadata)return Promise.resolve(null);
+  const key=room.name.toLowerCase();if(state.roomMetaCache.has(key))return state.roomMetaCache.get(key);
+  const pending=loadJson(room.metadata).catch(error=>{state.roomMetaCache.delete(key);throw error;});
+  state.roomMetaCache.set(key,pending);return pending;
+}
 
 function renderNavigation() {
   const query = $('search').value.trim().toLowerCase();
@@ -219,6 +225,7 @@ function selectGauntletMap(key) {
 }
 function renderGauntletMapDetails() {
   const gauntlet=(state.gauntletCatalog?.gauntlets||[]).find(item=>item.key===state.selectedGauntletMapKey)||null;
+  $('gauntletMapSummary').hidden=false;$('openGauntletGuide').hidden=!gauntlet;$('gauntletGuidePage').hidden=true;$('gauntletRouteHeading').hidden=false;$('gauntletMapRoutes').hidden=false;
   if(!gauntlet){$('gauntletMapSummary').innerHTML='<div class="hint">Choose one of the portal markers to see the linked rooms and scene data.</div>';$('gauntletRouteCount').textContent='0';$('gauntletMapRoutes').innerHTML='<div class="hint">No portal selected.</div>';return;}
   $('inspectorTitle').textContent=gauntlet.name;
   const position=gauntlet.hubPosition||{},routes=gauntlet.routes||[];
@@ -232,6 +239,65 @@ function renderGauntletMapDetails() {
     return `<button class="gauntlet-route-row" type="button" data-gauntlet-route="${esc(route.roomScene||route.targetScene)}"><span class="gauntlet-glyph">${String(index+1).padStart(2,'0')}</span><span class="gauntlet-route-copy">${esc(fileBase(route.roomScene||route.targetScene))}<small>${esc(detail)}</small></span><span class="nav-arrow">›</span></button>`;
   }).join('')||'<div class="hint">No external room exits are recorded for this portal in the Architect export.</div>';
   document.querySelectorAll('[data-gauntlet-route]').forEach(button=>button.addEventListener('click',()=>openGauntletRoute(button.dataset.gauntletRoute)));
+}
+function closeGauntletGuide(){
+  $('gauntletMapSummary').hidden=false;$('openGauntletGuide').hidden=false;$('gauntletGuidePage').hidden=true;
+  $('gauntletRouteHeading').hidden=false;$('gauntletMapRoutes').hidden=false;
+}
+function canonicalGuidePlacements(architect,records){
+  const parents=new Set();
+  for(const record of architect?.placements||[]){if(!record.enemyCandidate)continue;let slash=String(record.key||'').lastIndexOf('/');while(slash>0){parents.add(record.key.slice(0,slash));slash=record.key.lastIndexOf('/',slash-1);}}
+  return records.filter(record=>!record.enemyCandidate||!parents.has(String(record.key||'')));
+}
+function placementsForGuidePhase(architect,wave){
+  const all=architect?.placements||[],start=wave.startEvent,end=wave.endEvent;
+  const relevant=all.filter(record=>!record.controllerMarker&&(
+    (record.listeners||[]).some(listener=>listener.event===start||listener.event===end)||
+    (record.enemyCandidate&&!(record.listeners||[]).length)
+  ));
+  return canonicalGuidePlacements(architect,relevant);
+}
+function guidePlacementEnabled(record,wave){
+  const listeners=record.listeners||[],start=listeners.find(item=>item.event===wave.startEvent),end=listeners.find(item=>item.event===wave.endEvent);
+  return start?eventActionState(start,Boolean(record.activeByDefault)):end?eventActionState(end,Boolean(record.activeByDefault)):Boolean(record.activeByDefault);
+}
+async function openGauntletGuide(){
+  const gauntlet=(state.gauntletCatalog?.gauntlets||[]).find(item=>item.key===state.selectedGauntletMapKey);if(!gauntlet)return;
+  const page=$('gauntletGuidePage'),key=gauntlet.key;
+  $('gauntletMapSummary').hidden=true;$('openGauntletGuide').hidden=true;$('gauntletRouteHeading').hidden=true;$('gauntletMapRoutes').hidden=true;page.hidden=false;
+  page.innerHTML='<div class="gauntlet-guide-toolbar"><button id="backToGauntletDetails" type="button">‹ Portal details</button><span>GAUNTLETSONG FIELD GUIDE</span></div><div class="empty">Loading linked Architect event data…</div>';
+  const routes=gauntlet.routes||[],groups=new Map();
+  for(const route of routes){if(route.targetType!=='base-room')continue;const name=route.roomScene||route.targetScene,k=name.toLowerCase();if(!groups.has(k))groups.set(k,{name,routes:[]});groups.get(k).routes.push(route);}
+  const loaded=await Promise.all([...groups.values()].map(async group=>({group,meta:await loadRoomMetadata(group.name).catch(error=>({loadError:error.message}))})));
+  if(state.selectedGauntletMapKey!==key||state.mode!=='gauntlet-map')return;
+  const sections=loaded.map(({group,meta})=>{
+    if(meta?.loadError||!meta?.architect)return `<section class="gauntlet-guide-route"><h3>${esc(fileBase(group.name))}</h3><p class="hint">Room event data could not be loaded: ${esc(meta?.loadError||'Architect sidecar unavailable')}.</p></section>`;
+    const architect=meta.architect,waves=waveGroups(architect),routeNames=group.routes.map(route=>`${route.targetTransition||'exit'} → ${route.targetScene}`).join(' · ');
+    const phaseSections=waves.map((wave,index)=>{
+      const placements=placementsForGuidePhase(architect,wave),enemies=placements.filter(record=>record.enemyCandidate),changes=placements.filter(record=>!record.enemyCandidate&&(record.listeners||[]).length);
+      const enemyRows=enemies.slice(0,48).map(record=>{
+        const point=record.worldPosition||{},stateText=guidePlacementEnabled(record,wave)?'shown in selected event state':'inactive in selected event state';
+        return `<li><button class="gauntlet-guide-link" type="button" data-guide-enemy-scene="${esc(group.name)}" data-guide-enemy-key="${esc(record.key)}">${esc(record.label||record.placement?.id||'Enemy')}</button> · ${Number(point.x||0).toFixed(2)}, ${Number(point.y||0).toFixed(2)} · ${stateText}</li>`;
+      }).join('');
+      const omitted=enemies.length>48?`<li>Plus ${enemies.length-48} additional enemy placements in this phase.</li>`:'';
+      const changeRows=changes.slice(0,12).map(record=>`<li>${esc(record.label||record.placement?.id||'Room change')} · ${esc((record.listeners||[]).map(listener=>`${listener.event}: ${listener.action}`).join(', '))}</li>`).join('');
+      const changeTail=changes.length>12?`<li>Plus ${changes.length-12} more event-linked terrain/object changes.</li>`:'';
+      const enemyMarkup=enemies.length?`<ul class="gauntlet-guide-placements">${enemyRows}${omitted}</ul>`:'<p>No enemy placements are linked to this event pair in the saved sidecar.</p>';
+      const changeMarkup=changes.length?`<details><summary>${changes.length} linked arena and object changes</summary><ul class="gauntlet-guide-placements">${changeRows}${changeTail}</ul></details>`:'';
+      return `<section><h4>Event phase ${index+1}: ${esc(wave.label)}</h4><div class="gauntlet-guide-events">Start: ${esc(wave.startEvent)}${wave.endEvent?` · End: ${esc(wave.endEvent)}`:''} · ${placements.length} relevant placements</div>${enemyMarkup}${changeMarkup}</section>`;
+    }).join('');
+    const phaseContent=phaseSections||`<p>No start/end event pair was identified. Saved events: ${(architect.eventGroups||[]).map(group=>`${esc(group.name)} (${esc(group.actions||'no action')}, ${Number(group.placementCount||0)} placements)`).join('; ')||'none'}.</p>`;
+    return `<section class="gauntlet-guide-route"><h3>${esc(fileBase(group.name))}</h3><div class="gauntlet-guide-events">${esc(routeNames)} · ${esc(group.routes[0].roomArea?.name||'map location not indexed')}</div><button class="gauntlet-guide-link" type="button" data-guide-room="${esc(group.name)}">Open the real room image and event controls ↗</button>${phaseContent}</section>`;
+  }).join('')||'<p>This portal has no external room routes in the Architect export.</p>';
+  page.innerHTML=`<div class="gauntlet-guide-toolbar"><button id="backToGauntletDetails" type="button">‹ Portal details</button><span>GAUNTLETSONG FIELD GUIDE</span></div><article class="gauntlet-wiki-page"><div class="gauntlet-wiki-infobox"><div><strong>Scene:</strong> ${esc(gauntlet.scene)}</div><div><strong>Hub location:</strong> ${Number(gauntlet.hubPosition?.x||0).toFixed(2)}, ${Number(gauntlet.hubPosition?.y||0).toFixed(2)}</div><div><strong>Routes:</strong> ${routes.length}</div><div><strong>Architect placements:</strong> ${Number(gauntlet.placementCount||0).toLocaleString()}</div><div><strong>Tile occupancy cells:</strong> ${Number(gauntlet.tileCellCount||0).toLocaleString()}</div></div><h2 class="gauntlet-wiki-title">${esc(gauntlet.name)} Gauntlet</h2><p class="gauntlet-wiki-lead">This guide is generated from the supplied GauntletSong Architect export and linked room sidecars. Enemy links open the matching placement details and room location.</p><div class="gauntlet-guide-footnote">The Architect data names event groups but does not author a reliable numeric sequence. Phases below follow the saved event labels. Custom arena tile art is absent from the export; no terrain image is synthesized.</div><h3>Rooms and event phases</h3>${sections}</article>`;
+  $('backToGauntletDetails').addEventListener('click',closeGauntletGuide);
+  document.querySelectorAll('[data-guide-room]').forEach(button=>button.addEventListener('click',()=>openGauntletRoute(button.dataset.guideRoom)));
+  document.querySelectorAll('[data-guide-enemy-scene]').forEach(button=>button.addEventListener('click',()=>openGuideEnemy(button.dataset.guideEnemyScene,button.dataset.guideEnemyKey)));
+}
+async function openGuideEnemy(sceneName,placementKey){
+  const scene=String(sceneName||''),key=String(placementKey||'');
+  await openRoom(scene,{returnToGauntletMap:true});
+  if(state.mode==='room'&&state.room?.name.toLowerCase()===scene.toLowerCase())showEnemyArticle(key);
 }
 function openGauntletRoute(sceneName) {
   const room=findRoom(sceneName);if(!room)return;
@@ -316,7 +382,7 @@ async function openRoom(name, options = {}) {
   const metadataPath=room.metadata;
   try {
     const [meta,image] = await Promise.all([
-      metadataPath ? loadJson(metadataPath) : Promise.resolve(null),
+      metadataPath ? loadRoomMetadata(room.name) : Promise.resolve(null),
       (room.previewImage || room.image) ? loadImage(room.previewImage || room.image) : Promise.resolve(null)
     ]);
     state.roomMeta=meta; state.roomImage=image; state.roomViewImage=null;
@@ -1475,8 +1541,8 @@ function drawArchitect(width,height,frame,meta){
 }
 function spriteGeometry(sprite){const ppu=Math.max(1,Number(sprite.pixelsPerUnit)||100),rotated=Number(sprite.packingRotation)===4,w=(rotated?sprite.rectHeight:sprite.rectWidth)/ppu,h=(rotated?sprite.rectWidth:sprite.rectHeight)/ppu,ow=(sprite.originalWidth||sprite.rectWidth)/ppu,oh=(sprite.originalHeight||sprite.rectHeight)/ppu;return{width:w,height:h,left:(sprite.trimOffsetX||0)/ppu-(sprite.pivotX??.5)*ow,bottom:(sprite.trimOffsetY||0)/ppu-(sprite.pivotY??.5)*oh,rotated};}
 function enemyArtworkForRecord(record){
-  const id=String(record.placement?.id||'').replace(/^prefab_/i,'').toLowerCase().replace(/[^a-z0-9]/g,''),label=String(record.label||'').toLowerCase().replace(/[^a-z0-9]/g,''),artwork=state.roomMeta?.architect?.enemyArtwork||{},candidates=[id,...(id.startsWith('g')?[id.slice(1)]:[]),label,...(label.startsWith('g')?[label.slice(1)]:[])];
-  return candidates.map(key=>artwork[key]).find(item=>/^[a-f0-9]{64}$/i.test(item?.sprite?.textureSha256||''))||null;
+  const id=String(record.placement?.id||'').replace(/^prefab_/i,'').toLowerCase().replace(/[^a-z0-9]/g,''),label=String(record.label||'').toLowerCase().replace(/[^a-z0-9]/g,''),artwork=state.roomMeta?.architect?.enemyArtwork||{},shared=state.gauntletCatalog?.enemyArtworkAliases||{},candidates=[id,...(id.startsWith('g')?[id.slice(1)]:[]),label,...(label.startsWith('g')?[label.slice(1)]:[])];
+  return candidates.map(key=>artwork[key]||shared[key]).find(item=>/^[a-f0-9]{64}$/i.test(item?.sprite?.textureSha256||''))||null;
 }
 function enemySpriteForRecord(record){return enemyArtworkForRecord(record)?.sprite||null;}
 function drawEnemyTexture(record,px,py,roomScale,roomPpu,target){
@@ -1676,6 +1742,7 @@ async function exportCleanPng() {
 }
 $('search').addEventListener('input',renderNavigation);$('worldButton').addEventListener('click',()=>state.mode==='room'&&!state.area?showAllRooms():showWorld());$('areaButton').addEventListener('click',()=>state.area?showArea(state.area.key):showAllRooms());$('allRoomsButton').addEventListener('click',showAllRooms);$('closeRoomButton').addEventListener('click',()=>state.roomReturnMode==='gauntlet-map'?showGauntletMap({selectedKey:state.selectedGauntletMapKey}):state.area?showArea(state.area.key):showAllRooms());
 $('gauntletMapButton').addEventListener('click',()=>showGauntletMap());
+$('openGauntletGuide').addEventListener('click',()=>void openGauntletGuide());
 $('toggleNavigatorButton').addEventListener('click',()=>togglePanel('navigator'));$('toggleInspectorButton').addEventListener('click',()=>togglePanel('inspector'));
 $('closeNavigatorButton').addEventListener('click',()=>closePanel('navigator'));$('closeInspectorButton').addEventListener('click',()=>closePanel('inspector'));
 $('fullscreenButton').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{}});

@@ -29,6 +29,9 @@ internal sealed class SpriteAssetLoader {
             ["pilgrimhulk"] = ["pilgrim02"],
             ["pilgrimguide"] = ["pilgrimstaffweilder"],
             ["pilgrimbell"] = ["pilgrimbellthrower"],
+            // Flintbeetle's Silksong animation prefab is named ROCK_ROLLER in
+            // the game assets; Architect names its gauntlet prefab gFlintbeetle.
+            ["flintbeetle"] = ["rridle0000"],
             // The in-game idle sprite is named RR_idle0000 and lives in the
             // area-bone animation bundle, not either journal atlas. Prefer it
             // over the small journal portrait for both Architect spellings.
@@ -390,7 +393,11 @@ internal sealed class SpriteAssetLoader {
     private static string[] SpriteNameAliases(string normalized) {
         var aliases = new List<string> { normalized };
         if (KnownEnemySpriteAliases.TryGetValue(normalized, out var known)) aliases.AddRange(known);
-        if (normalized.Length > 5 && normalized[0] == 'g') aliases.Add(normalized[1..]);
+        if (normalized.Length > 5 && normalized[0] == 'g') {
+            var withoutGauntletPrefix = normalized[1..];
+            aliases.Add(withoutGauntletPrefix);
+            if (KnownEnemySpriteAliases.TryGetValue(withoutGauntletPrefix, out var gauntletAliases)) aliases.AddRange(gauntletAliases);
+        }
         // Many game animation bundles label their first animation frame with
         // the enemy's normalized placement name followed by idle0000.
         aliases.Add(normalized + "idle0000");

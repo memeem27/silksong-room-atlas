@@ -28,8 +28,15 @@ assert.ok(Array.isArray(catalog.hub.tileCells) && catalog.hub.tileCells.length =
   'hub tile footprint must match Architect source occupancy coordinates');
 assert.match(catalog.rendering.customArenaImageStatus, /no game tile textures or compiled scene bundles/i,
   'unavailable custom arena artwork must be stated instead of replaced with synthetic terrain');
+assert.equal(catalog.enemyArtworkAliases.flintbeetle?.sprite?.name, 'RR_idle0000',
+  'Flintbeetle must link to the authentic idle animation from the game bundle');
+assert.equal(catalog.enemyArtworkAliases.flintbeetle?.sourceBundle, 'animations_assets_areabone.bundle');
+assert.equal(catalog.enemyArtworkAliases.flintbeetle?.sprite?.textureSha256,
+  '29d0651e26a837a9cd34318b25b213f7f9a8ea022cbd89556236dd0b1f5d3aab');
 const packagedCatalog = readGzipJson(path.join(hostedDataRoot, 'maps', 'gauntlet-song.json.gz'));
 assert.deepEqual(packagedCatalog.coverage, catalog.coverage, 'hosted gzip catalog must match the generated local index');
+assert.equal(packagedCatalog.enemyArtworkAliases?.flintbeetle?.sprite?.textureSha256,
+  catalog.enemyArtworkAliases.flintbeetle.sprite.textureSha256, 'hosted catalog must carry the verified Flintbeetle alias');
 assert.ok(delta.changedFiles.includes('maps/gauntlet-song.json.gz'), 'delta should publish the portal index');
 assert.ok(!delta.changedFiles.some(file => file.startsWith('images/')), 'portal-only package must not re-upload or replace room images');
 
@@ -109,19 +116,52 @@ assert.ok(Number.isFinite(viewport.offsetX) && Number.isFinite(viewport.offsetY)
 assert.ok(Math.abs(anchor.x*viewport.zoom+viewport.offsetX-600)<1e-7 && Math.abs(anchor.y*viewport.zoom+viewport.offsetY-350)<1e-7,
   'selected portal should zoom to the map canvas center');
 
-for (const id of ['gauntletMapButton','gauntletMapPanel','gauntletMapSummary','gauntletMapRoutes']) assert.match(html, new RegExp(`id="${id}"`));
-for (const token of ["'gauntlet-map'", "loadJson('maps/gauntlet-song.json')", 'drawGauntletMap', 'openGauntletRoute', 'returnToGauntletMap', 'data-enemy-article', 'showEnemyArticle', 'drawEnemyArticleSprite']) {
+for (const id of ['gauntletMapButton','gauntletMapPanel','gauntletMapSummary','gauntletMapRoutes','gauntletGuidePage','openGauntletGuide']) assert.match(html, new RegExp(`id="${id}"`));
+for (const token of ["'gauntlet-map'", "loadJson('maps/gauntlet-song.json')", 'drawGauntletMap', 'openGauntletRoute', 'openGauntletGuide', 'data-guide-enemy-key', 'returnToGauntletMap', 'data-enemy-article', 'showEnemyArticle', 'drawEnemyArticleSprite']) {
   assert.ok(reader.includes(token), `reader should include GauntletSong map integration: ${token}`);
 }
 assert.match(reader, /tile occupancy \+ portal coordinates · no hub texture included/i,
   'viewer should disclose that hub artwork is absent');
 const boneSidecar = JSON.parse(fs.readFileSync(path.join(root, 'workspace', 'preprocessed', 'rooms', 'bone_01.json'), 'utf8'));
 const boneRoller = boneSidecar.architect.placements.find(record => record.enemyCandidate && record.placement?.id === 'bone_roller');
-const spriteContext = vm.createContext({ state: { roomMeta: boneSidecar } });
+const spriteContext = vm.createContext({ state: { roomMeta: boneSidecar, gauntletCatalog: catalog } });
 vm.runInContext(`${extractFunction(reader,'enemyArtworkForRecord')};${extractFunction(reader,'enemySpriteForRecord')};globalThis.api={enemyArtworkForRecord,enemySpriteForRecord};`, spriteContext);
 const rollerArtwork = spriteContext.api.enemyArtworkForRecord(boneRoller);
 assert.equal(rollerArtwork?.sprite?.name, 'RR_idle0000', 'enemy article must resolve the real Rock Roller idle sprite');
 assert.equal(rollerArtwork?.sourceBundle, 'animations_assets_areabone.bundle', 'enemy article must identify the game sprite source bundle');
 assert.equal(spriteContext.api.enemySpriteForRecord(boneRoller)?.textureSha256, '29d0651e26a837a9cd34318b25b213f7f9a8ea022cbd89556236dd0b1f5d3aab');
+spriteContext.state.roomMeta = { architect: { enemyArtwork: {} } };
+const flintbeetleRecord = { placement: { id: 'prefab_gFlintbeetle' }, label: 'gFlintbeetle' };
+const flintbeetleArtwork = spriteContext.api.enemyArtworkForRecord(flintbeetleRecord);
+assert.equal(flintbeetleArtwork?.sprite?.name, 'RR_idle0000', 'Gauntlet Flintbeetle must resolve through the verified shared sprite alias');
+assert.equal(spriteContext.api.enemySpriteForRecord(flintbeetleRecord)?.textureSha256,
+  '29d0651e26a837a9cd34318b25b213f7f9a8ea022cbd89556236dd0b1f5d3aab');
+const flintbeetleRooms = catalog.mappedRooms.filter(room => room.architect?.enemies?.some(enemy => /flintbeetle/i.test(enemy.id)));
+assert.ok(flintbeetleRooms.length >= 3, 'Gauntlet catalog should include each routed Flintbeetle room');
+assert.ok(flintbeetleRooms.every(room => room.architect.enemies.filter(enemy => /flintbeetle/i.test(enemy.id)).every(enemy => enemy.sprite?.textureSha256 === flintbeetleArtwork.sprite.textureSha256)),
+  'Flintbeetle sprite coverage must be reflected in portal metadata');
+
+const guideContext = vm.createContext({});
+vm.runInContext(`${extractFunction(reader,'labelCase')};${extractFunction(reader,'waveGroups')};${extractFunction(reader,'eventActionState')};${extractFunction(reader,'canonicalGuidePlacements')};${extractFunction(reader,'placementsForGuidePhase')};${extractFunction(reader,'guidePlacementEnabled')};globalThis.api={waveGroups,canonicalGuidePlacements,placementsForGuidePhase,guidePlacementEnabled};`, guideContext);
+const guideArchitect = {
+  eventGroups: [{name:'wave1Start',actions:'enable'},{name:'wave1End',actions:'disable'},{name:'wave2Start',actions:'enable'}],
+  placements: [
+    {key:'a',enemyCandidate:true,activeByDefault:false,listeners:[{event:'wave1Start',action:'enable'},{event:'wave1End',action:'disable'}]},
+    {key:'b',enemyCandidate:true,activeByDefault:true,listeners:[]},
+    {key:'c',enemyCandidate:false,activeByDefault:false,listeners:[{event:'wave1Start',action:'enable'}]},
+    {key:'d',enemyCandidate:true,activeByDefault:false,listeners:[{event:'wave2Start',action:'enable'}]},
+    {key:'parent',enemyCandidate:true,activeByDefault:false,listeners:[{event:'wave1Start',action:'enable'}]},
+    {key:'parent/child',enemyCandidate:true,activeByDefault:false,listeners:[{event:'wave1Start',action:'enable'}]}
+  ]
+};
+const phases = guideContext.api.waveGroups(guideArchitect);
+assert.deepEqual(phases.map(phase=>phase.startEvent), ['wave1Start','wave2Start']);
+const firstPhase = guideContext.api.placementsForGuidePhase(guideArchitect,phases[0]);
+assert.deepEqual(firstPhase.map(record=>record.key).sort(), ['a','b','c','parent/child']);
+assert.equal(guideContext.api.guidePlacementEnabled(firstPhase.find(record=>record.key==='a'),phases[0]), true,
+  'an authored phase start action should determine the guide state for linked enemies');
+assert.equal(guideContext.api.guidePlacementEnabled(firstPhase.find(record=>record.key==='b'),phases[0]), true,
+  'a listener-free enemy should retain its serialized active state across phases');
+assert.ok(!firstPhase.some(record=>record.key==='d'), 'the guide must not list a different wave’s listener as present in this phase');
 
 console.log(`GauntletSong map: ${catalog.coverage.hubEntrances} portals, ${catalog.coverage.routeCount} room routes, ${routeScenes.size} linked rooms, ${catalog.coverage.enemyTypes} enemy types; ${positions.length} independently clickable markers tested.`);
