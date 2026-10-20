@@ -311,7 +311,7 @@ async function openRoom(name, options = {}) {
   $('toggleEnemies').checked=false; $('toggleSpawns').checked=false; $('toggleChecks').checked=false;
   $('toggleAllInactiveArtwork').checked=false; $('toggleDisabledStateArtwork').checked=false; $('roomStateSearch').value='';
   $('toggleGauntlets').checked=false; $('toggleArenaChanges').checked=true; $('toggleEnemyTextures').checked=true;
-  $('gauntletDetails').hidden=true;
+  $('gauntletDetails').hidden=true; $('enemyArticle').hidden=true;
   renderNavigation();
   const metadataPath=room.metadata;
   try {
@@ -572,7 +572,7 @@ function waveGroups(architect) {
 }
 function setupArchitect(architect) {
   const markers=architect.markers||[], placements=architect.placements||[], waves=waveGroups(architect);
-  $('toggleGauntlets').checked=false; $('gauntletDetails').hidden=true;
+  $('toggleGauntlets').checked=false; $('gauntletDetails').hidden=true; $('enemyArticle').hidden=true;
   $('architectCount').textContent=`${markers.length} markers`;
   const lookup=architect.enemyArtworkLookup||{}, matchedEnemyTypes=lookup.matchedEnemyTypes??Object.keys(architect.enemyArtwork||{}).length,
     requestedEnemyTypes=lookup.requestedEnemyTypes;
@@ -604,7 +604,7 @@ function navigateWave(step){
 }
 function exitGauntletView(){
   state.selectedGauntlet=null;state.selectedWave='all';state.visiblePlacements.clear();
-  $('toggleGauntlets').checked=false;$('waveSelect').value='all';$('gauntletDetails').hidden=true;
+  $('toggleGauntlets').checked=false;$('waveSelect').value='all';$('gauntletDetails').hidden=true;$('enemyArticle').hidden=true;
   document.querySelectorAll('.gauntlet-button').forEach(button=>button.classList.remove('active'));
   updateWaveNavigation();renderPlacementList();draw();
 }
@@ -661,10 +661,40 @@ function renderPlacementList() {
   $('placementList').innerHTML=uiRecords.length?uiRecords.map(record=>{
     const point=record.worldPosition||{}; const events=(record.listeners||[]).map(listener=>`${listener.event} · ${listener.action}`).join(', '), phase=events|| (record.enemyCandidate?'No phase listener · saved active state applies in every wave':'No saved activation event');
     const spriteStatus=record.enemyCandidate?(enemySpriteForRecord(record)?' · Silksong sprite':' · sprite unavailable'):'';
-    return `<label class="placement-row"><input type="checkbox" data-placement="${esc(record.key)}" ${isPlacementEnabled(record)?'checked':''}><span class="placement-copy">${esc(record.label||record.placement?.id||'Placement')} · ${Number(point.x||0).toFixed(1)}, ${Number(point.y||0).toFixed(1)}${record.enemyCandidate?' · ENEMY':''}<span>${esc(phase+spriteStatus)}</span></span></label>`;
+    const name=esc(record.label||record.placement?.id||'Placement');
+    const nameControl=record.enemyCandidate?`<button class="enemy-article-link" type="button" data-enemy-article="${esc(record.key)}" aria-label="Open ${name} enemy details">${name}</button>`:name;
+    return `<div class="placement-row"><input type="checkbox" data-placement="${esc(record.key)}" aria-label="Show ${name} placement" ${isPlacementEnabled(record)?'checked':''}><span class="placement-copy">${nameControl} · ${Number(point.x||0).toFixed(1)}, ${Number(point.y||0).toFixed(1)}${record.enemyCandidate?' · ENEMY':''}<span>${esc(phase+spriteStatus)}</span></span></div>`;
   }).join(''):`<div class="hint">${wave.key==='all'?'No saved Architect placements in this room.':'No placements are linked to this event phase.'}</div>`;
   if(show.length>1200)$('placementList').insertAdjacentHTML('beforeend',`<div class="hint">Showing first 1,200 of ${show.length.toLocaleString()} placements.</div>`);
   document.querySelectorAll('[data-placement]').forEach(input=>input.addEventListener('change',()=>{state.visiblePlacements.set(input.dataset.placement,input.checked);draw();}));
+  document.querySelectorAll('[data-enemy-article]').forEach(button=>button.addEventListener('click',()=>showEnemyArticle(button.dataset.enemyArticle)));
+}
+function showEnemyArticle(key){
+  const record=(state.roomMeta?.architect?.placements||[]).find(item=>item.key===key&&item.enemyCandidate);
+  if(!record)return;
+  const sprite=enemySpriteForRecord(record),artwork=enemyArtworkForRecord(record),position=record.worldPosition||{},config=record.config||{};
+  const events=(record.listeners||[]).map(listener=>`${esc(listener.event)} · ${esc(listener.action)}`);
+  const stats=Object.entries(config).filter(([name,value])=>/^enemy_/i.test(name)&&String(value).trim()!=='').slice(0,8);
+  const statMarkup=stats.length?stats.map(([name,value])=>`<div><strong>${esc(labelCase(name))}:</strong> ${esc(value)}</div>`).join(''):'<div>No enemy-specific stat overrides are recorded in Architect.</div>';
+  const eventMarkup=events.length?events.join('<br>'):'No event activation listener is saved for this placement.';
+  const displayName=record.label||record.placement?.id||'Enemy';
+  $('enemyArticle').innerHTML=`<div class="enemy-article-head"><div><span class="eyebrow">PLACEMENT DETAILS</span><strong>${esc(displayName)}</strong></div><button id="enemyArticleClose" class="enemy-article-close" type="button" aria-label="Close enemy details">×</button></div><div class="enemy-article-body">${sprite?'<canvas id="enemyArticleSpriteCanvas" class="enemy-article-sprite" width="112" height="112" aria-label="Authentic game enemy sprite"></canvas>':'<div class="enemy-article-sprite enemy-sprite-missing" aria-label="No verified enemy sprite">—</div>'}<div class="enemy-article-copy"><div><strong>Architect ID:</strong> ${esc(record.placement?.id||'unknown')}</div><div><strong>Position:</strong> ${Number(position.x||0).toFixed(2)}, ${Number(position.y||0).toFixed(2)}${Number.isFinite(Number(position.z))?`, ${Number(position.z).toFixed(3)}`:''}</div><div><strong>State:</strong> ${isPlacementEnabled(record)?'shown':'hidden'} · ${record.activeByDefault?'active by default':'inactive by default'}</div><div><strong>Sprite:</strong> ${sprite?`${esc(artwork?.objectName||sprite.name||'matched Silksong sprite')} · ${esc(artwork?.sourceBundle||'game sprite bundle')}`:'no verified matching Silksong atlas; no substitute art used'}</div></div></div><div class="enemy-article-copy">${statMarkup}<div><strong>Event links:</strong><br>${eventMarkup}</div><div><strong>Source:</strong> Architect placement in ${esc(fileBase(state.room?.name||''))}. Stat values are mod configuration values, not a complete in-game bestiary entry.</div></div>`;
+  $('enemyArticle').hidden=false;
+  $('enemyArticleClose').addEventListener('click',()=>{$('enemyArticle').hidden=true;});
+  $('enemyArticle').scrollIntoView({block:'nearest'});
+  if(sprite)drawEnemyArticleSprite(record);
+}
+function drawEnemyArticleSprite(record){
+  const target=$('enemyArticleSpriteCanvas'),sprite=enemySpriteForRecord(record);if(!target||!sprite)return;
+  let image=state.atlasCache.get(sprite.textureSha256);
+  if(!image){image=new Image();state.atlasCache.set(sprite.textureSha256,image);image.onload=()=>{draw();drawEnemyArticleSprite(record);};image.onerror=()=>{};image.src=`${ARTWORK_BASE}${sprite.textureSha256}.${ARTWORK_EXTENSION}`;return;}
+  if(!image.complete||!image.naturalWidth){image.addEventListener('load',()=>drawEnemyArticleSprite(record),{once:true});return;}
+  const context=target.getContext('2d');if(!context)return;
+  const geometry=spriteGeometry(sprite),scale=Math.min((target.width-12)/Math.max(.01,geometry.width),(target.height-12)/Math.max(.01,geometry.height)),placement=record.placement||{};
+  const sourceY=Number(sprite.textureHeight)-Number(sprite.rectY)-Number(sprite.rectHeight);
+  context.clearRect(0,0,target.width,target.height);context.save();context.globalAlpha=Number(sprite.tintA??1);context.translate(target.width/2,target.height/2);context.rotate(-Number(placement.rotation||0)*Math.PI/180);context.scale(scale,-scale);context.translate(geometry.left+geometry.width/2,geometry.bottom+geometry.height/2);
+  if(placement.flipped)context.scale(-1,1);if(geometry.rotated)context.rotate(-Math.PI/2);
+  context.drawImage(image,sprite.rectX,sourceY,sprite.rectWidth,sprite.rectHeight,-geometry.width/2,-geometry.height/2,geometry.width,geometry.height);context.restore();
 }
 function selectGauntlet(index) {
   if(!$('toggleGauntlets').checked){$('toggleGauntlets').checked=true;}
@@ -1444,10 +1474,11 @@ function drawArchitect(width,height,frame,meta){
   }
 }
 function spriteGeometry(sprite){const ppu=Math.max(1,Number(sprite.pixelsPerUnit)||100),rotated=Number(sprite.packingRotation)===4,w=(rotated?sprite.rectHeight:sprite.rectWidth)/ppu,h=(rotated?sprite.rectWidth:sprite.rectHeight)/ppu,ow=(sprite.originalWidth||sprite.rectWidth)/ppu,oh=(sprite.originalHeight||sprite.rectHeight)/ppu;return{width:w,height:h,left:(sprite.trimOffsetX||0)/ppu-(sprite.pivotX??.5)*ow,bottom:(sprite.trimOffsetY||0)/ppu-(sprite.pivotY??.5)*oh,rotated};}
-function enemySpriteForRecord(record){
+function enemyArtworkForRecord(record){
   const id=String(record.placement?.id||'').replace(/^prefab_/i,'').toLowerCase().replace(/[^a-z0-9]/g,''),label=String(record.label||'').toLowerCase().replace(/[^a-z0-9]/g,''),artwork=state.roomMeta?.architect?.enemyArtwork||{},candidates=[id,...(id.startsWith('g')?[id.slice(1)]:[]),label,...(label.startsWith('g')?[label.slice(1)]:[])];
-  return candidates.map(key=>artwork[key]?.sprite).find(sprite=>/^[a-f0-9]{64}$/i.test(sprite?.textureSha256||''))||null;
+  return candidates.map(key=>artwork[key]).find(item=>/^[a-f0-9]{64}$/i.test(item?.sprite?.textureSha256||''))||null;
 }
+function enemySpriteForRecord(record){return enemyArtworkForRecord(record)?.sprite||null;}
 function drawEnemyTexture(record,px,py,roomScale,roomPpu,target){
   const sprite=enemySpriteForRecord(record);if(!sprite)return false;
   let image=state.atlasCache.get(sprite.textureSha256);if(!image){image=new Image();image.onload=draw;image.onerror=()=>{};image.src=`${ARTWORK_BASE}${sprite.textureSha256}.${ARTWORK_EXTENSION}`;state.atlasCache.set(sprite.textureSha256,image);}if(!image.complete||!image.naturalWidth)return false;
@@ -1575,7 +1606,29 @@ canvas.addEventListener('click',event=>{
   if(state.mode==='gauntlet-map'){const portal=gauntletPortalAt(point);if(portal)selectGauntletMap(portal.item.key);}
   else if(state.mode==='world'||state.mode==='all-rooms')selectWorldAt(point);
   else if(state.mode==='area'){const architectRoom=architectRoomAt(point),anchorRoom=architectRoom?null:mapAnchorAt(point);if(architectRoom)openRoom(architectRoom.name,{architectMarkerIndex:0});else if(anchorRoom)openRoom(anchorRoom.name);else selectRoomAt(point);}
-  else if($('toggleGauntlets').checked){const image=currentRoomImage(),meta=state.roomMeta;if(!meta)return;const{width,height}=canvasSize(),dynamic=state.showAllInactiveArtwork||state.includeDisabledStateArtwork||state.roomStateChanged,cache=dynamic?conditionalCacheFor(meta):null,rebuild=Boolean(dynamic&&cache?.scene.renderables.length),frame=zoomRoomFrame(rebuild?(cache?.raster?conditionalRasterFrame(width,height,meta,cache):conditionalRoomFrame(width,height,meta,cache.scene)):roomFrame(width,height,image,meta));if(!frame)return;let best=null;for(const [i,marker] of (meta.architect?.markers||[]).entries()){if(!marker.worldPosition)continue;const screen=frame.worldPoint(marker.worldPosition.x,marker.worldPosition.y),d=Math.hypot(point.x-screen.x,point.y-screen.y);if(screen.x<frame.x||screen.x>frame.x+frame.drawWidth||screen.y<frame.y||screen.y>frame.y+frame.drawHeight)continue;if(d<15&&(!best||d<best.d))best={i,d};}if(best)selectGauntlet(best.i);}
+  else if($('toggleGauntlets').checked){
+    const image=currentRoomImage(),meta=state.roomMeta;if(!meta)return;
+    const{width,height}=canvasSize(),dynamic=state.showAllInactiveArtwork||state.includeDisabledStateArtwork||state.roomStateChanged,
+      cache=dynamic?conditionalCacheFor(meta):null,rebuild=Boolean(dynamic&&cache?.scene.renderables.length),
+      frame=zoomRoomFrame(rebuild?(cache?.raster?conditionalRasterFrame(width,height,meta,cache):conditionalRoomFrame(width,height,meta,cache.scene)):roomFrame(width,height,image,meta));
+    if(!frame)return;
+    let enemyBest=null;
+    for(const record of canonicalArchitectPlacements(placementsForWave()).filter(item=>item.enemyCandidate&&isPlacementEnabled(item))){
+      const position=record.worldPosition;if(!position)continue;
+      const screen=frame.worldPoint(position.x,position.y),distance=Math.hypot(point.x-screen.x,point.y-screen.y);
+      if(screen.x<frame.x||screen.x>frame.x+frame.drawWidth||screen.y<frame.y||screen.y>frame.y+frame.drawHeight)continue;
+      if(distance<=16&&(!enemyBest||distance<enemyBest.distance))enemyBest={record,distance};
+    }
+    if(enemyBest){showEnemyArticle(enemyBest.record.key);return;}
+    let markerBest=null;
+    for(const [index,marker] of (meta.architect?.markers||[]).entries()){
+      if(!marker.worldPosition)continue;
+      const screen=frame.worldPoint(marker.worldPosition.x,marker.worldPosition.y),distance=Math.hypot(point.x-screen.x,point.y-screen.y);
+      if(screen.x<frame.x||screen.x>frame.x+frame.drawWidth||screen.y<frame.y||screen.y>frame.y+frame.drawHeight)continue;
+      if(distance<15&&(!markerBest||distance<markerBest.distance))markerBest={index,distance};
+    }
+    if(markerBest)selectGauntlet(markerBest.index);
+  }
 });
 
 function exportJson(value,name){const blob=new Blob([JSON.stringify(value,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
