@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "repository": "memeem27/silksong-room-atlas",
-  "assetCount": 2119,
-  "releaseCount": 11,
+  "assetCount": 2120,
+  "releaseCount": 12,
   "assets": {
     "artwork/00d10de1fa0d1dbcd96a755ad4bad91f57189cd9347fb2b1cef076dfad276ae2.webp": {
       "tag": "silksong-atlas-data-v2-001",
@@ -8479,6 +8479,10 @@
     "artwork/f24e024b9769cb6b1af16651c0a9f928b7796a8e6a1c0a4781638eaed974002c.webp": {
       "tag": "silksong-atlas-data-v2-015",
       "name": "f24e024b9769cb6b1af16651c0a9f928b7796a8e6a1c0a4781638eaed974002c.webp"
+    },
+    "maps/enemy-artwork.json.gz": {
+      "tag": "silksong-atlas-data-v2-016",
+      "name": "enemy-artwork.json.gz"
     }
   }
 }

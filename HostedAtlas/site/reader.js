@@ -6,7 +6,7 @@ const ARTWORK_EXTENSION = String(window.SILKSONG_ATLAS_ARTWORK_EXTENSION || 'png
 const GZIP_JSON = Boolean(window.SILKSONG_ATLAS_GZIP_JSON);
 const DATA_VERSION = String(window.SILKSONG_ATLAS_DATA_VERSION || '').trim();
 const MAX_MAP_ZOOM = 64;
-const state = { manifest: null, navigation: null, gauntletCatalog: null, roomMetaCache: new Map(), arenaDataCache: new Map(), mode: 'world', area: null, room: null, roomMeta: null,
+const state = { manifest: null, navigation: null, gauntletCatalog: null, enemyArtworkCatalog: null, enemyArtworkCatalogPromise: null, roomMetaCache: new Map(), arenaDataCache: new Map(), mode: 'world', area: null, room: null, roomMeta: null,
   roomImage: null, roomViewImage: null, wideImage: null, detailImage: null, imageCache: new Map(), atlasCache: new Map(),
   selectedGauntlet: null, selectedWave: 'all', visiblePlacements: new Map(), selectedAreaName: null, selectedGauntletMapKey: null, hoverAreaKey: null, hoverGauntletKey: null,
   selectedArenaKey: null, arenaData: null, selectedArenaChoiceId: '', hiddenArenaPlacementKeys: new Set(), selectedArenaPlacementKey: null, hoverArenaPlacementKey: null,
@@ -120,6 +120,18 @@ function loadRoomMetadata(name){
   const key=room.name.toLowerCase();if(state.roomMetaCache.has(key))return state.roomMetaCache.get(key);
   const pending=loadJson(room.metadata).catch(error=>{state.roomMetaCache.delete(key);throw error;});
   state.roomMetaCache.set(key,pending);return pending;
+}
+
+function loadEnemyArtworkCatalog(){
+  if(state.enemyArtworkCatalog)return Promise.resolve(state.enemyArtworkCatalog);
+  if(state.enemyArtworkCatalogPromise)return state.enemyArtworkCatalogPromise;
+  const pending=loadJson('maps/enemy-artwork.json').then(data=>{
+    if(data?.format!=='silksong-gauntlet-enemy-artwork'||data.formatVersion!==1||
+      !data.actors||typeof data.actors!=='object'||!data.aliases||typeof data.aliases!=='object')
+      throw new Error('The shared enemy idle-artwork catalog failed validation.');
+    state.enemyArtworkCatalog=data;return data;
+  }).catch(error=>{state.enemyArtworkCatalogPromise=null;throw error;});
+  state.enemyArtworkCatalogPromise=pending;return pending;
 }
 
 function renderNavigation() {
@@ -495,6 +507,7 @@ async function openRoom(name, options = {}) {
       metadataPath ? loadRoomMetadata(room.name) : Promise.resolve(null),
       (room.previewImage || room.image) ? loadImage(room.previewImage || room.image) : Promise.resolve(null)
     ]);
+    if((meta?.objects||[]).some(object=>object.classification?.enemy)) await loadEnemyArtworkCatalog().catch(()=>null);
     state.roomMeta=meta; state.roomImage=image; state.roomViewImage=null;
     $('canvasLoading').hidden=true;
     setupRoomSections(meta);
@@ -1735,20 +1748,26 @@ function enemyFactsForRecord(record){
   for(const [key,item] of Object.entries(facts))if([item.displayName,item.internalName].some(value=>candidates.includes(String(value||'').toLowerCase().replace(/[^a-z0-9]/g,''))))candidates.push(key);
   return candidates.map(key=>facts[key]).find(item=>item?.displayName)||null;
 }
+function sharedEnemyArtworkForKey(key){
+  const catalog=state.enemyArtworkCatalog;if(!catalog)return null;
+  const normalized=String(key||'').toLowerCase().replace(/[^a-z0-9]/g,''),actorId=catalog.aliases?.[normalized]||catalog.enemyActors?.[normalized]||
+    (catalog.actors?.[normalized]?normalized:null),animation=catalog.actors?.[actorId],sprite=animation?.frames?.[0];
+  return sprite?{objectName:animation.gameObjectName,sourceBundle:animation.sourceBundle,sprite,idleAnimation:animation}:null;
+}
 function enemyArtworkForRoomObject(object){
-  const normalize=value=>String(value||'').toLowerCase().replace(/[^a-z0-9]/g,''),name=normalize(object?.name),roomArtwork=state.roomMeta?.architect?.enemyArtwork||{},shared=state.gauntletCatalog?.enemyArtworkAliases||{},facts=state.gauntletCatalog?.enemyFacts||{},candidates=[name],spriteNames=new Set((object?.sprites||[]).map(sprite=>normalize(sprite.name)).filter(Boolean));
+  const normalize=value=>String(value||'').toLowerCase().replace(/[^a-z0-9]/g,''),name=normalize(object?.name),roomArtwork=state.roomMeta?.architect?.enemyArtwork||{},shared=state.gauntletCatalog?.enemyArtworkAliases||{},facts=state.gauntletCatalog?.enemyFacts||{},enemyCatalog=state.enemyArtworkCatalog,candidates=[name],spriteNames=new Set((object?.sprites||[]).map(sprite=>normalize(sprite.name)).filter(Boolean));
   for(const [key,item] of Object.entries(facts))if([item.displayName,item.internalName].some(value=>normalize(value)===name))candidates.push(key);
-  // Unity's room export can give the visible enemy child a generic name such
-  // as "Silhoutte (1)". Match its serialized game sprite name back to the
-  // same sourced artwork catalog used by Architect placements.
   for(const source of [roomArtwork,shared])for(const [key,item] of Object.entries(source)){
     const sourceNames=[item.objectName,item.sprite?.name,...(item.idleAnimation?.frames||[]).map(frame=>frame.name)].map(normalize);
     if(sourceNames.some(spriteName=>spriteName&&spriteNames.has(spriteName)))candidates.push(key);
   }
-  const artwork=[...new Set(candidates)].map(key=>roomArtwork[key]||shared[key]).find(item=>/^[a-f0-9]{64}$/i.test(item?.sprite?.textureSha256||''));
+  for(const spriteName of spriteNames)if(enemyCatalog?.aliases?.[spriteName])candidates.push(spriteName);
+  for(const [actorId,animation] of Object.entries(enemyCatalog?.actors||{})){
+    const sourceNames=[animation.gameObjectName,...(animation.frames||[]).map(frame=>frame.name)].map(normalize);
+    if(sourceNames.some(spriteName=>spriteName&&spriteNames.has(spriteName)))candidates.push(actorId);
+  }
+  const artwork=[...new Set(candidates)].map(key=>roomArtwork[key]||shared[key]||sharedEnemyArtworkForKey(key)).find(item=>/^[a-f0-9]{64}$/i.test(item?.sprite?.textureSha256||''));
   if(artwork)return artwork;
-  // If the room object already carries a real, hashed game sprite but has no
-  // named catalog alias, use that exact serialized sprite instead of an E pin.
   const sceneSprite=(object?.sprites||[]).find(sprite=>/^[a-f0-9]{64}$/i.test(sprite?.textureSha256||''));
   return sceneSprite?{sprite:sceneSprite}:null;
 }
